@@ -8,6 +8,7 @@ import {
   MapPin,
   Menu,
   MessageCircle,
+  Phone,
   Settings,
   ShieldPlus,
   Stethoscope,
@@ -142,40 +143,80 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const { lang } = useLanguage();
   const currentItem = navItems.find(({ to }) => pathname === to) ?? navItems[0];
+  const CurrentIcon = currentItem.icon;
 
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen max-w-[1560px]">
-        <aside className="hidden w-80 shrink-0 border-r border-border/70 bg-card/75 backdrop-blur lg:flex lg:flex-col">
+        <aside className="hidden w-80 shrink-0 border-r border-border/70 bg-card/75 backdrop-blur lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
           <SidebarPanel />
         </aside>
 
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border/70 bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">AFYAROOT</p>
-              <p className="text-sm font-semibold text-foreground">{t(currentItem.labelKey, lang)}</p>
-            </div>
-            <Sheet>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition hover:bg-secondary"
-                  aria-label="Open navigation"
+          <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl">
+            <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+              <div className="flex min-w-0 items-center gap-3">
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition hover:bg-secondary lg:hidden"
+                      aria-label="Open navigation"
+                    >
+                      <Menu className="h-5 w-5" />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-[86vw] max-w-sm border-r border-border/70 bg-background p-0">
+                    <SheetHeader className="sr-only">
+                      <SheetTitle>AFYAROOT Navigation</SheetTitle>
+                      <SheetDescription>
+                        Access Home, Symptoms, Emergency, Chat AI, Facilities, Analytics, Booking, and Settings.
+                      </SheetDescription>
+                    </SheetHeader>
+                    <SidebarPanel mobile />
+                  </SheetContent>
+                </Sheet>
+
+                <div
+                  className={cn(
+                    'hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl border bg-card shadow-sm lg:flex',
+                    currentItem.labelKey === 'emergency'
+                      ? 'border-emergency/30 text-emergency'
+                      : 'border-border text-primary',
+                  )}
                 >
-                  <Menu className="h-5 w-5" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[86vw] max-w-sm border-r border-border/70 bg-background p-0">
-                <SheetHeader className="sr-only">
-                  <SheetTitle>AFYAROOT Navigation</SheetTitle>
-                  <SheetDescription>
-                    Access Home, Symptoms, Emergency, Chat AI, Facilities, Analytics, Booking, and Settings.
-                  </SheetDescription>
-                </SheetHeader>
-                <SidebarPanel mobile />
-              </SheetContent>
-            </Sheet>
+                  <CurrentIcon className="h-5 w-5" />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-xs font-semibold uppercase tracking-[0.24em] text-primary">AFYAROOT</p>
+                    {currentItem.labelKey === 'emergency' && (
+                      <span className="rounded-full bg-emergency/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emergency">
+                        Priority
+                      </span>
+                    )}
+                  </div>
+                  <p className="truncate text-base font-semibold text-foreground sm:text-lg">{t(currentItem.labelKey, lang)}</p>
+                  <p className="hidden truncate text-sm text-muted-foreground sm:block">{currentItem.description}</p>
+                </div>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <a
+                  href="tel:999"
+                  className="hidden items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-secondary sm:inline-flex"
+                >
+                  <Phone className="h-4 w-4 text-emergency" />
+                  Emergency 999
+                </a>
+                <span className="inline-flex items-center gap-2 rounded-2xl bg-success/10 px-3 py-2 text-xs font-semibold text-success">
+                  <span className="h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
+                  Online
+                </span>
+              </div>
+            </div>
+            <div className="h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           </header>
 
           <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
