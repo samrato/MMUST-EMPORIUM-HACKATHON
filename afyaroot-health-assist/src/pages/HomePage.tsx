@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BarChart3, Calendar, AlertTriangle, MapPin, MessageCircle, ShieldCheck, Stethoscope } from 'lucide-react';
+import { ArrowRight, BarChart3, Calendar, AlertTriangle, Download, MapPin, MessageCircle, ShieldCheck, Stethoscope, Wifi } from 'lucide-react';
+import PwaInstallButton from '@/components/PwaInstallButton';
+import { usePwa } from '@/hooks/use-pwa';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { t } from '@/services/languageService';
 import heroImage from '@/assets/hero-health.png';
@@ -16,6 +18,7 @@ const quickActions = [
 export default function HomePage() {
   const navigate = useNavigate();
   const { lang } = useLanguage();
+  const { canInstall, installLabel, isInstalled } = usePwa();
 
   return (
     <div className="space-y-6">
@@ -64,6 +67,42 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {(canInstall || isInstalled) && (
+        <section className="rounded-[1.75rem] border border-primary/15 bg-primary/5 p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Progressive Web App</p>
+              <h2 className="mt-2 text-xl font-bold text-foreground">Use AFYAROOT like a native app.</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Install it to your home screen for faster access, offline support, and a cleaner full-screen experience.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3 text-xs font-medium text-muted-foreground">
+                <span className="inline-flex items-center gap-2 rounded-full bg-background px-3 py-2">
+                  <Download className="h-3.5 w-3.5 text-primary" />
+                  Easy install
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-background px-3 py-2">
+                  <Wifi className="h-3.5 w-3.5 text-primary" />
+                  Offline after first load
+                </span>
+              </div>
+            </div>
+
+            {isInstalled ? (
+              <div className="inline-flex items-center gap-2 self-start rounded-2xl bg-success/10 px-4 py-3 text-sm font-semibold text-success">
+                <span className="h-2.5 w-2.5 rounded-full bg-success" />
+                Installed and ready offline
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 self-start lg:items-end">
+                <PwaInstallButton className="min-w-[12rem]" />
+                <p className="text-xs text-muted-foreground">{installLabel} to open faster next time.</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {quickActions.map(({ to, icon: Icon, labelKey, color, detail }) => (

@@ -14,6 +14,7 @@ import {
   Stethoscope,
 } from 'lucide-react';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import PwaInstallButton from '@/components/PwaInstallButton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { t } from '@/services/languageService';
 import { cn } from '@/lib/utils';
@@ -203,6 +204,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </div>
 
               <div className="flex shrink-0 items-center gap-2">
+                <PwaInstallButton compact className="hidden sm:inline-flex" />
                 <a
                   href="tel:999"
                   className="hidden items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-secondary sm:inline-flex"
