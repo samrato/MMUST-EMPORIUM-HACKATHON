@@ -1,0 +1,16 @@
+[project]
+name = "rural-health-guide"
+version = "1.0.0"
+description = "AI agentic triage and clinic routing for rural Kenyan healthcare."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.104.1",
+    "google-generativeai==0.8.3",
+    "supabase==2.4.0",
+    "uvicorn[standard]==0.30.0",
+    "python-multipart==0.0.9",
+    "python-dotenv==1.0.0",
+    "pydantic==2.9.0",
+    "pydantic-settings==2.5.0",
+]
