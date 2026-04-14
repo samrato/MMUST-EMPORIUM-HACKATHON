@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { t, languages, Language } from '@/services/languageService';
-import { Globe, Info } from 'lucide-react';
+import { Globe, Info, RefreshCw } from 'lucide-react';
+import { useUser } from '@/hooks/use-user';
 
 export default function SettingsPage() {
   const { lang, setLang } = useLanguage();
-  const patientId = useMemo(() => `AFR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`, []);
+  const { patientId, resetId } = useUser();
 
   return (
     <div className="space-y-6">
@@ -32,12 +32,21 @@ export default function SettingsPage() {
       </div>
 
       {/* Patient ID */}
-      <div className="bg-card border border-border rounded-2xl p-5 space-y-2">
-        <h3 className="font-semibold text-foreground">Anonymous Patient ID</h3>
+      <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-foreground">Anonymous Patient ID</h3>
+          <button 
+            onClick={resetId}
+            className="text-primary hover:text-primary/80 transition-colors p-1"
+            title="Reset Patient ID"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </div>
         <p className="text-sm font-mono bg-secondary text-secondary-foreground rounded-lg px-3 py-2">
           {patientId}
         </p>
-        <p className="text-xs text-muted-foreground">No login required. Your data stays on this device.</p>
+        <p className="text-xs text-muted-foreground">This ID is stored locally on your device to keep your data persistent.</p>
       </div>
 
       {/* About */}

@@ -1,225 +1,273 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, Bot, User, MapPin, Navigation } from 'lucide-react';
+import { Send, User, Bot, Mic, MicOff, Volume2, MapPin, Loader2, Navigation, AlertTriangle, Compass } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { t } from '@/services/languageService';
-import { getAIChatResponse } from '@/services/mockAI';
-import { facilities } from '@/services/facilityData';
+import { getGeminiResponse } from '@/services/geminiService';
+import { getNearbyHospitals, NearbyFacility } from '@/services/placesService';
+import { useVoice } from '@/hooks/use-voice';
+import { useUser } from '@/hooks/use-user';
+import { logAiInteraction } from '@/services/dataService';
 
 interface Message {
   id: string;
-  role: 'user' | 'ai';
-  text: string;
+  role: 'user' | 'assistant';
+  content: string;
   time: string;
-  facilityLink?: { name: string; lat: number; lng: number };
+  facility?: NearbyFacility;
 }
 
-interface UserLocation {
-  lat: number;
-  lng: number;
-  label: string;
+function SafeMarkdown({ content }: { content: string }) {
+  // Simple markdown-to-React transformer for basic formatting
+  const lines = content.split('\n');
+  
+  return (
+    <div className="space-y-1">
+      {lines.map((line, i) => {
+        // Handle bold text **bold**
+        const parts = line.split(/(\*\*.*?\*\*)/g);
+        const formattedLine = parts.map((part, j) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={j} className="font-extrabold text-foreground underline decoration-primary/30">{part.slice(2, -2)}</strong>;
+          }
+          return part;
+        });
+
+        // Handle list items starting with * or -
+        if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
+          return (
+            <div key={i} className="flex gap-2 pl-2 py-0.5">
+              <span className="text-primary mt-1.5 w-1 h-1 rounded-full bg-primary flex-shrink-0" />
+              <p className="text-sm leading-relaxed font-medium">{formattedLine.map(p => typeof p === 'string' ? p.replace(/^[*-\s]+/, '') : p)}</p>
+            </div>
+          );
+        }
+
+        return (
+          <p key={i} className="text-sm leading-relaxed font-medium min-h-[1em]">
+            {formattedLine}
+          </p>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function ChatAI() {
-  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const [locationStep, setLocationStep] = useState<'prompt' | 'detecting' | 'done'>('prompt');
-  const [manualLocation, setManualLocation] = useState('');
-
+  const { lang } = useLanguage();
+  const { patientId } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
-  const { lang } = useLanguage();
+  const [loading, setLoading] = useState(false);
+  const [locationStatus, setLocationStatus] = useState<'idle' | 'detecting' | 'ready' | 'error'>('idle');
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [nearbyHospitals, setNearbyHospitals] = useState<NearbyFacility[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const { isListening, startListening, stopListening, speak } = useVoice();
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
-  const detectLocation = () => {
-    setLocationStep('detecting');
+  const initLocation = () => {
+    setLocationStatus('detecting');
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude, label: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}` };
-          setUserLocation(loc);
-          setLocationStep('done');
-          initChat(loc);
+        async (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setLocation(loc);
+          const hospitals = await getNearbyHospitals(loc.lat, loc.lng);
+          setNearbyHospitals(hospitals);
+          setLocationStatus('ready');
+          
+          setMessages([
+            { 
+              id: '0', 
+              role: 'assistant', 
+              content: `Hello! 👋 I have detected your location. I can see ${hospitals.length} medical facilities nearby. \n\nHow are you feeling? Describe your symptoms, or ask me for directions to the nearest hospital.`,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }
+          ]);
         },
-        () => {
-          setLocationStep('prompt');
-          alert('Could not detect location. Please enter manually.');
-        }
+        () => setLocationStatus('error'),
+        { timeout: 10000 }
       );
     } else {
-      setLocationStep('prompt');
+      setLocationStatus('error');
     }
   };
 
-  const submitManualLocation = () => {
-    if (!manualLocation.trim()) return;
-    const loc = { lat: 0, lng: 0, label: manualLocation.trim() };
-    setUserLocation(loc);
-    setLocationStep('done');
-    initChat(loc);
-  };
+  const handleSend = async (text?: string) => {
+    const messageText = text || input;
+    if (!messageText.trim()) return;
+    const startedAt = Date.now();
 
-  const initChat = (loc: UserLocation) => {
-    const nearest = [...facilities].sort((a, b) => {
-      const distA = Math.sqrt(Math.pow(a.location.lat - loc.lat, 2) + Math.pow(a.location.lng - loc.lng, 2));
-      const distB = Math.sqrt(Math.pow(b.location.lat - loc.lat, 2) + Math.pow(b.location.lng - loc.lng, 2));
-      return distA - distB;
-    })[0];
-
-    setMessages([
-      {
-        id: '0', role: 'ai',
-        text: `Hello! 👋 I'm your AFYAROOT AI health assistant.\n\n📍 Your location: ${loc.label}\n🏥 Nearest facility: ${nearest.name} (${nearest.distance} km)\n\nDescribe your symptoms and I'll help guide you to the right care.`,
-        time: now(),
-        facilityLink: { name: nearest.name, lat: nearest.location.lat, lng: nearest.location.lng },
-      },
-    ]);
-  };
-
-  const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input, time: now() };
-    setMessages(prev => [...prev, userMsg]);
+    const userMessage: Message = { 
+      id: Date.now().toString(),
+      role: 'user', 
+      content: messageText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
-    setIsTyping(true);
+    setLoading(true);
 
-    setTimeout(() => {
-      const response = getAIChatResponse(userMsg.text);
+    const context = {
+      language: lang,
+      user_location: location,
+      nearby_facilities: nearbyHospitals.slice(0, 5).map(h => ({
+        name: h.name,
+        address: h.address,
+        distance: h.distance,
+        open: h.open_now
+      }))
+    };
 
-      // Check if response suggests a facility
-      const keywords = ['hospital', 'facility', 'clinic', 'emergency', 'visit'];
-      const suggestFacility = keywords.some(k => response.toLowerCase().includes(k));
-      const nearest = userLocation
-        ? [...facilities].sort((a, b) => {
-            const distA = Math.sqrt(Math.pow(a.location.lat - userLocation.lat, 2) + Math.pow(a.location.lng - userLocation.lng, 2));
-            const distB = Math.sqrt(Math.pow(b.location.lat - userLocation.lat, 2) + Math.pow(b.location.lng - userLocation.lng, 2));
-            return distA - distB;
-          })[0]
-        : facilities[0];
+    const aiResponse = await getGeminiResponse(messageText, context);
+    const mentionedHospital = nearbyHospitals.find(h => aiResponse.toLowerCase().includes(h.name.toLowerCase())) || nearbyHospitals[0];
 
-      const directionText = suggestFacility
-        ? `\n\n🏥 Recommended: ${nearest.name}\n📍 ${nearest.distance} km away • ${nearest.availability}% available`
-        : '';
+    const assistantMessage: Message = { 
+      id: (Date.now() + 1).toString(),
+      role: 'assistant', 
+      content: aiResponse,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      ...(aiResponse.toLowerCase().match(/direction|route|how to get|navigate|go to/) ? { facility: mentionedHospital } : {})
+    };
+    
+    setMessages(prev => [...prev, assistantMessage]);
+    setLoading(false);
+    speak(aiResponse.replace(/[#*]/g, ''));
 
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'ai',
-        text: response + directionText,
-        time: now(),
-        ...(suggestFacility ? { facilityLink: { name: nearest.name, lat: nearest.location.lat, lng: nearest.location.lng } } : {}),
-      }]);
-      setIsTyping(false);
-    }, 1200);
+    void logAiInteraction({
+      patientId,
+      messageType: "chat",
+      language: lang,
+      inputText: messageText,
+      responseText: aiResponse,
+      durationMs: Date.now() - startedAt,
+    }).catch((error: unknown) => {
+      console.error("Failed to store chat interaction:", error);
+    });
   };
 
-  // Location capture screen
-  if (locationStep !== 'done') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] fade-slide-up space-y-5">
-        <div className="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center">
-          <MapPin className="h-10 w-10 text-primary" />
-        </div>
-        <h2 className="text-xl font-bold text-foreground text-center">Share Your Location</h2>
-        <p className="text-sm text-muted-foreground text-center max-w-xs">
-          We need your location to find the nearest facilities and give you accurate health guidance.
-        </p>
+  const toggleMic = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening((text) => handleSend(text));
+    }
+  };
 
-        {locationStep === 'detecting' ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            Detecting location...
+  if (locationStatus !== 'ready') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center space-y-6">
+        <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 ${locationStatus === 'detecting' ? 'bg-primary/10 animate-pulse' : 'bg-secondary'}`}>
+          <MapPin className={`h-12 w-12 ${locationStatus === 'detecting' ? 'text-primary' : 'text-muted-foreground'}`} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-foreground">AI Health Assistant</h2>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            Before we start, I need your location to guide you to the right medical facilities.
+          </p>
+        </div>
+        
+        {locationStatus === 'idle' && (
+          <button onClick={initLocation} className="bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-black shadow-lg flex items-center gap-2 active:scale-95 transition-all">
+            Start AI Consultation
+          </button>
+        )}
+        
+        {locationStatus === 'detecting' && (
+          <div className="flex items-center gap-2 text-primary font-bold">
+            <Loader2 className="h-5 w-5 animate-spin" /> Identifying Location...
           </div>
-        ) : (
-          <>
-            <button onClick={detectLocation} className="w-full max-w-xs bg-primary text-primary-foreground rounded-xl py-3.5 font-bold flex items-center justify-center gap-2">
-              <MapPin className="h-5 w-5" /> Auto-Detect My Location
+        )}
+        
+        {locationStatus === 'error' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-emergency font-bold justify-center">
+              <AlertTriangle className="h-5 w-5" /> Location Access Denied
+            </div>
+            <button onClick={initLocation} className="bg-secondary text-secondary-foreground px-6 py-3 rounded-xl font-bold">
+              Try Again
             </button>
-            <div className="flex items-center gap-3 w-full max-w-xs">
-              <hr className="flex-1 border-border" /><span className="text-xs text-muted-foreground">or</span><hr className="flex-1 border-border" />
-            </div>
-            <div className="w-full max-w-xs space-y-2">
-              <input
-                value={manualLocation}
-                onChange={e => setManualLocation(e.target.value)}
-                placeholder="Enter your area (e.g. Kapsabet, Nandi)"
-                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
-              />
-              <button onClick={submitManualLocation} disabled={!manualLocation.trim()} className="w-full bg-secondary text-secondary-foreground rounded-xl py-3 font-semibold disabled:opacity-40">
-                Continue with this location
-              </button>
-            </div>
-          </>
+          </div>
         )}
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100dvh-10rem)] min-h-[34rem] max-h-[56rem] flex-col">
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-xl font-bold text-foreground">💬 {t('chat', lang)}</h1>
-        {userLocation && (
-          <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary rounded-full px-2 py-1">
-            <MapPin className="h-3 w-3" /> {userLocation.label.slice(0, 20)}
-          </span>
-        )}
+    <div className="flex flex-col h-[calc(100vh-140px)] max-w-2xl mx-auto w-full px-2">
+      <div className="flex items-center justify-between mb-4 bg-background/80 backdrop-blur-sm py-2 sticky top-0 z-10">
+        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">🤖 {t('aiAssistant', lang)}</h1>
+        <div className="flex items-center gap-1 text-[10px] bg-success/10 text-success px-3 py-1 rounded-full font-black uppercase tracking-widest">
+          <Compass className="h-3 w-3" /> Navigation Active
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 pb-4">
-        {messages.map(msg => (
-          <div key={msg.id} className={`flex gap-2 fade-slide-up ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'ai' ? 'bg-primary text-primary-foreground' : 'bg-accent text-accent-foreground'}`}>
-              {msg.role === 'ai' ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
-            </div>
-            <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-br-md' : 'bg-card border border-border text-foreground rounded-bl-md'}`}>
-              <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-              {msg.facilityLink && (
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${msg.facilityLink.lat},${msg.facilityLink.lng}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary bg-primary/10 rounded-lg px-2.5 py-1.5"
-                >
-                  <Navigation className="h-3 w-3" /> Get Directions to {msg.facilityLink.name.split(' ').slice(0, 2).join(' ')}
-                </a>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 pr-2 pb-4 scrollbar-hide">
+        {messages.map((m) => (
+          <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+            <div className={`max-w-[90%] rounded-2xl p-4 shadow-sm ${
+              m.role === 'user' 
+                ? 'bg-primary text-primary-foreground rounded-tr-none' 
+                : 'bg-card border border-border text-foreground rounded-tl-none'
+            }`}>
+              <div className="flex items-center gap-2 mb-1.5 opacity-60">
+                {m.role === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+                <span className="text-[10px] font-black uppercase tracking-widest">{m.role}</span>
+              </div>
+              {m.role === 'assistant' ? (
+                <SafeMarkdown content={m.content} />
+              ) : (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{m.content}</p>
               )}
-              <p className={`text-[10px] mt-1 ${msg.role === 'user' ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>{msg.time}</p>
+              
+              {m.facility && (
+                <div className="mt-3 p-3 bg-secondary/50 rounded-xl border border-primary/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Navigation className="h-3 w-3 text-primary" />
+                    <p className="text-[10px] font-black uppercase text-primary">AI Route Guidance Active</p>
+                  </div>
+                  <p className="text-xs font-bold">{m.facility.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{m.facility.address}</p>
+                  <button 
+                    onClick={() => speak(`I am guiding you to ${m.facility?.name}. Please listen to the instructions I provided in the chat.`)}
+                    className="mt-2 w-full bg-primary/10 text-primary py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                  >
+                    <Volume2 className="h-3 w-3" /> Replay Voice Guide
+                  </button>
+                </div>
+              )}
+
+              {m.role === 'assistant' && (
+                <button onClick={() => speak(m.content.replace(/[#*]/g, ''))} className="mt-2 text-primary p-1">
+                  <Volume2 className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
         ))}
-        {isTyping && (
-          <div className="flex gap-2 items-end">
-            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-              <Bot className="h-4 w-4" />
-            </div>
-            <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-3">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-card border border-border rounded-2xl rounded-tl-none p-4 flex items-center gap-3">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground font-black uppercase tracking-widest animate-pulse">Calculating Route...</span>
             </div>
           </div>
         )}
-        <div ref={endRef} />
       </div>
 
-      {/* Input */}
-      <div className="flex gap-2 pt-2 border-t border-border">
-        <button className="bg-secondary text-secondary-foreground rounded-xl px-3">
-          <Mic className="h-5 w-5" />
+      <div className="mt-4 flex gap-2 items-center bg-card border border-border p-2 rounded-2xl shadow-lg">
+        <button onClick={toggleMic} className={`p-4 rounded-xl transition-all ${isListening ? 'bg-emergency text-white animate-pulse shadow-lg scale-110' : 'bg-secondary text-secondary-foreground'}`}>
+          {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </button>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && sendMessage()}
-          placeholder={t('typeMessage', lang)}
-          className="flex-1 bg-card border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring"
-        />
-        <button onClick={sendMessage} disabled={!input.trim()} className="bg-primary text-primary-foreground rounded-xl px-4 disabled:opacity-50">
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} placeholder="Ask for a hospital or route..." className="flex-1 bg-transparent border-none outline-none text-sm px-2 text-foreground font-bold" />
+        <button onClick={() => handleSend()} disabled={loading || !input.trim()} className="bg-primary text-primary-foreground p-4 rounded-xl shadow-md">
           <Send className="h-5 w-5" />
         </button>
       </div>
