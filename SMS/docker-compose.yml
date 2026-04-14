@@ -1,0 +1,26 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  sms:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Use Mongo for context/charts storage when running in Docker
+      - MONGO_URL=mongodb://mongo:27017/afyroot_sms
+      - PORT=4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
+

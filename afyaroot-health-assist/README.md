@@ -9,7 +9,7 @@ AFYAROOT Health Assist is a Vite + React application designed to provide AI-guid
 *   **Emergency Response Panel:** Provides tools and information for emergency situations, including voice + text turn-by-turn guidance to the nearest facility.
 *   **Chat AI Assistant:** An interactive chat interface for health queries and guidance.
 *   **Facility Discovery:** Helps locate nearby health facilities.
-*   **Analytics/Admin Monitoring:** Provides insights, anonymous user tracking, and request activity monitoring for support teams.
+*   **Analytics/Admin Monitoring:** Provides insights, anonymous user tracking, emergency alert review queue, and AI-guided location/direction follow-up support for admin teams.
 *   **Booking:** Functionality to book appointments or services.
 *   **Settings:** User preferences and application configuration.
 
@@ -58,7 +58,30 @@ Create `afyaroot-health-assist/.env.local` and set:
 
 ```bash
 VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+# Optional shared admin code for /admin/login.
+VITE_ADMIN_ACCESS_CODE=your_private_admin_code
+# Optional facility-specific codes (overrides defaults/shared code per facility).
+# Format: facility-id:code,facility-id:code
+VITE_ADMIN_FACILITY_PINS=kapsabet:1234,nandi-hills:5678
 ```
+
+Default facility codes when `VITE_ADMIN_FACILITY_PINS` is not set:
+
+- `kapsabet=1111`
+- `nandi-hills=2222`
+- `chepterit=3333`
+- `kabiyet=4444`
+- `mosoriot=5555`
+
+## Admin side routes
+
+The app now uses a dedicated admin side:
+
+- `/admin/login` - facility admin login
+- `/admin/dashboard` - overview and emergency queue
+- `/admin/analytics` - monitoring and trends
+- `/admin/bookings` - appointment operations
+- `/admin/settings` - facility configuration
 
 ## Verify
 

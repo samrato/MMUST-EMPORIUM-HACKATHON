@@ -11,7 +11,7 @@ const quickActions = [
   { to: '/emergency', icon: AlertTriangle, labelKey: 'emergencyHelp' as const, color: 'bg-emergency text-emergency-foreground', detail: 'Open urgent response tools and contacts' },
   { to: '/facilities', icon: MapPin, labelKey: 'findFacility' as const, color: 'bg-accent text-accent-foreground', detail: 'Browse nearby hospitals and clinics' },
   { to: '/chat', icon: MessageCircle, labelKey: 'talkToAI' as const, color: 'bg-warning text-warning-foreground', detail: 'Ask for guidance in plain language' },
-  { to: '/analytics', icon: BarChart3, labelKey: 'liveAnalytics' as const, color: 'bg-secondary text-secondary-foreground', detail: 'Track cases and facility load' },
+  { to: '/admin/login', icon: BarChart3, labelKey: 'liveAnalytics' as const, color: 'bg-secondary text-secondary-foreground', detail: 'Admin oversight, alerts, and reports' },
   { to: '/booking', icon: Calendar, labelKey: 'bookAppointment' as const, color: 'bg-success text-success-foreground', detail: 'Schedule an appointment or follow-up' },
 ];
 

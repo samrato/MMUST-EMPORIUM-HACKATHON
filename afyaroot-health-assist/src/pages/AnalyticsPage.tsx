@@ -3,10 +3,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { t } from '@/services/languageService';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { supabase } from '@/lib/supabase';
-import { AlertTriangle, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Check, Loader2, MapPin, Navigation, ShieldCheck } from 'lucide-react';
 import {
+  EmergencyAdminAlert,
   AnonymousRequestLog,
   AnonymousUserActivitySummary,
+  getEmergencyAlertsForAdmin,
   getAnonymousUserActivity,
   getRecentAnonymousRequests,
 } from '@/services/dataService';
@@ -45,11 +47,48 @@ function formatDateTime(iso: string) {
   return parsed.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+const REVIEWED_ALERTS_STORAGE_KEY = 'afyaroot-reviewed-emergency-alerts';
+
+function loadReviewedAlertIds() {
+  if (typeof window === 'undefined' || !window.localStorage) return [] as string[];
+  const raw = window.localStorage.getItem(REVIEWED_ALERTS_STORAGE_KEY);
+  if (!raw) return [] as string[];
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [] as string[];
+    return parsed.filter((value): value is string => typeof value === 'string');
+  } catch (error: unknown) {
+    console.error('Failed to parse reviewed emergency alerts from local storage:', error);
+    return [] as string[];
+  }
+}
+
+function persistReviewedAlertIds(alertIds: string[]) {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  window.localStorage.setItem(REVIEWED_ALERTS_STORAGE_KEY, JSON.stringify(alertIds));
+}
+
+function buildDirectionsLink(alert: EmergencyAdminAlert) {
+  if (alert.coordinates && alert.destinationName) {
+    return `https://www.google.com/maps/dir/?api=1&origin=${alert.coordinates.lat},${alert.coordinates.lng}&destination=${encodeURIComponent(alert.destinationName)}`;
+  }
+  if (alert.coordinates) {
+    return `https://www.google.com/maps/search/?api=1&query=${alert.coordinates.lat},${alert.coordinates.lng}`;
+  }
+  if (alert.destinationName) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(alert.destinationName)}`;
+  }
+  return null;
+}
+
 export default function AnalyticsPage() {
   const { lang } = useLanguage();
   const [stats, setStats] = useState({ today: 0, emergency: 0, facilities: 6 });
   const [anonymousUsers, setAnonymousUsers] = useState<AnonymousUserActivitySummary[]>([]);
   const [recentRequests, setRecentRequests] = useState<AnonymousRequestLog[]>([]);
+  const [emergencyAlerts, setEmergencyAlerts] = useState<EmergencyAdminAlert[]>([]);
+  const [reviewedAlertIds, setReviewedAlertIds] = useState<string[]>(() => loadReviewedAlertIds());
   const [loadingTracking, setLoadingTracking] = useState(true);
   const [trackingError, setTrackingError] = useState<string | null>(null);
 
@@ -78,12 +117,14 @@ export default function AnalyticsPage() {
     setLoadingTracking(true);
     setTrackingError(null);
     try {
-      const [users, requests] = await Promise.all([
+      const [users, requests, alerts] = await Promise.all([
         getAnonymousUserActivity(30),
         getRecentAnonymousRequests(50),
+        getEmergencyAlertsForAdmin(40),
       ]);
       setAnonymousUsers(users);
       setRecentRequests(requests);
+      setEmergencyAlerts(alerts);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to load admin tracking data.';
       setTrackingError(message);
@@ -124,6 +165,20 @@ export default function AnalyticsPage() {
       ).length,
     [recentRequests, todayIsoDate]
   );
+  const reviewedAlertSet = useMemo(() => new Set(reviewedAlertIds), [reviewedAlertIds]);
+  const openEmergencyAlerts = useMemo(
+    () => emergencyAlerts.filter((alert) => !reviewedAlertSet.has(alert.id)),
+    [emergencyAlerts, reviewedAlertSet]
+  );
+
+  const markAlertAsReviewed = useCallback((alertId: string) => {
+    setReviewedAlertIds((previous) => {
+      if (previous.includes(alertId)) return previous;
+      const updated = [...previous, alertId];
+      persistReviewedAlertIds(updated);
+      return updated;
+    });
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -196,6 +251,115 @@ export default function AnalyticsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl p-4 space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-emergency" />
+              Emergency Alert Review Queue
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Admin can review emergency alerts, confirm patient location, and follow AI guidance for safe directions.
+            </p>
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-emergency/10 text-emergency">
+            Open Alerts: {openEmergencyAlerts.length}
+          </span>
+        </div>
+
+        {loadingTracking ? (
+          <div className="flex items-center gap-2 py-3">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            <p className="text-xs text-muted-foreground">Loading emergency alert queue...</p>
+          </div>
+        ) : trackingError ? (
+          <div className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs text-warning flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5" />
+            <p>{trackingError}</p>
+          </div>
+        ) : emergencyAlerts.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No emergency alerts are waiting for admin review.</p>
+        ) : (
+          <div className="space-y-3 max-h-[28rem] overflow-y-auto pr-1">
+            {emergencyAlerts.slice(0, 16).map((alert) => {
+              const reviewed = reviewedAlertSet.has(alert.id);
+              const directionsLink = buildDirectionsLink(alert);
+
+              return (
+                <div
+                  key={alert.id}
+                  className={`rounded-xl border p-3 ${
+                    reviewed ? 'border-success/30 bg-success/5' : 'border-emergency/30 bg-emergency/5'
+                  }`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="text-[11px] font-mono text-foreground">{alert.patientId}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {alert.sourceLabel} • {formatDateTime(alert.triggeredAt)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => markAlertAsReviewed(alert.id)}
+                      disabled={reviewed}
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest transition ${
+                        reviewed
+                          ? 'bg-success/20 text-success cursor-not-allowed'
+                          : 'bg-emergency text-emergency-foreground hover:brightness-110'
+                      }`}
+                    >
+                      {reviewed ? <Check className="h-3 w-3" /> : null}
+                      {reviewed ? 'Reviewed' : 'Mark Reviewed'}
+                    </button>
+                  </div>
+
+                  <div className="mt-2 space-y-1">
+                    <p className="text-[11px] text-foreground/90 flex items-start gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 mt-0.5 text-primary flex-shrink-0" />
+                      <span><span className="font-semibold">Patient location:</span> {alert.locationLabel}</span>
+                    </p>
+                    <p className="text-[11px] text-foreground/90">
+                      <span className="font-semibold">Emergency destination:</span> {alert.destinationName || 'Nearest available emergency facility'}
+                    </p>
+                    {alert.routeSummary && (
+                      <p className="text-[10px] text-muted-foreground">
+                        <span className="font-semibold text-foreground/80">Latest route context:</span> {alert.routeSummary}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-3 rounded-lg border border-border bg-background/60 p-2.5">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">
+                      AI Guidance
+                    </p>
+                    <ol className="space-y-1.5">
+                      {alert.aiGuidance.slice(0, 3).map((step, index) => (
+                        <li key={`${alert.id}-guidance-${index}`} className="text-[11px] text-foreground/85 flex gap-1.5">
+                          <span className="font-black text-primary">{index + 1}.</span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  {directionsLink && (
+                    <a
+                      href={directionsLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary"
+                    >
+                      <Navigation className="h-3.5 w-3.5" />
+                      Open Directions
+                    </a>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

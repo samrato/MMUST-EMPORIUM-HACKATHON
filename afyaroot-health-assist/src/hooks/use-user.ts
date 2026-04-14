@@ -8,21 +8,36 @@ export function generatePatientId() {
 
 export function useUser() {
   const [patientId, setPatientId] = useState<string>(() => {
-    return localStorage.getItem(STORAGE_KEY) || '';
+    if (typeof window === 'undefined') return generatePatientId();
+
+    try {
+      const existing = localStorage.getItem(STORAGE_KEY);
+      if (existing) return existing;
+      const newId = generatePatientId();
+      localStorage.setItem(STORAGE_KEY, newId);
+      return newId;
+    } catch {
+      return generatePatientId();
+    }
   });
 
   useEffect(() => {
-    if (!patientId) {
-      const newId = generatePatientId();
-      setPatientId(newId);
-      localStorage.setItem(STORAGE_KEY, newId);
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(STORAGE_KEY, patientId);
+    } catch {
+      // ignore storage errors (privacy modes / blocked storage)
     }
   }, [patientId]);
 
   const resetId = () => {
     const newId = generatePatientId();
     setPatientId(newId);
-    localStorage.setItem(STORAGE_KEY, newId);
+    try {
+      localStorage.setItem(STORAGE_KEY, newId);
+    } catch {
+      // ignore
+    }
   };
 
   return { patientId, resetId };

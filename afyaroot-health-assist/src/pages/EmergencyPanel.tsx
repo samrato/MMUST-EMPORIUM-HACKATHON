@@ -13,6 +13,46 @@ import { useVoice } from '@/hooks/use-voice';
 import { useUser } from '@/hooks/use-user';
 import { logAiInteraction } from '@/services/dataService';
 
+interface UserCoordinates {
+  lat: number;
+  lng: number;
+}
+
+function rankHospitalsByDistance(source: UserCoordinates, facilities: NearbyFacility[]) {
+  return facilities
+    .map((facility) => ({
+      ...facility,
+      distance: parseFloat(calculateDistance(source.lat, source.lng, facility.location.lat, facility.location.lng).toFixed(1)),
+    }))
+    .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+}
+
+async function findNearestHospital(source: UserCoordinates) {
+  const data = await getNearbyHospitals(source.lat, source.lng);
+  if (data.length === 0) return null;
+  return rankHospitalsByDistance(source, data)[0] || null;
+}
+
+function requestBrowserLocation(timeoutMs = 7000) {
+  if (!navigator.geolocation) return Promise.resolve(null as UserCoordinates | null);
+
+  return new Promise<UserCoordinates | null>((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        resolve({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+      },
+      (error) => {
+        console.error('Emergency geolocation request failed:', error);
+        resolve(null);
+      },
+      { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 1000 }
+    );
+  });
+}
+
 export default function EmergencyPanel() {
   const { lang } = useLanguage();
   const { patientId } = useUser();
@@ -20,7 +60,7 @@ export default function EmergencyPanel() {
   const [dispatched, setDispatched] = useState(false);
   const [dispatchTime, setDispatchTime] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLoc, setUserLoc] = useState<UserCoordinates | null>(null);
   const [nearestHospital, setNearestHospital] = useState<NearbyFacility | null>(null);
   const [route, setRoute] = useState<EmergencyRouteInstructions | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
@@ -33,18 +73,12 @@ export default function EmergencyPanel() {
           const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setUserLoc(loc);
           try {
-            const data = await getNearbyHospitals(pos.coords.latitude, pos.coords.longitude);
-            if (data.length > 0) {
-            const withDistance = data.map(f => ({
-              ...f,
-              distance: parseFloat(calculateDistance(loc.lat, loc.lng, f.location.lat, f.location.lng).toFixed(1))
-            })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
-            setNearestHospital(withDistance[0]);
-          }
+            const nearest = await findNearestHospital(loc);
+            if (nearest) setNearestHospital(nearest);
           } catch (err) {
             console.error(err);
           } finally {
-          setLoading(false);
+            setLoading(false);
           }
         },
         (err) => {
@@ -116,21 +150,49 @@ export default function EmergencyPanel() {
     };
   }, [stopSpeaking]);
 
-  const handleEmergencyDispatch = () => {
+  const handleEmergencyDispatch = async () => {
     if (dispatched) return;
 
     setDispatched(true);
     const nowIso = new Date().toISOString();
     setDispatchTime(nowIso);
 
+    let resolvedLocation = userLoc;
+    let resolvedHospital = nearestHospital;
+
+    if (!resolvedLocation) {
+      resolvedLocation = await requestBrowserLocation();
+      if (resolvedLocation) {
+        setUserLoc(resolvedLocation);
+      }
+    }
+
+    if (resolvedLocation && !resolvedHospital) {
+      try {
+        resolvedHospital = await findNearestHospital(resolvedLocation);
+        if (resolvedHospital) {
+          setNearestHospital(resolvedHospital);
+        }
+      } catch (error: unknown) {
+        console.error('Failed to resolve nearest hospital on emergency dispatch:', error);
+      }
+    }
+
+    const coordinateSummary = resolvedLocation
+      ? `${resolvedLocation.lat.toFixed(4)}, ${resolvedLocation.lng.toFixed(4)}`
+      : "Unavailable";
+    const destinationSummary = resolvedHospital
+      ? `${resolvedHospital.name} (${resolvedHospital.location.lat.toFixed(4)}, ${resolvedHospital.location.lng.toFixed(4)})`
+      : "Nearest facility pending";
+
     void logAiInteraction({
       patientId,
       messageType: "emergency_alert",
       language: lang,
-      inputText: "Emergency call button pressed.",
-      responseText: "Emergency workflow activated and nearest facility lookup started.",
-      durationMs: 0,
-    }).catch((error: unknown) => {
+        inputText: `Emergency call button pressed. Coordinates: ${coordinateSummary}.`,
+        responseText: `Emergency workflow activated. Destination target: ${destinationSummary}.`,
+        durationMs: 0,
+      }).catch((error: unknown) => {
       console.error("Failed to store emergency alert event:", error);
     });
   };
@@ -152,7 +214,7 @@ export default function EmergencyPanel() {
 
       {/* Big Emergency Button */}
       <button
-        onClick={handleEmergencyDispatch}
+        onClick={() => { void handleEmergencyDispatch(); }}
         disabled={loading}
         className={`w-full rounded-[40px] py-16 flex flex-col items-center gap-6 font-black text-3xl transition-all shadow-2xl relative overflow-hidden group active:scale-95 ${
           dispatched

@@ -2,7 +2,6 @@ import { ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   AlertTriangle,
-  BarChart3,
   Calendar,
   Home,
   MapPin,
@@ -25,13 +24,11 @@ const navItems = [
   { to: '/emergency', icon: AlertTriangle, labelKey: 'emergency' as const, description: 'Urgent response and ambulance flow' },
   { to: '/chat', icon: MessageCircle, labelKey: 'chat' as const, description: 'Ask the health assistant anything' },
   { to: '/facilities', icon: MapPin, labelKey: 'facilities' as const, description: 'Nearby hospitals and clinics' },
-  { to: '/analytics', icon: BarChart3, labelKey: 'analytics' as const, description: 'Live case and capacity trends' },
   { to: '/booking', icon: Calendar, labelKey: 'booking' as const, description: 'Book appointments and follow-ups' },
   { to: '/settings', icon: Settings, labelKey: 'settings' as const, description: 'Language and device preferences' },
 ];
 
 function SidebarPanel({ mobile = false }: { mobile?: boolean }) {
-  const { pathname } = useLocation();
   const { lang } = useLanguage();
 
   return (

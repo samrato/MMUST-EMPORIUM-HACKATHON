@@ -5,7 +5,7 @@ import { t } from '@/services/languageService';
 import { useUser } from '@/hooks/use-user';
 import { useToast } from '@/hooks/use-toast';
 import { getNearbyHospitals, NearbyFacility, calculateDistance } from '@/services/placesService';
-import { AppointmentRecord, createAppointment, getAppointmentsByPatientId, logAiInteraction, normalizeText } from '@/services/dataService';
+import { AppointmentRecord, createAppointment, getAppointmentsByPatientId, logAiInteraction, normalizePatientId } from '@/services/dataService';
 
 const timeSlots = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
 
@@ -46,7 +46,7 @@ export default function BookingPage() {
   });
 
   const loadMyAppointments = useCallback(async (idToLookup: string) => {
-    const normalizedId = normalizeText(idToLookup);
+    const normalizedId = normalizePatientId(idToLookup);
     const startedAt = Date.now();
     if (!normalizedId) {
       toast({
