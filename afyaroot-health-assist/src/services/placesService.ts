@@ -70,14 +70,87 @@ const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?locati
 
 function getFallbackFacilities(lat: number, lng: number): NearbyFacility[] {
   return [
-    { id: "m1", name: "Kapsabet County Referral", address: "Kapsabet-Chavakali Rd", rating: 4.2, user_ratings_total: 450, location: { lat: lat + 0.05, lng: lng + 0.02 }, open_now: true, types: ["hospital"] },
-    { id: "m2", name: "Nandi Hills Sub-County Hospital", address: "Hospital Rd, Nandi Hills", rating: 4.0, user_ratings_total: 230, location: { lat: lat - 0.08, lng: lng + 0.1 }, open_now: true, types: ["hospital"] },
-    { id: "m3", name: "St. Jude's Medical Center", address: "Main Highway, Eldoret South", rating: 4.7, user_ratings_total: 120, location: { lat: lat + 0.12, lng: lng - 0.05 }, open_now: true, types: ["hospital"] },
-    { id: "m4", name: "Kilibwoni Health Centre", address: "Kilibwoni Center", rating: 3.8, user_ratings_total: 85, location: { lat: lat - 0.04, lng: lng - 0.03 }, open_now: true, types: ["health_center"] },
-    { id: "m5", name: "Baraton University Hospital", address: "Baraton", rating: 4.5, user_ratings_total: 190, location: { lat: lat + 0.03, lng: lng - 0.08 }, open_now: true, types: ["hospital"] },
-    { id: "m6", name: "Mosoriot Rural Health Training Centre", address: "Eldoret-Kapsabet Rd", rating: 4.1, user_ratings_total: 310, location: { lat: lat + 0.15, lng: lng + 0.05 }, open_now: true, types: ["health_center"] },
-    { id: "m7", name: "Chepterit Mission Dispensary", address: "Chepterit", rating: 4.4, user_ratings_total: 65, location: { lat: lat + 0.02, lng: lng + 0.01 }, open_now: true, types: ["dispensary"] },
-  ];
+ {
+  id: "m1",
+  name: "MMUST Clinic",
+  address: "Comrades Way, MMUST Campus, Kakamega",
+  rating: 4.4,
+  user_ratings_total: 80,
+  location: { lat: lat + 0.0002, lng: lng + 0.0002 },
+  open_now: true,
+  types: ["clinic", "health"]
+},
+  {
+    id: "m2",
+    name: "Kakamega County General Hospital",
+    address: "Hospital Road, Kakamega",
+    rating: 4.1,
+    user_ratings_total: 320,
+    location: { lat: lat - 0.02, lng: lng - 0.005 },
+    open_now: true,
+    types: ["hospital", "general_hospital"]
+  },
+  {
+    id: "m3",
+    name: "New Kakamega Referral Hospital",
+    address: "Hospital Road, Kakamega",
+    rating: 4.0,
+    user_ratings_total: 240,
+    location: { lat: lat - 0.025, lng: lng + 0.002 },
+    open_now: true,
+    types: ["hospital", "referral_hospital"]
+  },
+  {
+    id: "m4",
+    name: "Jumuia Hospitals",
+    address: "Kisumu-Kakamega Road, Kakamega",
+    rating: 4.2,
+    user_ratings_total: 170,
+    location: { lat: lat + 0.01, lng: lng - 0.015 },
+    open_now: true,
+    types: ["hospital", "general_hospital"]
+  },
+  {
+    id: "m5",
+    name: "Nala Hospital",
+    address: "Kakamega-Mumias Road, Kakamega",
+    rating: 4.0,
+    user_ratings_total: 130,
+    location: { lat: lat + 0.008, lng: lng - 0.02 },
+    open_now: true,
+    types: ["hospital"]
+  },
+  {
+    id: "m6",
+    name: "Kakamega Central Nursing Home",
+    address: "Kakamega Town, Kakamega",
+    rating: 3.9,
+    user_ratings_total: 90,
+    location: { lat: lat + 0.012, lng: lng - 0.01 },
+    open_now: true,
+    types: ["clinic", "nursing_home"]
+  },
+  {
+    id: "m7",
+    name: "St Elizabeth Mukumu Hospital",
+    address: "E237, Mukumu, Kakamega",
+    rating: 4.3,
+    user_ratings_total: 210,
+    location: { lat: lat - 0.07, lng: lng + 0.01 },
+    open_now: true,
+    types: ["hospital", "general_hospital"]
+  },
+  {
+    id: "m8",
+    name: "Shikokho Health Clinic",
+    address: "Shikokho, Kakamega County",
+    rating: 3.8,
+    user_ratings_total: 70,
+    location: { lat: lat - 0.1, lng: lng - 0.04 },
+    open_now: true,
+    types: ["clinic", "health_center"]
+  }
+];
 }
 
 export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
