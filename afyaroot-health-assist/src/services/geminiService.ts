@@ -30,6 +30,33 @@ function toEngineLanguage(language?: unknown): "en" | "sw" {
   return language === "sw" ? "sw" : "en";
 }
 
+function getSymptomOutputLanguage(language?: Language) {
+  switch (language) {
+    case "sw":
+      return { code: "sw", label: "Kiswahili" };
+    case "lu":
+      return { code: "lu", label: "Dholuo (Luo)" };
+    case "kl":
+      return { code: "kl", label: "Kalenjin" };
+    case "lh":
+      return { code: "lh", label: "Luhya" };
+    default:
+      return { code: "en", label: "English" };
+  }
+}
+
+function toStringArray(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function toUrgency(value: unknown): EngineUrgency {
+  if (value === "low" || value === "medium" || value === "high" || value === "emergency") {
+    return value;
+  }
+  return "medium";
+}
+
 export async function getVoiceDirections(
   userLoc: { lat: number; lng: number },
   destination: VoiceDirectionDestination,
@@ -98,19 +125,35 @@ export async function analyzeSymptomsWithAI(
   symptoms: string,
   options?: { language?: Language; nearbyHospitals?: NearbyHospitalInput[] }
 ): Promise<SymptomAnalysisResult | null> {
-  const langLabel = options?.language === "sw" ? "Swahili" : "English";
+  const outputLanguage = getSymptomOutputLanguage(options?.language);
   
   const prompt = `
-    You are a medical triage assistant in Kenya.
-    User Input: "${symptoms}"
-    Language: ${langLabel}
+    You are a medical symptom triage assistant for an educational health support application.
+    Your role is to analyze user-reported symptoms and return structured, safe, non-diagnostic health guidance.
+    You do NOT diagnose diseases. You only provide possible conditions, urgency guidance, and safe next steps.
 
-    Analyze the symptoms and return ONLY a JSON object with:
-    - condition (string)
-    - urgency (string: "low", "medium", "high", "emergency")
-    - description (string)
-    - recommendations (string[])
-    - warnings (string[])
+    Context:
+    - Country context: Kenya
+    - User symptom input: "${symptoms}"
+    - Preferred response language: ${outputLanguage.label} (code: ${outputLanguage.code})
+
+    Safety and response rules:
+    - Never claim a confirmed diagnosis.
+    - Keep language simple, clear, and patient-friendly.
+    - Include emergency red-flag action when severity is high.
+    - If symptoms are unclear or insufficient, state that clearly and ask for better symptom detail.
+    - Keep urgency value in English enum only: "low" | "medium" | "high" | "emergency".
+    - Write all other fields in ${outputLanguage.label}.
+    - Return valid JSON only (no markdown, no code fence, no extra text).
+
+    Return EXACTLY this JSON shape:
+    {
+      "condition": "string",
+      "urgency": "low | medium | high | emergency",
+      "description": "string",
+      "recommendations": ["string", "string"],
+      "warnings": ["string", "string"]
+    }
   `;
 
   try {
@@ -118,31 +161,51 @@ export async function analyzeSymptomsWithAI(
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Could not parse JSON from AI");
 
-    const aiResult = JSON.parse(jsonMatch[0]);
+    const aiResult = JSON.parse(jsonMatch[0]) as {
+      condition?: unknown;
+      urgency?: unknown;
+      description?: unknown;
+      recommendations?: unknown;
+      warnings?: unknown;
+    };
+    const recommendations = toStringArray(aiResult.recommendations);
+    const warnings = toStringArray(aiResult.warnings);
+    const guidance = [...new Set([...recommendations, ...warnings])];
+    const condition = typeof aiResult.condition === "string" && aiResult.condition.trim()
+      ? aiResult.condition.trim()
+      : outputLanguage.code === "en"
+        ? "Medical Assessment Required"
+        : "Tathmini ya daktari inahitajika";
+    const description = typeof aiResult.description === "string" && aiResult.description.trim()
+      ? aiResult.description.trim()
+      : outputLanguage.code === "en"
+        ? "Analysis complete."
+        : "Uchambuzi umekamilika.";
+    const urgency = toUrgency(aiResult.urgency);
 
     return {
-      condition: aiResult.condition || "Medical Assessment Required",
+      condition,
       confidence: 0.95,
-      urgency: (aiResult.urgency as EngineUrgency) || "medium",
-      description: aiResult.description || "Analysis complete.",
-      recommendations: aiResult.recommendations || [],
+      urgency,
+      description,
+      recommendations,
       suggestedFacilityType: "hospital",
-      matchedSymptoms: [aiResult.condition],
-      possibleConditions: [aiResult.condition],
+      matchedSymptoms: [condition],
+      possibleConditions: [condition],
       recommendedFacility: {
         name: "Nearest Health Facility",
         type: "General",
         distance_km: 1.2
       },
-      guidance: aiResult.recommendations || [],
-      explanation: aiResult.description,
+      guidance,
+      explanation: description,
       structuredResult: {
-        matched_symptoms: [aiResult.condition],
-        possible_conditions: [aiResult.condition],
-        urgency: aiResult.urgency,
+        matched_symptoms: [condition],
+        possible_conditions: [condition],
+        urgency,
         recommended_facility: { name: "Local Clinic", type: "clinic", distance_km: 1 },
-        guidance: aiResult.recommendations,
-        explanation: aiResult.description
+        guidance,
+        explanation: description
       }
     };
   } catch (error) {
