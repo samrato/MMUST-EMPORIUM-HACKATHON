@@ -64,8 +64,22 @@ export default function SymptomChecker() {
     
     setIsAnalyzing(true);
     setResult(null);
+
+    let userLoc: { lat: number; lng: number } | undefined;
     
-    const aiResult = await analyzeSymptomsWithAI(symptomText, { language: lang });
+    // Try to get location for better facility recommendations
+    try {
+      if (navigator.geolocation) {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        });
+        userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      }
+    } catch (e) {
+      console.warn("Location not available for symptom analysis, using default routing.");
+    }
+    
+    const aiResult = await analyzeSymptomsWithAI(symptomText, { language: lang, userLoc });
     if (aiResult) {
       setResult(aiResult);
       // Auto-speak the summary

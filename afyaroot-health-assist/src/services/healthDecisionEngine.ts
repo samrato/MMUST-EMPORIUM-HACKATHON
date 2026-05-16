@@ -953,6 +953,7 @@ export function runHealthcareDecisionEngine(input: {
   symptom_dataset?: SymptomDatasetEntry[];
   nearby_hospitals?: NearbyHospitalInput[];
   preferred_language?: EngineLanguage;
+  ai_condition?: string; // New optional parameter
 }): HealthcareDecisionResult {
   const dataset = input.symptom_dataset?.length ? input.symptom_dataset : symptomDataset;
   const translation = translateToEnglishForProcessing(input.user_input, dataset);
@@ -960,15 +961,21 @@ export function runHealthcareDecisionEngine(input: {
   const matches = matchSymptomsFromDataset(translation.translated, dataset);
   const urgency = summarizeUrgency(matches);
 
-  const matchedSymptoms = uniqueBy(
+  let matchedSymptoms = uniqueBy(
     matches.map(({ entry }) => toLanguageText(entry, language).symptom),
     (item) => normalizeText(item)
   ).slice(0, 6);
 
-  const possibleConditions = uniqueBy(
+  let possibleConditions = uniqueBy(
     matches.map(({ entry }) => toLanguageText(entry, language).condition),
     (item) => normalizeText(item)
   ).slice(0, 4);
+
+  // OPTION A: Trust the AI's condition if the local engine has no matches
+  if (possibleConditions.length === 0 && input.ai_condition) {
+    possibleConditions = [input.ai_condition];
+    matchedSymptoms = [language === 'sw' ? 'Dalili zilizoandikwa' : 'Reported symptoms'];
+  }
 
   const routing = routePatientToFacility(urgency, input.nearby_hospitals || []);
   const guidance = buildGuidanceSteps(language, urgency, routing.selected, matches);

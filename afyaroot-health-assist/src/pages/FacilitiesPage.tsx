@@ -22,6 +22,8 @@ export default function FacilitiesPage() {
 
   const [error, setError] = useState<string | null>(null);
 
+  const sanitizePhone = (phone?: string | null) => phone?.replace(/[^\d+]/g, '') || '';
+
   const getLocationAndHospitals = () => {
     setLoading(true);
     setError(null);
@@ -260,9 +262,15 @@ export default function FacilitiesPage() {
                   <button className="flex-1 bg-secondary text-secondary-foreground rounded-xl py-3 text-xs font-bold flex items-center justify-center gap-2 hover:bg-secondary/80 transition-all shadow-sm active:scale-95">
                     <MapPin className="h-4 w-4" /> View Details
                   </button>
-                  <button className="bg-secondary/50 text-secondary-foreground rounded-xl px-5 py-3 hover:bg-secondary/80 transition-all">
-                    <Phone className="h-4 w-4" />
-                  </button>
+                  {f.phone ? (
+                    <a href={`tel:${sanitizePhone(f.phone)}`} className="bg-secondary/50 text-secondary-foreground rounded-xl px-5 py-3 hover:bg-secondary/80 transition-all inline-flex items-center justify-center">
+                      <Phone className="h-4 w-4" />
+                    </a>
+                  ) : (
+                    <button disabled className="bg-secondary/30 text-secondary-foreground/40 rounded-xl px-5 py-3 cursor-not-allowed">
+                      <Phone className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

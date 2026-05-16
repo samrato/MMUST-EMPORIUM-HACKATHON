@@ -1,0 +1,58 @@
+services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_USER: freepbxuser
+      MYSQL_PASSWORD_FILE: /run/secrets/freepbxuser_password
+      TZ: ${TZ:-Africa/Nairobi}
+    secrets:
+      - mysql_root_password
+      - freepbxuser_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/my.cnf:ro
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      callcenter:
+
+  freepbx:
+    image: escomputers/freepbx:17-nofail2ban
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      TZ: ${TZ:-Africa/Nairobi}
+    secrets:
+      - postfix_sasl_passwd
+    ports:
+      - "${FREEPBX_HTTP_PORT:-8080}:80/tcp"
+      - "${FREEPBX_HTTPS_PORT:-8443}:443/tcp"
+      - "${SIP_PORT:-5060}:5060/udp"
+      - "${SIP_PORT:-5060}:5060/tcp"
+      - "${RTP_START:-10000}-${RTP_END:-20000}:10000-20000/udp"
+    volumes:
+      - freepbx_var:/var
+      - freepbx_etc:/etc
+      - ./data/recordings:/var/spool/asterisk/monitor
+      - ./data/asterisk-logs:/var/log/asterisk
+    networks:
+      callcenter:
+
+networks:
+  callcenter:
+    driver: bridge
+
+volumes:
+  mariadb_data:
+  freepbx_var:
+  freepbx_etc:
+
+secrets:
+  mysql_root_password:
+    file: ./secrets/mysql_root_password.txt
+  freepbxuser_password:
+    file: ./secrets/freepbxuser_password.txt
+  postfix_sasl_passwd:
+    file: ./secrets/sasl_passwd.txt

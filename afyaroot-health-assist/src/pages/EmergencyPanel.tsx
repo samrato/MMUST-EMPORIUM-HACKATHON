@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Phone, MapPin, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { t } from '@/services/languageService';
-import { getNearbyHospitals, NearbyFacility, calculateDistance } from '@/services/placesService';
+import { getClosestFacility, NearbyFacility } from '@/services/placesService';
 import {
   buildEmergencyVoiceScript,
   buildFallbackEmergencyRoute,
@@ -18,19 +18,8 @@ interface UserCoordinates {
   lng: number;
 }
 
-function rankHospitalsByDistance(source: UserCoordinates, facilities: NearbyFacility[]) {
-  return facilities
-    .map((facility) => ({
-      ...facility,
-      distance: parseFloat(calculateDistance(source.lat, source.lng, facility.location.lat, facility.location.lng).toFixed(1)),
-    }))
-    .sort((a, b) => (a.distance || 0) - (b.distance || 0));
-}
-
-async function findNearestHospital(source: UserCoordinates) {
-  const data = await getNearbyHospitals(source.lat, source.lng);
-  if (data.length === 0) return null;
-  return rankHospitalsByDistance(source, data)[0] || null;
+function sanitizePhone(phone?: string | null) {
+  return phone?.replace(/[^\d+]/g, '') || '';
 }
 
 function requestBrowserLocation(timeoutMs = 7000) {
@@ -73,7 +62,7 @@ export default function EmergencyPanel() {
           const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setUserLoc(loc);
           try {
-            const nearest = await findNearestHospital(loc);
+            const nearest = await getClosestFacility(loc.lat, loc.lng);
             if (nearest) setNearestHospital(nearest);
           } catch (err) {
             console.error(err);
@@ -169,7 +158,7 @@ export default function EmergencyPanel() {
 
     if (resolvedLocation && !resolvedHospital) {
       try {
-        resolvedHospital = await findNearestHospital(resolvedLocation);
+        resolvedHospital = await getClosestFacility(resolvedLocation.lat, resolvedLocation.lng);
         if (resolvedHospital) {
           setNearestHospital(resolvedHospital);
         }
@@ -272,10 +261,10 @@ export default function EmergencyPanel() {
 
               <div className="flex gap-3">
                 <a 
-                  href={`tel:${nearestHospital.id}`} // Using ID as placeholder if phone isn't available
+                  href={`tel:${sanitizePhone(nearestHospital.phone) || '999'}`}
                   className="flex-[2] bg-emergency text-white rounded-2xl py-5 flex items-center justify-center gap-3 font-black text-sm shadow-lg hover:brightness-110 active:scale-95 transition-all"
                 >
-                  <Phone className="h-5 w-5" /> CALL HOSPITAL
+                  <Phone className="h-5 w-5" /> {nearestHospital.phone ? 'CALL HOSPITAL' : 'CALL 999'}
                 </a>
                 <button
                   onClick={handleVoiceGuidance}

@@ -1,5 +1,6 @@
 import type { Language } from "./languageService";
 import {
+  runHealthcareDecisionEngine,
   type EngineUrgency,
   type HealthcareDecisionJson,
   type NearbyHospitalInput,
@@ -11,11 +12,13 @@ import {
   getEmergencyRouteInstructions,
 } from "./directionsService";
 
+import { getNearbyHospitals } from "./placesService";
+
 // Vertex AI Configuration (Direct Frontend Call)
 const API_KEY = import.meta.env.VITE_VERTEX_API_KEY || "";
 const PROJECT_ID = import.meta.env.VITE_GOOGLE_CLOUD_PROJECT || "gen-lang-client-0852400804";
 const LOCATION = import.meta.env.VITE_GOOGLE_CLOUD_LOCATION || "us-central1";
-const MODEL_ID = "gemini-2.5-flash-lite";
+const MODEL_ID = "gemini-2.5-flash-lite"; // Restored original model ID
 
 interface VoiceDirectionDestination {
   name: string;
@@ -24,6 +27,25 @@ interface VoiceDirectionDestination {
   distance?: number;
   type?: string;
   types?: string[];
+}
+
+export interface SymptomAnalysisResult {
+  condition: string;
+  confidence: number;
+  urgency: EngineUrgency;
+  description: string;
+  recommendations: string[];
+  suggestedFacilityType: "hospital" | "health_center" | "dispensary" | "clinic";
+  matchedSymptoms: string[];
+  possibleConditions: string[];
+  recommendedFacility: {
+    name: string;
+    type: string;
+    distance_km: number;
+  };
+  guidance: string[];
+  explanation: string;
+  structuredResult: HealthcareDecisionJson;
 }
 
 function toEngineLanguage(language?: unknown): "en" | "sw" {
@@ -51,8 +73,9 @@ function toStringArray(value: unknown) {
 }
 
 function toUrgency(value: unknown): EngineUrgency {
-  if (value === "low" || value === "medium" || value === "high" || value === "emergency") {
-    return value;
+  const v = String(value).toLowerCase();
+  if (v === "low" || v === "medium" || v === "high" || v === "emergency") {
+    return v as EngineUrgency;
   }
   return "medium";
 }
@@ -72,27 +95,8 @@ export async function getVoiceDirections(
   }
 }
 
-export interface SymptomAnalysisResult {
-  condition: string;
-  confidence: number;
-  urgency: EngineUrgency;
-  description: string;
-  recommendations: string[];
-  suggestedFacilityType: "hospital" | "health_center" | "dispensary" | "clinic";
-  matchedSymptoms: string[];
-  possibleConditions: string[];
-  recommendedFacility: {
-    name: string;
-    type: string;
-    distance_km: number;
-  };
-  guidance: string[];
-  explanation: string;
-  structuredResult: HealthcareDecisionJson;
-}
-
 /**
- * Direct call to Vertex AI REST API from Frontend
+ * Direct call to Vertex AI REST API from Frontend (Streaming)
  */
 async function callVertexDirectly(prompt: string) {
   const url = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${MODEL_ID}:streamGenerateContent?key=${API_KEY}`;
@@ -102,111 +106,109 @@ async function callVertexDirectly(prompt: string) {
     generationConfig: { maxOutputTokens: 2048, temperature: 0.7 }
   };
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error("Vertex API Error:", errorData);
-    throw new Error(`Vertex AI call failed: ${response.statusText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Vertex API Error:", errorText);
+      throw new Error(`Vertex AI call failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    // Vertex returns an array of objects for streamGenerateContent
+    if (!Array.isArray(data)) {
+        // Fallback for single object response
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    }
+    
+    return data
+      .map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || "")
+      .join("");
+  } catch (error) {
+    console.error("Vertex API Request Failed:", error);
+    throw error;
   }
-
-  const data = await response.json();
-  // Aggregate text from streamed response chunks
-  return data
-    .map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || "")
-    .join("");
 }
 
 export async function analyzeSymptomsWithAI(
   symptoms: string,
-  options?: { language?: Language; nearbyHospitals?: NearbyHospitalInput[] }
+  options?: { language?: Language; userLoc?: { lat: number; lng: number } }
 ): Promise<SymptomAnalysisResult | null> {
   const outputLanguage = getSymptomOutputLanguage(options?.language);
   
+  let nearbyHospitals: NearbyHospitalInput[] = [];
+  if (options?.userLoc) {
+    try {
+      const realHospitals = await getNearbyHospitals(options.userLoc.lat, options.userLoc.lng);
+      nearbyHospitals = realHospitals.map(h => ({
+        name: h.name,
+        distance_km: h.distance || 0,
+        type: h.types[0] || 'hospital',
+        types: h.types
+      }));
+    } catch (e) {
+      console.error("Failed to fetch real hospitals for AI analysis:", e);
+    }
+  }
+
   const prompt = `
-    You are a medical symptom triage assistant for an educational health support application.
-    Your role is to analyze user-reported symptoms and return structured, safe, non-diagnostic health guidance.
-    You do NOT diagnose diseases. You only provide possible conditions, urgency guidance, and safe next steps.
+    You are a medical symptom triage assistant for an educational health support application in Kenya.
+    Analyze user-reported symptoms and return structured health guidance.
+    User input: "${symptoms}"
+    Response language: ${outputLanguage.label}
 
-    Context:
-    - Country context: Kenya
-    - User symptom input: "${symptoms}"
-    - Preferred response language: ${outputLanguage.label} (code: ${outputLanguage.code})
-
-    Safety and response rules:
-    - Never claim a confirmed diagnosis.
-    - Keep language simple, clear, and patient-friendly.
-    - Include emergency red-flag action when severity is high.
-    - If symptoms are unclear or insufficient, state that clearly and ask for better symptom detail.
-    - Keep urgency value in English enum only: "low" | "medium" | "high" | "emergency".
-    - Write all other fields in ${outputLanguage.label}.
-    - Return valid JSON only (no markdown, no code fence, no extra text).
-
-    Return EXACTLY this JSON shape:
+    Return ONLY valid JSON in this format:
     {
-      "condition": "string",
+      "condition": "Likely condition name",
       "urgency": "low | medium | high | emergency",
-      "description": "string",
-      "recommendations": ["string", "string"],
-      "warnings": ["string", "string"]
+      "description": "Brief description of why you chose this",
+      "recommendations": ["step 1", "step 2"],
+      "warnings": ["warning 1"]
     }
   `;
 
   try {
     const text = await callVertexDirectly(prompt);
+    // Extract JSON from potential markdown/text markers
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not parse JSON from AI");
-
+    if (!jsonMatch) throw new Error("Could not parse JSON from AI response: " + text);
+    
     const aiResult = JSON.parse(jsonMatch[0]) as {
-      condition?: unknown;
-      urgency?: unknown;
-      description?: unknown;
-      recommendations?: unknown;
-      warnings?: unknown;
+      condition?: string;
+      urgency?: string;
+      description?: string;
+      recommendations?: string[];
+      warnings?: string[];
     };
+    
+    const engineResult = runHealthcareDecisionEngine({
+      user_input: symptoms,
+      nearby_hospitals: nearbyHospitals,
+      preferred_language: options?.language === 'sw' ? 'sw' : 'en',
+      ai_condition: aiResult.condition
+    });
+
     const recommendations = toStringArray(aiResult.recommendations);
     const warnings = toStringArray(aiResult.warnings);
-    const guidance = [...new Set([...recommendations, ...warnings])];
-    const condition = typeof aiResult.condition === "string" && aiResult.condition.trim()
-      ? aiResult.condition.trim()
-      : outputLanguage.code === "en"
-        ? "Medical Assessment Required"
-        : "Tathmini ya daktari inahitajika";
-    const description = typeof aiResult.description === "string" && aiResult.description.trim()
-      ? aiResult.description.trim()
-      : outputLanguage.code === "en"
-        ? "Analysis complete."
-        : "Uchambuzi umekamilika.";
-    const urgency = toUrgency(aiResult.urgency);
-
+    
     return {
-      condition,
+      condition: aiResult.condition || engineResult.possible_conditions[0] || "Assessment Required",
       confidence: 0.95,
-      urgency,
-      description,
+      urgency: engineResult.urgency, 
+      description: aiResult.description || engineResult.explanation,
       recommendations,
-      suggestedFacilityType: "hospital",
-      matchedSymptoms: [condition],
-      possibleConditions: [condition],
-      recommendedFacility: {
-        name: "Nearest Health Facility",
-        type: "General",
-        distance_km: 1.2
-      },
-      guidance,
-      explanation: description,
-      structuredResult: {
-        matched_symptoms: [condition],
-        possible_conditions: [condition],
-        urgency,
-        recommended_facility: { name: "Local Clinic", type: "clinic", distance_km: 1 },
-        guidance,
-        explanation: description
-      }
+      suggestedFacilityType: engineResult.recommended_facility.type as any,
+      matchedSymptoms: engineResult.matched_symptoms,
+      possibleConditions: engineResult.possible_conditions,
+      recommendedFacility: engineResult.recommended_facility,
+      guidance: [...new Set([...engineResult.guidance, ...recommendations])],
+      explanation: engineResult.explanation,
+      structuredResult: engineResult,
     };
   } catch (error) {
     console.error("AI Analysis Failed:", error);
@@ -216,7 +218,7 @@ export async function analyzeSymptomsWithAI(
 
 export async function getGeminiResponse(prompt: string, context: any = {}) {
   try {
-    const text = await callVertexDirectly(`Context: Medical Assistant. Language: ${context.language || 'en'}. Question: ${prompt}`);
+    const text = await callVertexDirectly(`Context: Medical Assistant. Location Context: ${JSON.stringify(context)}. Question: ${prompt}`);
     return text || "I'm sorry, I couldn't process that request.";
   } catch {
     return "The medical AI is currently unavailable. Please check your connection.";
