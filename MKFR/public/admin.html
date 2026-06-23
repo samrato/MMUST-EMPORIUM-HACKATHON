@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AFYAROOT - Hospital Administration Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --bg-card: rgba(18, 26, 47, 0.7);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #10b981; /* Emerald Green */
+      --primary-glow: rgba(16, 185, 129, 0.2);
+      --secondary: #3b82f6; /* Blue */
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --indigo: #6366f1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #070a13 0%, #111827 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Background decorative ambient lights */
+    .glow-sphere-1 {
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(0,0,0,0) 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .glow-sphere-2 {
+      position: absolute;
+      bottom: -150px;
+      left: -100px;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(0,0,0,0) 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      padding: 2rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-card);
+      background: rgba(11, 15, 25, 0.5);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .brand-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #a5f3fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge-portal {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 0.35rem 0.75rem;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--secondary);
+      letter-spacing: 0.5px;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      header {
+        padding: 1.5rem 2rem;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 20px;
+      padding: 2.25rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    .panel:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 0.75rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
+
+    input, select {
+      background: rgba(17, 24, 39, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      color: var(--text-main);
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+      background: rgba(17, 24, 39, 0.8);
+    }
+
+    .grid-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    button.btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #059669 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 5px 15px var(--primary-glow);
+    }
+
+    button.btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    button.btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .indicator-card {
+      background: rgba(17, 24, 39, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .indicator-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .indicator-val {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-high { background: rgba(16, 185, 129, 0.15); color: var(--primary); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-medium { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-low { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .badge-emergency-normal { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
+    .badge-emergency-busy { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .badge-emergency-critical { background: rgba(239, 68, 68, 0.15); color: var(--danger); animation: pulse 2s infinite; }
+
+    @keyframes pulse {
+      0% { opacity: 0.8; }
+      50% { opacity: 1; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+      100% { opacity: 0.8; }
+    }
+
+    .list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .list-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .list-container::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+
+    .booking-card {
+      background: rgba(17, 24, 39, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 1.15rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .booking-card:hover {
+      background: rgba(17, 24, 39, 0.6);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .booking-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .booking-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-action {
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .btn-checkin { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3); }
+    .btn-checkin:hover { background: var(--secondary); color: white; }
+
+    .btn-complete { background: rgba(16, 185, 129, 0.15); color: #a7f3d0; border-color: rgba(16, 185, 129, 0.3); }
+    .btn-complete:hover { background: var(--primary); color: white; }
+
+    .btn-cancel { background: rgba(239, 68, 68, 0.1); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+    .btn-cancel:hover { background: var(--danger); color: white; }
+
+    .feedback-alert {
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      display: none;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #a7f3d0;
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-card);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-sphere-1"></div>
+  <div class="glow-sphere-2"></div>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">R</div>
+      <div class="brand-title">AFYAROOT</div>
+    </div>
+    <div class="badge-portal">HOSPITAL CAPACITY PORTAL</div>
+  </header>
+
+  <main>
+    <!-- Left Panel: Live Queue Status Update Form -->
+    <div class="panel">
+      <div class="panel-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="15" y2="17"></line></svg>
+        Liveliness & Queue Control
+      </div>
+
+      <div id="statusAlert" class="feedback-alert"></div>
+
+      <div class="form-group">
+        <label for="facilitySelector">Select Mapped Hospital (KMHFR Registry)</label>
+        <select id="facilitySelector">
+          <option value="">Loading facilities...</option>
+        </select>
+      </div>
+
+      <div class="grid-inputs">
+        <div class="form-group">
+          <label for="queueInput">Patients Waiting in Queue</label>
+          <input type="number" id="queueInput" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label for="doctorsInput">Available On-Duty Doctors</label>
+          <input type="number" id="doctorsInput" min="0" value="0">
+        </div>
+      </div>
+
+      <div class="grid-inputs">
+        <div class="form-group">
+          <label for="bedsInput">Available Free Beds</label>
+          <input type="number" id="bedsInput" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label for="emergencySelector">Emergency Room Load Status</label>
+          <select id="emergencySelector">
+            <option value="normal">Normal</option>
+            <option value="busy">Busy</option>
+            <option value="critical">Critical (Max Delay)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="authKeyInput">Portal Client API Auth Key</label>
+        <input type="password" id="authKeyInput" value="afyaroot_hospital_portal_token" placeholder="Enter API Key">
+      </div>
+
+      <button id="updateBtn" class="btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Broadcast Live Status
+      </button>
+
+      <!-- Live metrics evaluation indicators -->
+      <div id="liveStatusPreview" class="indicator-card" style="display: none;">
+        <div class="indicator-info">
+          <span style="font-size: 0.8rem; color: var(--text-muted)">Live Liveness Freshness</span>
+          <span id="freshnessBadge" class="badge">UNKNOWN</span>
+        </div>
+        <div class="indicator-info" style="text-align: right">
+          <span style="font-size: 0.8rem; color: var(--text-muted)">Last Broadcast</span>
+          <span id="lastUpdatedVal" style="font-weight: 600">Never</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Apppointment List and Actions -->
+    <div class="panel">
+      <div class="panel-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--indigo)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Care Bookings & Registrations
+      </div>
+
+      <div id="bookingsAlert" class="feedback-alert"></div>
+
+      <div class="list-container" id="bookingsList">
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted)">
+          Select a facility to load scheduled client bookings.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 AFYAROOT Healthcare Navigation. Mapped to Kenya Master Health Facility Registry (KMHFR).</p>
+  </footer>
+
+  <script>
+    // Elements
+    const facilitySelector = document.getElementById('facilitySelector');
+    const queueInput = document.getElementById('queueInput');
+    const doctorsInput = document.getElementById('doctorsInput');
+    const bedsInput = document.getElementById('bedsInput');
+    const emergencySelector = document.getElementById('emergencySelector');
+    const authKeyInput = document.getElementById('authKeyInput');
+    const updateBtn = document.getElementById('updateBtn');
+    const statusAlert = document.getElementById('statusAlert');
+    const bookingsAlert = document.getElementById('bookingsAlert');
+    const liveStatusPreview = document.getElementById('liveStatusPreview');
+    const freshnessBadge = document.getElementById('freshnessBadge');
+    const lastUpdatedVal = document.getElementById('lastUpdatedVal');
+    const bookingsList = document.getElementById('bookingsList');
+
+    let allFacilities = [];
+
+    // 1. Fetch Facilities in master registry
+    async function loadFacilities() {
+      try {
+        const response = await fetch('/api/facilities');
+        const resData = await response.json();
+        
+        if (resData.success) {
+          allFacilities = resData.data;
+          facilitySelector.innerHTML = '<option value="">-- Choose Hospital --</option>';
+          allFacilities.forEach(f => {
+            const option = document.createElement('option');
+            option.value = f.id;
+            option.textContent = `${f.name} (${f.level})`;
+            facilitySelector.appendChild(option);
+          });
+        } else {
+          showError(statusAlert, 'Could not retrieve registry metadata.');
+        }
+      } catch (err) {
+        showError(statusAlert, 'Backend communication failure.');
+      }
+    }
+
+    // Show alert messages
+    function showSuccess(element, msg) {
+      element.textContent = msg;
+      element.className = 'feedback-alert alert-success';
+      element.style.display = 'block';
+      setTimeout(() => element.style.display = 'none', 4000);
+    }
+
+    function showError(element, msg) {
+      element.textContent = msg;
+      element.className = 'feedback-alert alert-error';
+      element.style.display = 'block';
+      setTimeout(() => element.style.display = 'none', 5000);
+    }
+
+    // 2. Load live metrics of chosen hospital
+    async function handleFacilityChange() {
+      const facilityId = facilitySelector.value;
+      if (!facilityId) {
+        liveStatusPreview.style.display = 'none';
+        bookingsList.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted)">Select a facility to load scheduled client bookings.</div>`;
+        return;
+      }
+
+      // Fetch facility status details
+      try {
+        const res = await fetch(`/api/facilities/${facilityId}`);
+        const data = await res.json();
+
+        if (data.success && data.data) {
+          const f = data.data;
+          // Set values
+          if (f.live_status && f.live_status.updated_at) {
+            queueInput.value = f.live_status.queue_count || 0;
+            doctorsInput.value = f.live_status.doctor_available || 0;
+            bedsInput.value = f.live_status.beds_available || 0;
+            emergencySelector.value = f.live_status.emergency_status || 'normal';
+            
+            // Show status check info
+            liveStatusPreview.style.display = 'flex';
+            lastUpdatedVal.textContent = new Date(f.live_status.updated_at).toLocaleTimeString();
+            
+            const trust = f.live_status.freshness_trust || 'LOW';
+            freshnessBadge.textContent = `${trust} TRUST`;
+            freshnessBadge.className = `badge badge-${trust.toLowerCase()}`;
+          } else {
+            // Default blank fields
+            queueInput.value = 0;
+            doctorsInput.value = 0;
+            bedsInput.value = 0;
+            emergencySelector.value = 'normal';
+            liveStatusPreview.style.display = 'none';
+          }
+          
+          // Fetch booking registrations
+          loadBookings(facilityId);
+        }
+      } catch (err) {
+        showError(statusAlert, 'Error retrieving hospital status.');
+      }
+    }
+
+    // 3. Load Bookings for chosen hospital
+    async function loadBookings(facilityId) {
+      try {
+        const response = await fetch('/api/intelligence/dashboard');
+        const dbData = await response.json();
+        
+        // Simulating booking filtered check-ins (since we are querying all bookings in our mock db)
+        // Let's query individual booking mappings. In a real system we list bookings by facilityId.
+        // We will fetch all bookings and filter locally for this mock app.
+        const bookingsRes = await fetch(`/api/facilities`); // Let's make a request to check bookings.
+        // To be safe, let's query our bookings endpoint. Since we don't have a direct "GET all bookings" endpoint in our original route, 
+        // let's fetch individual bookings. Let's see: we have `GET /api/bookings/:id`. We can add a GET all bookings endpoint or simulate.
+        // Wait, does `/api/bookings` support GET? In routing we defined POST.
+        // Let's create an endpoint GET `/api/bookings` in our booking router if we need it, or we can query the dashboard insights summary.
+        // Let's add GET `/api/bookings` to our bookingController.js and booking.js routes to make it simple!
+        
+        const bResponse = await fetch(`/api/bookings/list?facilityId=${facilityId}`);
+        const bData = await bResponse.json();
+
+        if (bData.success) {
+          const list = bData.data || [];
+          if (list.length === 0) {
+            bookingsList.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted)">No bookings scheduled for this hospital.</div>`;
+            return;
+          }
+
+          bookingsList.innerHTML = '';
+          list.forEach(b => {
+            const card = document.createElement('div');
+            card.className = 'booking-card';
+            
+            const dateStr = new Date(b.date).toLocaleDateString();
+            
+            card.innerHTML = `
+              <div class="booking-meta">
+                <span style="font-weight:600; font-size:1.05rem;">${b.patientName}</span>
+                <span style="font-size:0.85rem; color:var(--text-muted)">Time: ${dateStr} at ${b.time} | Service: ${b.serviceNeeded}</span>
+                <span style="font-size:0.8rem; color:var(--indigo); font-weight:600; text-transform:uppercase;">Code: ${b.id} | Status: ${b.status}</span>
+              </div>
+              <div class="booking-actions">
+                ${b.status === 'pending' ? `
+                  <button class="btn-action btn-checkin" onclick="updateBooking('${b.id}', 'checked-in')">Check In</button>
+                  <button class="btn-action btn-cancel" onclick="updateBooking('${b.id}', 'cancelled')">Cancel</button>
+                ` : ''}
+                ${b.status === 'checked-in' ? `
+                  <button class="btn-action btn-complete" onclick="updateBooking('${b.id}', 'completed')">Complete</button>
+                ` : ''}
+                ${b.status === 'completed' || b.status === 'cancelled' ? `
+                  <span style="font-size: 0.8rem; color:var(--text-muted)">Resolved</span>
+                ` : ''}
+              </div>
+            `;
+            bookingsList.appendChild(card);
+          });
+        } else {
+          bookingsList.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted)">Error loading bookings database.</div>`;
+        }
+      } catch (err) {
+        bookingsList.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted)">Communication failure loading bookings.</div>`;
+      }
+    }
+
+    // 4. Update booking check-in state
+    async function updateBooking(bookingId, newStatus) {
+      try {
+        const response = await fetch(`/api/bookings/${bookingId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        const resData = await response.json();
+        if (resData.success) {
+          showSuccess(bookingsAlert, `Booking ${bookingId} updated to ${newStatus}.`);
+          handleFacilityChange(); // Reload listings
+        } else {
+          showError(bookingsAlert, resData.error || 'Failed to update booking status.');
+        }
+      } catch (err) {
+        showError(bookingsAlert, 'Communication failure updating booking.');
+      }
+    }
+
+    // 5. Broadcast live portal status parameters
+    async function updateLiveStatus() {
+      const facilityId = facilitySelector.value;
+      if (!facilityId) {
+        showError(statusAlert, 'Please select a hospital first.');
+        return;
+      }
+
+      const payload = {
+        facilityId: facilityId,
+        queue_count: parseInt(queueInput.value),
+        doctor_available: parseInt(doctorsInput.value),
+        beds_available: parseInt(bedsInput.value),
+        emergency_status: emergencySelector.value
+      };
+
+      try {
+        const response = await fetch('/api/live-status/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': authKeyInput.value
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const resData = await response.json();
+
+        if (resData.success) {
+          showSuccess(statusAlert, 'Liveliness and queue count updated successfully.');
+          handleFacilityChange(); // Refresh stats indicators
+        } else {
+          showError(statusAlert, resData.error || 'Failed to update live status.');
+        }
+      } catch (err) {
+        showError(statusAlert, 'Error broadcasting live status update.');
+      }
+    }
+
+    // Bind Event Listeners
+    facilitySelector.addEventListener('change', handleFacilityChange);
+    updateBtn.addEventListener('click', updateLiveStatus);
+
+    // Initial Load
+    loadFacilities();
+  </script>
+</body>
+</html>
