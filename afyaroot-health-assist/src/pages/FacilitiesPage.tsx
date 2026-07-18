@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Phone, Navigation, Star, Loader2, Search, Volume2, AlertTriangle, Mic, MicOff } from 'lucide-react';
+import { MapPin, Phone, Navigation, Star, Loader2, Search, Volume2, AlertTriangle, Mic, MicOff, RefreshCw, CheckCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { t } from '@/services/languageService';
 import { getNearbyHospitals, NearbyFacility, calculateDistance } from '@/services/placesService';
@@ -19,6 +19,42 @@ export default function FacilitiesPage() {
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [navLoading, setNavLoading] = useState<string | null>(null);
   const [activeDirections, setActiveDirections] = useState<{ [key: string]: string }>({});
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSyncKmhfr = async () => {
+    setSyncing(true);
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${backendUrl}/api/facilities/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast({
+          title: "Registry Synced",
+          description: `Successfully synced ${data.data.synced || 0} facilities from the Kenya Master Health Facility Registry!`,
+        });
+        getLocationAndHospitals(); // Refresh list
+      } else {
+        toast({
+          title: "Sync Failed",
+          description: data.error || "Could not authenticate with KMHFR OAuth server.",
+          variant: "destructive"
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Sync Error",
+        description: "Failed to connect to local backend sync endpoint.",
+        variant: "destructive"
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const [error, setError] = useState<string | null>(null);
 
@@ -180,11 +216,22 @@ export default function FacilitiesPage() {
     <div className="space-y-6 max-w-2xl mx-auto w-full px-2 pb-20 relative">
       <div className="flex items-center justify-between bg-background/80 backdrop-blur-sm py-2 sticky top-0 z-10">
         <h1 className="text-xl font-bold text-foreground flex items-center gap-2">📍 {t('nearestFacilities', lang)}</h1>
-        {userLoc && !error && (
-          <div className="text-[10px] bg-primary/10 text-primary px-3 py-1 rounded-full font-bold uppercase tracking-wider animate-pulse">
-            GPS Active
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSyncKmhfr}
+            disabled={syncing}
+            className="flex items-center gap-1.5 bg-primary/10 text-primary text-xs px-3 py-2 rounded-xl font-bold hover:bg-primary/20 active:scale-95 transition-all disabled:opacity-50"
+            title="Sync Registry with KMHFR Portal"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing...' : 'Sync KMHFR'}
+          </button>
+          {userLoc && !error && (
+            <div className="text-[10px] bg-primary/10 text-primary px-3 py-1 rounded-full font-bold uppercase tracking-wider animate-pulse">
+              GPS Active
+            </div>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -227,6 +274,11 @@ export default function FacilitiesPage() {
                       <span className="w-2 h-2 rounded-full bg-success animate-pulse" title="Open Now" />
                     )}
                   </div>
+                  {f.source === 'registry' && (
+                    <div className="inline-flex items-center gap-1 bg-success/10 text-success text-[10px] px-2 py-0.5 rounded-full font-bold mb-2">
+                      <CheckCircle className="h-2.5 w-2.5" /> KMHFR Registry Verified
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground flex items-start gap-1">
                     <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
                     {f.address}

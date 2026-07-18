@@ -78,6 +78,28 @@ CREATE TABLE IF NOT EXISTS chw_referrals (
     synced_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 7. Unified Multi-Channel Conversations
+CREATE TABLE IF NOT EXISTS conversations (
+    id VARCHAR(50) PRIMARY KEY,
+    phone_number VARCHAR(50),
+    web_user_id VARCHAR(255),
+    channel VARCHAR(20) NOT NULL CHECK (channel IN ('SMS', 'WEB', 'WHATSAPP', 'VOICE')),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 8. Unified Conversation Messages
+CREATE TABLE IF NOT EXISTS messages (
+    id VARCHAR(50) PRIMARY KEY,
+    conversation_id VARCHAR(50) NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    sender VARCHAR(20) NOT NULL CHECK (sender IN ('user', 'agent')),
+    message TEXT NOT NULL,
+    channel VARCHAR(20) NOT NULL CHECK (channel IN ('SMS', 'WEB', 'WHATSAPP', 'VOICE')),
+    classification JSONB, -- Router classification details
+    ai_model VARCHAR(100),
+    status VARCHAR(20) NOT NULL DEFAULT 'sent',
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for high-frequency queries
 CREATE INDEX IF NOT EXISTS idx_facilities_county ON facilities(county);
 CREATE INDEX IF NOT EXISTS idx_facilities_coords ON facilities(latitude, longitude);
@@ -85,3 +107,8 @@ CREATE INDEX IF NOT EXISTS idx_live_status_updated ON facility_live_status(updat
 CREATE INDEX IF NOT EXISTS idx_triage_logs_county ON triage_logs(county);
 CREATE INDEX IF NOT EXISTS idx_triage_logs_timestamp ON triage_logs(timestamp);
 CREATE INDEX IF NOT EXISTS idx_triage_sessions_finalized ON triage_sessions(finalized);
+CREATE INDEX IF NOT EXISTS idx_conversations_phone ON conversations(phone_number);
+CREATE INDEX IF NOT EXISTS idx_conversations_web_user ON conversations(web_user_id);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp);
+

@@ -215,3 +215,72 @@ export async function logAdminAction(
 
   if (error) console.error('Failed to log admin action:', error);
 }
+
+export interface AdminGbvAlert {
+  id: string;
+  conversationId: string;
+  sender: string;
+  message: string;
+  channel: string;
+  classification: {
+    category: string;
+    urgency: string;
+    reason?: string;
+    confidence?: number;
+    intent?: string;
+    language_detected?: string;
+  } | null;
+  timestamp: string;
+}
+
+// Fetch all recorded GBV interactions
+export async function getGbvAlerts(): Promise<AdminGbvAlert[]> {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  
+  try {
+    const res = await fetch(`${backendUrl}/api/conversations/classified?category=GBV`);
+    if (res.ok) {
+      const payload = await res.json();
+      if (payload.success && Array.isArray(payload.data)) {
+        return payload.data;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not fetch GBV alerts from backend server, querying Supabase backup:", err);
+  }
+
+  // Fallback to Supabase
+  try {
+    const { data, error } = await supabase
+      .from('ai_interactions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const gbvKeywords = ['beat', 'hit', 'assault', 'rape', 'abuse', 'safe', '1195', 'counselor'];
+    const filtered = (data || []).filter(item => {
+      const input = (item.input_text || '').toLowerCase();
+      const output = (item.response_text || '').toLowerCase();
+      return gbvKeywords.some(kw => input.includes(kw) || output.includes(kw));
+    });
+
+    return filtered.map(item => ({
+      id: item.id,
+      conversationId: 'SUPABASE-SYNCED',
+      sender: 'user',
+      message: item.input_text,
+      channel: 'WEB',
+      classification: {
+        category: 'GBV',
+        urgency: 'HIGH',
+        reason: 'Detected via Supabase keyword search fallback'
+      },
+      timestamp: item.created_at
+    }));
+
+  } catch (error) {
+    console.error("Supabase fallback query failed:", error);
+    return [];
+  }
+}

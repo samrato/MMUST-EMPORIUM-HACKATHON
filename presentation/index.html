@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AFYAROOT - Intelligent Healthcare Presentation</title>
+  <meta name="description" content="AFYAROOT Healthcare - Reimagining rural healthcare access through intelligent, offline, and multilingual voice-and-SMS AI systems.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <!-- Background Decorative Glowing Orbs -->
+  <div class="bg-glow-container">
+    <div class="bg-glow-orb orb-1"></div>
+    <div class="bg-glow-orb orb-2"></div>
+    <div class="bg-glow-orb orb-3"></div>
+  </div>
+  <div class="bg-grid-overlay"></div>
+
+  <!-- Main Presentation Layout -->
+  <div class="presentation-container">
+    
+    <!-- Table of Contents Dots (Sidebar) -->
+    <div class="sidebar-toc hud-element"></div>
+
+    <!-- Slides Wrapper -->
+    <main class="slides-wrapper">
+
+      <!-- ==========================================
+           SLIDE 1: COVER SLIDE
+           ========================================== -->
+      <section class="slide" id="slide-1">
+        <div class="slide-cover-layout">
+          <!-- Visual Circle Frame on Left -->
+          <div class="cover-visual-container anim-zoom-in">
+            <div class="cover-decorative-ring ring-outer"></div>
+            <div class="cover-decorative-ring ring-inner"></div>
+            <div class="cover-image-frame">
+              <div class="cover-image-mask">
+                <img src="assets/images/surgeon.png" alt="Medical Professional in Mask">
+              </div>
+            </div>
+          </div>
+          <!-- Title & Subtitle Info on Right -->
+          <div class="cover-info anim-slide-right delay-2">
+            <div class="cover-logo-wrapper">
+              <svg class="cover-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+              <span class="cover-logo-text">Afyaroot</span>
+            </div>
+            <h1 class="cover-title">AFYAROOT<br><span>Healthcare</span></h1>
+            <p class="cover-subtitle">Commitment to Care, Driven by Innovation</p>
+            <div class="cover-meta">
+              <div class="meta-item">
+                <span class="meta-label">Presented by</span>
+                <span class="meta-value">Afyaroot Team</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 2: TEAM
+           ========================================== -->
+      <section class="slide" id="slide-2">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">Who We Are</span>
+            <h2 class="slide-title">Our Team</h2>
+          </div>
+        </header>
+        <div class="slide-content">
+          <div class="team-grid" style="max-width: 960px; margin: 0 auto;">
+            <!-- Amos Sabuni -->
+            <div class="team-card glass-card anim-slide-up delay-1">
+              <div class="team-avatar-container">
+                <div class="team-avatar-mask">
+                  <img src="assets/images/team_amos.png" alt="Amos Sabuni">
+                </div>
+                <div class="team-avatar-glow"></div>
+              </div>
+              <h3 class="team-name">Amos Sabuni</h3>
+              <p class="team-role">Public Health Officer</p>
+              <span class="team-bio-tag">Community Health</span>
+            </div>
+            <!-- Willington Juma -->
+            <div class="team-card glass-card anim-slide-up delay-2">
+              <div class="team-avatar-container">
+                <div class="team-avatar-mask">
+                  <img src="assets/images/team_willinton.png" alt="Willington Juma">
+                </div>
+                <div class="team-avatar-glow"></div>
+              </div>
+              <h3 class="team-name">Willington Juma</h3>
+              <p class="team-role">Lead Developer</p>
+              <span class="team-bio-tag">Architecture & AI</span>
+            </div>
+            <!-- Ikram Chemutai -->
+            <div class="team-card glass-card anim-slide-up delay-3">
+              <div class="team-avatar-container">
+                <div class="team-avatar-mask">
+                  <img src="assets/images/team_ikram.png" alt="Ikram Chemutai">
+                </div>
+                <div class="team-avatar-glow"></div>
+              </div>
+              <h3 class="team-name">Ikram Chemutai</h3>
+              <p class="team-role">Medical Healthcare Provider</p>
+              <span class="team-bio-tag">Clinical Advisor</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 3: INTRODUCTION
+           ========================================== -->
+      <section class="slide" id="slide-3">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">Background</span>
+            <h2 class="slide-title">Introduction</h2>
+          </div>
+        </header>
+        <div class="slide-content" style="justify-content: center; align-items: center; width: 100%;">
+          <div class="intro-quote-card glass-card anim-zoom-in" style="max-width: 960px; padding: 50px 60px; text-align: center; border-left: none; border-top: 4px solid var(--primary); background: linear-gradient(180deg, rgba(0, 220, 51, 0.04) 0%, transparent 100%);">
+            <span class="quote-icon" style="position: static; font-size: 5rem; display: block; margin-bottom: 20px; line-height: 1; color: var(--primary);">“</span>
+            <p class="quote-text" style="font-size: 2.1rem; font-weight: 600; line-height: 1.6; color: #fff; margin-bottom: 24px;">Every day, people in rural areas face life-threatening situations not because treatment is unavailable, but because they lack guidance on when and where to seek care.</p>
+            <p class="quote-bridge" style="font-size: 1.15rem; font-weight: 400; line-height: 1.6; color: var(--text-secondary); max-width: 780px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">This guidance gap is driven by four severe systemic barriers:</p>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 4: PROBLEM STATEMENT
+           ========================================== -->
+      <section class="slide" id="slide-4">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">The Challenge</span>
+            <h2 class="slide-title">Problem Statement</h2>
+          </div>
+        </header>
+        <div class="slide-content">
+          <div class="problem-split-layout">
+            <!-- Left Column: Menu Tabs -->
+            <div class="problem-menu">
+              <!-- Tab 1 (Active on load) -->
+              <div class="problem-tab active" data-desc="Crucial hours are lost deciding when and where to seek care or get medications.">
+                <span class="tab-icon">⏱</span>
+                <span class="tab-label">Critical Delays</span>
+              </div>
+              <!-- Tab 2 (Fragment) -->
+              <div class="problem-tab fragment" data-desc="Lack of standard 3G/4G broadband internet in rural ecosystems.">
+                <span class="tab-icon">📶</span>
+                <span class="tab-label">Zero Connectivity</span>
+              </div>
+              <!-- Tab 3 (Fragment) -->
+              <div class="problem-tab fragment" data-desc="Medical advice is rarely accessible in tribal and local dialects.">
+                <span class="tab-icon">🗣️</span>
+                <span class="tab-label">Language Barriers</span>
+              </div>
+              <!-- Tab 4 (Fragment) -->
+              <div class="problem-tab fragment" data-desc="Traveling to clinics that lack the medications or tools for their specific disease.">
+                <span class="tab-icon">🏥</span>
+                <span class="tab-label">Facility Mismatch</span>
+              </div>
+            </div>
+
+            <!-- Right Column: Showcase Spotlight Card -->
+            <div class="problem-spotlight glass-card">
+              <div class="spotlight-header">
+                <div class="spotlight-icon">⏱</div>
+                <h3 class="spotlight-title">Critical Delays</h3>
+              </div>
+              <p class="spotlight-desc">Crucial hours are lost deciding when and where to seek care or get medications.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 5: SOLUTION
+           ========================================== -->
+      <section class="slide" id="slide-5">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">IoT-Based AI & SMS Chat Dispatch Kits</span>
+            <h2 class="slide-title">The Solution</h2>
+          </div>
+        </header>
+        <div class="slide-content">
+          <div class="solution-layout">
+            <!-- Left Column: Interactive Phone mockup -->
+            <div class="phone-demo-container anim-zoom-in">
+              <div class="phone-device">
+                <div class="phone-notch"></div>
+                <div class="phone-header">AFYAROOT SMS AI</div>
+                <div class="phone-chat-area">
+                  <!-- JS Appends messages here -->
+                </div>
+                <div class="phone-input-bar">
+                  <div class="phone-input-mock">Kagua dalili...</div>
+                  <div class="phone-send-btn">➔</div>
+                </div>
+              </div>
+            </div>
+            <!-- Right Column: 6 Solutions in 2x3 grid -->
+            <div class="solutions-list">
+              <!-- Item 1 -->
+              <div class="solution-item anim-slide-right delay-1">
+                <div class="solution-number">01</div>
+                <div class="solution-item-content">
+                  <h3>Smart SMS Chat</h3>
+                  <p>Allows patients to ask health questions and receive immediate guidance using simple text messages on any basic mobile phone, requiring no internet connectivity.</p>
+                </div>
+              </div>
+              <!-- Item 2 -->
+              <div class="solution-item anim-slide-right delay-2">
+                <div class="solution-number">02</div>
+                <div class="solution-item-content">
+                  <h3>IoT SMS Dispatch Node</h3>
+                  <p>Dedicated physical dispatch kits that automatically receive text requests from local health volunteers and route them directly to our central offline health database.</p>
+                </div>
+              </div>
+              <!-- Item 3 -->
+              <div class="solution-item anim-slide-right delay-3">
+                <div class="solution-number">03</div>
+                <div class="solution-item-content">
+                  <h3>Offline GSM Network</h3>
+                  <p>Bypasses mobile internet coverage gaps by routing medical queries through standard mobile messaging channels instead of web data.</p>
+                </div>
+              </div>
+              <!-- Item 4 -->
+              <div class="solution-item anim-slide-right delay-4">
+                <div class="solution-number">04</div>
+                <div class="solution-item-content">
+                  <h3>Multilingual Interface</h3>
+                  <p>Fully supports Swahili, English, and local dialects to ensure language is never a barrier to receiving critical health guidance.</p>
+                </div>
+              </div>
+              <!-- Item 5 -->
+              <div class="solution-item anim-slide-right delay-5">
+                <div class="solution-number">05</div>
+                <div class="solution-item-content">
+                  <h3>Intelligent Router</h3>
+                  <p>Directs patients to the closest medical clinic or hospital that has the right equipment, tools, and doctors for their specific health needs.</p>
+                </div>
+              </div>
+              <!-- Item 6 -->
+              <div class="solution-item anim-slide-right delay-6">
+                <div class="solution-number">06</div>
+                <div class="solution-item-content">
+                  <h3>Voice-to-Text Input (Speech Logging)</h3>
+                  <p>Allows users to ask health questions by simply speaking into the system, converting voice into text to make it accessible to everyone.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 6: HOW IT WORKS
+           ========================================== -->
+      <section class="slide" id="slide-6">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">Mechanism & Process Flow</span>
+            <h2 class="slide-title">How It Works</h2>
+          </div>
+        </header>
+        <div class="slide-content">
+          <div class="workflow-container">
+            <div class="workflow-track">
+              <!-- Connecting Progress Line -->
+              <div class="workflow-line">
+                <div class="workflow-line-progress"></div>
+              </div>
+              
+              <!-- Node 1: User Input -->
+              <div class="workflow-node anim-zoom-in delay-1">
+                <div class="workflow-node-circle">
+                  <span>01</span>
+                </div>
+                <h3 class="workflow-node-title">User Input</h3>
+                <p class="workflow-node-desc">Patient reports symptoms via SMS (SIM800 GSM Client) or Web portal.</p>
+              </div>
+              <!-- Node 2: Pre-Processing -->
+              <div class="workflow-node anim-zoom-in delay-2">
+                <div class="workflow-node-circle">
+                  <span>02</span>
+                </div>
+                <h3 class="workflow-node-title">Data Processing</h3>
+                <p class="workflow-node-desc">MQTT broker & Port 4000 gateway bridge cleanses and routes inputs.</p>
+              </div>
+              <!-- Node 3: AI Analysis -->
+              <div class="workflow-node anim-zoom-in delay-3">
+                <div class="workflow-node-circle">
+                  <span>03</span>
+                </div>
+                <h3 class="workflow-node-title">AI Analysis</h3>
+                <p class="workflow-node-desc">Central backend classifies queries using Gemini or local BioMistral via Ollama.</p>
+              </div>
+              <!-- Node 4: Health Rec -->
+              <div class="workflow-node anim-zoom-in delay-4">
+                <div class="workflow-node-circle">
+                  <span>04</span>
+                </div>
+                <h3 class="workflow-node-title">Recommendation</h3>
+                <p class="workflow-node-desc">AI orchestrator compiles triage advice & checks GBV safety flows.</p>
+              </div>
+              <!-- Node 5: Intelligent Routing -->
+              <div class="workflow-node anim-zoom-in delay-5">
+                <div class="workflow-node-circle">
+                  <span>05</span>
+                </div>
+                <h3 class="workflow-node-title">Intelligent Routing</h3>
+                <p class="workflow-node-desc">System queries KMHFR GIS database to select nearest level 1-5 facility.</p>
+              </div>
+              <!-- Node 6: Emergency -->
+              <div class="workflow-node anim-zoom-in delay-6">
+                <div class="workflow-node-circle">
+                  <span>06</span>
+                </div>
+                <h3 class="workflow-node-title">Emergency Response</h3>
+                <p class="workflow-node-desc">Dispatches alerts to clinics or triggers secure Counselors & Helpline 1195.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 7: UNIQUENESS
+           ========================================== -->
+      <section class="slide" id="slide-7">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">Core Differentiation</span>
+            <h2 class="slide-title">Why Afyaroot is Unique</h2>
+          </div>
+        </header>
+        <div class="slide-content">
+          <div class="uniqueness-split-layout">
+            <!-- Left Column: Menu Tabs -->
+            <div class="uniqueness-menu">
+              <!-- Tab 1 (Active on load) -->
+              <div class="uniqueness-tab active" data-desc="Maintains active physical dispatch kits built with custom microcontroller boards and low-power SIM800 GSM modems. These nodes act as localized internet-free relays bridging remote community health volunteers directly to the AI operating system.">
+                <span class="tab-icon">📡</span>
+                <span class="tab-label">IoT SMS Dispatch Node</span>
+              </div>
+              <!-- Tab 2 (Fragment) -->
+              <div class="uniqueness-tab fragment" data-desc="Automatically queries the Kenya Master Health Facility Registry (KMHFR) database to direct patients to the nearest level 1-5 clinic that possesses the exact equipment, medical staff, and drug stock needed for their diagnosed condition, eliminating wasted journeys.">
+                <span class="tab-icon">📍</span>
+                <span class="tab-label">Intelligent GIS Routing</span>
+              </div>
+              <!-- Tab 3 (Fragment) -->
+              <div class="uniqueness-tab fragment" data-desc="Uses localized natural language processing to detect domestic violence signals in text queries. When triggered, the system seamlessly redirects the user to emergency counseling contacts and logs the incident to the Kenya National Helpline 1195.">
+                <span class="tab-icon">🛡️</span>
+                <span class="tab-label">GBV Detection & Counsel</span>
+              </div>
+              <!-- Tab 4 (Fragment) -->
+              <div class="uniqueness-tab fragment" data-desc="Enables low-cost GSM devices (kabambe phones) to access advanced medical AI. By stripping heavy payload requests into lightweight SMS text strings, patients receive structured diagnostic feedback without relying on 3G/4G broadband internet.">
+                <span class="tab-icon">💬</span>
+                <span class="tab-label">Offline GSM SMS Network</span>
+              </div>
+              <!-- Tab 5 (Fragment) -->
+              <div class="uniqueness-tab fragment" data-desc="Runs large language models completely offline on local county server hardware using Ollama and fine-tuned BioMistral-7B models. This guarantees data privacy, zero internet latency, and continuous medical support during national power grids or fiber outages.">
+                <span class="tab-icon">⚙️</span>
+                <span class="tab-label">Local Edge AI Node</span>
+              </div>
+              <!-- Tab 6 (Fragment) -->
+              <div class="uniqueness-tab fragment" data-desc="Provides health administrative officers with real-time dashboards mapping local epidemiological outbreaks, SMS query frequencies, and clinic referral compliance statistics, allowing data-backed resource distribution.">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">Unified Oversight Web App</span>
+              </div>
+            </div>
+
+            <!-- Right Column: Showcase Spotlight Card -->
+            <div class="uniqueness-spotlight glass-card">
+              <div class="spotlight-header">
+                <div class="spotlight-icon">📡</div>
+                <h3 class="spotlight-title">IoT SMS Dispatch Node</h3>
+              </div>
+              <p class="spotlight-desc">Maintains active physical dispatch kits built with custom microcontroller boards and low-power SIM800 GSM modems. These nodes act as localized internet-free relays bridging remote community health volunteers directly to the AI operating system.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 8: BUSINESS MODEL
+           ========================================== -->
+      <section class="slide" id="slide-8">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">Business Canvas</span>
+            <h2 class="slide-title">Business Model</h2>
+          </div>
+        </header>
+        <div class="slide-content">
+          <div class="business-model-grid">
+            
+            <!-- Central spinning decorative gear -->
+            <div class="business-model-center">
+              <div class="business-model-center-inner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Key Partners -->
+            <div class="bm-card glass-card anim-slide-left delay-1">
+              <div class="bm-card-header">
+                <svg class="svg-icon icon-primary" viewBox="0 0 24 24">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                <h3 class="bm-card-title">Key Partners</h3>
+              </div>
+              <ul class="bm-card-list">
+                <li>Ministry of Health Kenya</li>
+                <li>County Health Departments</li>
+                <li>Kenya Medical Research Institute (KEMRI)</li>
+                <li>Telecommunication Companies</li>
+                <li>AMREF Health Africa</li>
+              </ul>
+            </div>
+
+            <!-- Customers -->
+            <div class="bm-card glass-card anim-slide-right delay-2">
+              <div class="bm-card-header">
+                <svg class="svg-icon icon-secondary" viewBox="0 0 24 24">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <h3 class="bm-card-title">Customers</h3>
+              </div>
+              <ul class="bm-card-list">
+                <li>Rural Communities</li>
+                <li>Community Health Workers (CHWs)</li>
+                <li>Patients in Remote & Hard-to-reach Areas</li>
+                <li>NGOs in Healthcare and Rural Development</li>
+              </ul>
+            </div>
+
+            <!-- Channels -->
+            <div class="bm-card glass-card anim-slide-left delay-3">
+              <div class="bm-card-header">
+                <svg class="svg-icon icon-secondary" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/>
+                </svg>
+                <h3 class="bm-card-title">Channels</h3>
+              </div>
+              <ul class="bm-card-list">
+                <li>Community Health Workers (Physical dispatch)</li>
+                <li>SMS-based Portal Services</li>
+                <li>Social Media Awareness Campaigns</li>
+                <li>Standalone Mobile Web Application</li>
+              </ul>
+            </div>
+
+            <!-- Revenue -->
+            <div class="bm-card glass-card anim-slide-right delay-4">
+              <div class="bm-card-header">
+                <svg class="svg-icon icon-primary" viewBox="0 0 24 24">
+                  <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                <h3 class="bm-card-title">Revenue</h3>
+              </div>
+              <ul class="bm-card-list">
+                <li>B2B Licensing (Enterprise portals)</li>
+                <li>Government Partnerships & Grants</li>
+                <li>Telehealth Consultation Commissions</li>
+                <li>Subscription Models (Premium alerting)</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 9: SUSTAINABLE GOALS
+           ========================================== -->
+      <section class="slide" id="slide-9">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">Alignment</span>
+            <h2 class="slide-title">Sustainable Goals</h2>
+          </div>
+        </header>
+        <div class="slide-content" style="flex-direction: column;">
+          <p class="sdg-intro anim-fade-in">Our solution primarily advances SDG 3 by improving healthcare access, while leveraging innovation (SDG 9) to reduce inequalities (SDG 10) and empower communities through knowledge (SDG 4).</p>
+          <div class="sdg-grid">
+            <!-- SDG 3 -->
+            <div class="sdg-tile tile-sdg3 anim-slide-up delay-1">
+              <div class="sdg-number">3</div>
+              <div class="sdg-tile-content">
+                <svg class="sdg-tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+                <h3 class="sdg-tile-title">Good Health & Well-Being</h3>
+              </div>
+            </div>
+            <!-- SDG 4 -->
+            <div class="sdg-tile tile-sdg4 anim-slide-up delay-2">
+              <div class="sdg-number">4</div>
+              <div class="sdg-tile-content">
+                <svg class="sdg-tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+                <h3 class="sdg-tile-title">Quality Education</h3>
+              </div>
+            </div>
+            <!-- SDG 9 -->
+            <div class="sdg-tile tile-sdg9 anim-slide-up delay-3">
+              <div class="sdg-number">9</div>
+              <div class="sdg-tile-content">
+                <svg class="sdg-tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                  <line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+                <h3 class="sdg-tile-title">Industry, Innovation & Infrastructure</h3>
+              </div>
+            </div>
+            <!-- SDG 10 -->
+            <div class="sdg-tile tile-sdg10 anim-slide-up delay-4">
+              <div class="sdg-number">10</div>
+              <div class="sdg-tile-content">
+                <svg class="sdg-tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/>
+                  <polyline points="12 2 12 6"/><polyline points="12 18 12 22"/>
+                </svg>
+                <h3 class="sdg-tile-title">Reduced Inequalities</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 10: COST STRUCTURE
+           ========================================== -->
+      <section class="slide" id="slide-10">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">Financials</span>
+            <h2 class="slide-title">Cost Structure</h2>
+          </div>
+        </header>
+        <div class="slide-content">
+          <div class="cost-layout">
+            <!-- Left side: Donut Chart -->
+            <div class="cost-chart-container anim-zoom-in">
+              <svg class="cost-donut-svg" viewBox="0 0 240 240">
+                <!-- Background track -->
+                <circle class="cost-donut-bg" cx="120" cy="120" r="100" />
+                
+                <!-- Slices (Stroke length circum = 628.3) -->
+                <!-- Tech Dev (30%): stroke-dasharray = 628.3, length=188.5, offset=0 -->
+                <circle class="cost-donut-slice" cx="120" cy="120" r="100" stroke="#00dc33" data-offset="0" />
+                <!-- Pilot testing (25%): length=157.1, offset=188.5 -->
+                <circle class="cost-donut-slice" cx="120" cy="120" r="100" stroke="#00d2ff" data-offset="188.5" />
+                <!-- Operations (25%): length=157.1, offset=345.6 -->
+                <circle class="cost-donut-slice" cx="120" cy="120" r="100" stroke="#7d2ae8" data-offset="345.6" />
+                <!-- Storage (10%): length=62.8, offset=502.7 -->
+                <circle class="cost-donut-slice" cx="120" cy="120" r="100" stroke="#ff4757" data-offset="502.7" />
+                <!-- Partnerships (10%): length=62.8, offset=565.5 -->
+                <circle class="cost-donut-slice" cx="120" cy="120" r="100" stroke="#ffa502" data-offset="565.5" />
+              </svg>
+              
+              <!-- Center Text labels -->
+              <div class="cost-donut-center">
+                <span class="cost-donut-total-lbl">Total Budget</span>
+                <span class="cost-donut-total-val">KSH 1.0M</span>
+                <span class="cost-donut-ask-tag">Funding Ask</span>
+              </div>
+            </div>
+            
+            <!-- Right side: Budget Breakdowns -->
+            <div class="cost-breakdown">
+              <!-- Item 1 -->
+              <div class="cost-item-card glass-card anim-slide-right delay-1">
+                <div class="cost-item-left">
+                  <div class="cost-item-indicator" style="background-color: #00dc33;"></div>
+                  <div class="cost-item-info">
+                    <h4>Technology Development (Initial)</h4>
+                    <p>Core AI engine training, SMS parser configuration, DB setup</p>
+                  </div>
+                </div>
+                <span class="cost-item-amount">KSH 300,000</span>
+              </div>
+              <!-- Item 2 -->
+              <div class="cost-item-card glass-card anim-slide-right delay-2">
+                <div class="cost-item-left">
+                  <div class="cost-item-indicator" style="background-color: #00d2ff;"></div>
+                  <div class="cost-item-info">
+                    <h4>Pilot Testing</h4>
+                    <p>Beta release in localized communities, medical validations</p>
+                  </div>
+                </div>
+                <span class="cost-item-amount">KSH 250,000</span>
+              </div>
+              <!-- Item 3 -->
+              <div class="cost-item-card glass-card anim-slide-right delay-3">
+                <div class="cost-item-left">
+                  <div class="cost-item-indicator" style="background-color: #7d2ae8;"></div>
+                  <div class="cost-item-info">
+                    <h4>Operations & Administration</h4>
+                    <p>Project supervision, transport, legal advice and audits</p>
+                  </div>
+                </div>
+                <span class="cost-item-amount">KSH 250,000</span>
+              </div>
+              <!-- Item 4 -->
+              <div class="cost-item-card glass-card anim-slide-right delay-4">
+                <div class="cost-item-left">
+                  <div class="cost-item-indicator" style="background-color: #ff4757;"></div>
+                  <div class="cost-item-info">
+                    <h4>Storage & Hosting</h4>
+                    <p>Database server costs, SMS gateway integration keys</p>
+                  </div>
+                </div>
+                <span class="cost-item-amount">KSH 100,000</span>
+              </div>
+              <!-- Item 5 -->
+              <div class="cost-item-card glass-card anim-slide-right delay-5">
+                <div class="cost-item-left">
+                  <div class="cost-item-indicator" style="background-color: #ffa502;"></div>
+                  <div class="cost-item-info">
+                    <h4>Partnerships & Integration</h4>
+                    <p>County-level health API linkages, telco bundle setups</p>
+                  </div>
+                </div>
+                <span class="cost-item-amount">KSH 100,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 11: IMPACT
+           ========================================== -->
+      <section class="slide" id="slide-11">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">Key Outcomes</span>
+            <h2 class="slide-title">Impact</h2>
+          </div>
+        </header>
+        <div class="slide-content">
+          <div class="impact-layout">
+            <div class="impact-grid">
+              <!-- Item 1 -->
+              <div class="impact-card glass-card anim-slide-up delay-1">
+                <div class="impact-card-icon">
+                  <svg class="svg-icon" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="impact-card-text">
+                  <h3>Improved Healthcare Service</h3>
+                  <ul>
+                    <li>Enables rural patients to get guidance anytime (SMS + voice support)</li>
+                    <li>Reduces delays in seeking medical help</li>
+                  </ul>
+                </div>
+              </div>
+              <!-- Item 2 -->
+              <div class="impact-card glass-card anim-slide-up delay-2">
+                <div class="impact-card-icon">
+                  <svg class="svg-icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/>
+                  </svg>
+                </div>
+                <div class="impact-card-text">
+                  <h3>Reduced Mortality & Complications</h3>
+                  <ul>
+                    <li>Early detection and timely facility referrals</li>
+                    <li>Faster coordinate response during critical emergencies</li>
+                  </ul>
+                </div>
+              </div>
+              <!-- Item 3 -->
+              <div class="impact-card glass-card anim-slide-up delay-3">
+                <div class="impact-card-icon">
+                  <svg class="svg-icon" viewBox="0 0 24 24">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                  </svg>
+                </div>
+                <div class="impact-card-text">
+                  <h3>Reduced Healthcare Burden</h3>
+                  <ul>
+                    <li>Filters out non-critical cases to reduce outpatient queues</li>
+                    <li>Helps major hospitals prioritize critical cases</li>
+                  </ul>
+                </div>
+              </div>
+              <!-- Item 4 -->
+              <div class="impact-card glass-card anim-slide-up delay-4">
+                <div class="impact-card-icon">
+                  <svg class="svg-icon" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </div>
+                <div class="impact-card-text">
+                  <h3>Bridging Language & Literacy Gaps</h3>
+                  <ul>
+                    <li>Voice-to-text and local language interfaces provide access to all</li>
+                    <li>Inclusive design catered to low-literacy users</li>
+                  </ul>
+                </div>
+              </div>
+              <!-- Item 5 -->
+              <div class="impact-card glass-card anim-slide-up delay-5">
+                <div class="impact-card-icon">
+                  <svg class="svg-icon" viewBox="0 0 24 24">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                  </svg>
+                </div>
+                <div class="impact-card-text">
+                  <h3>Data-Driven Health Decisions</h3>
+                  <ul>
+                    <li>Collects anonymous real-time epidemiological logs on disease patterns</li>
+                    <li>Supports municipal health authorities in allocation planning</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 12: COME JOIN US!
+           ========================================== -->
+      <section class="slide" id="slide-12">
+        <div class="cta-slide-container">
+          <div class="cta-icon-wrapper anim-zoom-in">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 48px; height: 48px;">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <h1 class="cta-title anim-slide-up delay-2">Come Join Us!</h1>
+          <p class="cta-desc anim-slide-up delay-3">Together, we can transform rural healthcare through intelligent, accessible, and life-saving technology.</p>
+          <a href="https://github.com/samrato/MMUST-EMPORIUM-HACKATHON" target="_blank" class="cta-button anim-slide-up delay-4">
+            <span>Explore GitHub Codebase</span>
+            <svg class="svg-icon" viewBox="0 0 24 24">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <!-- ==========================================
+           SLIDE 13: THANK YOU
+           ========================================== -->
+      <section class="slide" id="slide-13">
+        <div class="thankyou-container">
+          <!-- Drawing SVG Heartbeat pulse -->
+          <svg class="thankyou-heartbeat anim-fade-in" viewBox="0 0 200 60">
+            <path d="M10,30 L60,30 L70,10 L80,50 L90,30 L100,30 L105,25 L110,35 L115,30 L130,30 L135,15 L142,42 L148,27 L153,30 L200,30" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+          <h1 class="thankyou-title anim-slide-up delay-2">THANK YOU</h1>
+          <p class="thankyou-subtitle anim-slide-up delay-3">Afyaroot Team</p>
+          
+          <div class="thankyou-links anim-slide-up delay-4">
+            <a href="https://github.com/samrato/MMUST-EMPORIUM-HACKATHON" target="_blank" class="thankyou-link-btn">
+              <svg class="svg-icon" viewBox="0 0 24 24">
+                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+              </svg>
+              <span>View GitHub Codebase</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation progress bar HUD -->
+    <div class="progress-bar-container hud-element">
+      <div class="progress-bar-fill"></div>
+    </div>
+
+    <!-- HUD footer counters and branding -->
+    <footer class="hud-footer">
+      <div class="hud-brand hud-element">
+        <div class="hud-brand-dot"></div>
+        <span>AFYAROOT Healthcare</span>
+      </div>
+      <div class="hud-counter hud-element">
+        <span class="hud-counter-current">01</span> / <span class="hud-counter-total">13</span>
+      </div>
+    </footer>
+
+    <!-- Arrow HUD Controls -->
+    <div class="nav-arrows-container hud-element">
+      <button class="nav-arrow-btn" id="nav-prev" title="Previous Slide (← / Backspace)">
+        <svg class="svg-icon" viewBox="0 0 24 24">
+          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <button class="nav-arrow-btn" id="nav-next" title="Next Slide (→ / Space)">
+        <svg class="svg-icon" viewBox="0 0 24 24">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Javascript Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/navigation.js"></script>
+</body>
+</html>

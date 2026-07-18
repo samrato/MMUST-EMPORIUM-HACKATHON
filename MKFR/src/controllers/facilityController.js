@@ -132,3 +132,23 @@ exports.getFacilityById = async (req, res) => {
     });
   }
 };
+
+/**
+ * Sync facilities from KMHFR Live REST API
+ */
+exports.syncFacilities = async (req, res) => {
+  try {
+    const result = await kmhfrService.syncKmhfrRegistry();
+    return res.status(200).json({
+      success: true,
+      message: "KMHFR Facility synchronization completed successfully.",
+      data: result
+    });
+  } catch (error) {
+    console.error("Error in facility controller (syncFacilities):", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Failed to synchronize facility registry with KMHFR."
+    });
+  }
+};

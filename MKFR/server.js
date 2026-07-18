@@ -28,6 +28,7 @@ const routingRouter = require('./src/routes/routing');
 const liveStatusRouter = require('./src/routes/liveStatus');
 const bookingRouter = require('./src/routes/booking');
 const intelligenceRouter = require('./src/routes/intelligence');
+const conversationRouter = require('./src/routes/conversation');
 
 app.use('/api/triage', triageRouter);
 app.use('/api/facilities', facilityRouter);
@@ -35,6 +36,7 @@ app.use('/api/route', routingRouter);
 app.use('/api/live-status', liveStatusRouter);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/intelligence', intelligenceRouter);
+app.use('/api/conversations', conversationRouter);
 
 // Home Root Endpoint - System Information & Status Map
 app.get('/', (req, res) => {

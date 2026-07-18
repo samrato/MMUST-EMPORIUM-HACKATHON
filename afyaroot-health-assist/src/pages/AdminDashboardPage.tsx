@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
-import { getFacilityStats, AdminStats, getEmergencyAlerts, AdminEmergencyAlert } from '@/services/adminService';
-import { AlertTriangle, BarChart3, Clock, Users, TrendingUp, LogOut, MapPin } from 'lucide-react';
+import { getFacilityStats, AdminStats, getEmergencyAlerts, AdminEmergencyAlert, getGbvAlerts, AdminGbvAlert } from '@/services/adminService';
+import { AlertTriangle, BarChart3, Clock, Users, TrendingUp, LogOut, MapPin, ShieldAlert } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const { isAuthenticated, currentFacilityId, currentFacilityName, logout } = useAdminAuth();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [emergencyAlerts, setEmergencyAlerts] = useState<AdminEmergencyAlert[]>([]);
+  const [gbvAlerts, setGbvAlerts] = useState<AdminGbvAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,13 +19,15 @@ export default function AdminDashboardPage() {
     setError(null);
 
     try {
-      const [statsData, alertsData] = await Promise.all([
+      const [statsData, alertsData, gbvData] = await Promise.all([
         getFacilityStats(currentFacilityId, currentFacilityName),
         getEmergencyAlerts(currentFacilityId, 10),
+        getGbvAlerts(),
       ]);
 
       setStats(statsData);
       setEmergencyAlerts(alertsData);
+      setGbvAlerts(gbvData);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load data';
       setError(message);
@@ -94,7 +97,7 @@ export default function AdminDashboardPage() {
       ) : stats ? (
         <>
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <StatCard
               label="Today's Bookings"
               value={stats.totalBookingsToday}
@@ -107,6 +110,13 @@ export default function AdminDashboardPage() {
               icon={<AlertTriangle className="h-5 w-5" />}
               color="emergency"
               highlight={stats.emergencyBookingsToday > 0}
+            />
+            <StatCard
+              label="GBV Cases Flagged"
+              value={gbvAlerts.length}
+              icon={<ShieldAlert className="h-5 w-5" />}
+              color="emergency"
+              highlight={gbvAlerts.length > 0}
             />
             <StatCard
               label="Facility Capacity"
@@ -122,48 +132,113 @@ export default function AdminDashboardPage() {
             />
           </div>
 
-          {/* Emergency Queue */}
-          <div className="bg-card border border-border rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-emergency" />
-                Emergency Alert Queue
-              </h2>
-              <span className="text-sm font-semibold px-3 py-1 rounded-full bg-emergency/10 text-emergency">
-                {emergencyAlerts.length} Open
-              </span>
+          {/* Queues Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Emergency Queue */}
+            <div className="bg-card border border-border rounded-2xl p-6 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-emergency" />
+                    Emergency Alert Queue
+                  </h2>
+                  <span className="text-sm font-semibold px-3 py-1 rounded-full bg-emergency/10 text-emergency">
+                    {emergencyAlerts.length} Open
+                  </span>
+                </div>
+
+                {emergencyAlerts.length === 0 ? (
+                  <p className="text-muted-foreground text-sm py-4">No active emergency alerts</p>
+                ) : (
+                  <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                    {emergencyAlerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        className="border border-emergency/35 bg-emergency/5 rounded-xl p-4 space-y-2"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-mono text-xs text-primary">{alert.patientId}</p>
+                            <p className="text-sm font-medium text-foreground">{alert.symptoms}</p>
+                          </div>
+                          <span className="text-xs font-bold px-2 py-1 rounded-full bg-emergency text-emergency-foreground">
+                            {alert.status.toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          📍 {alert.location} • {new Date(alert.createdAt).toLocaleTimeString()}
+                        </p>
+                        {!alert.assignedAmbulance && (
+                          <button className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emergency text-emergency-foreground hover:brightness-110 transition-all">
+                            Assign Ambulance
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {emergencyAlerts.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No active emergency alerts</p>
-            ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {emergencyAlerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="border border-emergency/30 bg-emergency/5 rounded-xl p-4 space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-mono text-xs text-primary">{alert.patientId}</p>
-                        <p className="text-sm font-medium text-foreground">{alert.symptoms}</p>
+            {/* GBV Alerts Queue */}
+            <div className="bg-card border border-border rounded-2xl p-6 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                    <ShieldAlert className="h-5 w-5 text-emergency animate-pulse" />
+                    GBV Incident Review Queue
+                  </h2>
+                  <span className="text-sm font-semibold px-3 py-1 rounded-full bg-emergency/10 text-emergency">
+                    {gbvAlerts.length} Flagged
+                  </span>
+                </div>
+
+                {gbvAlerts.length === 0 ? (
+                  <p className="text-muted-foreground text-sm py-4">No GBV incidents flagged today</p>
+                ) : (
+                  <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                    {gbvAlerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        className="border border-border bg-muted/20 rounded-xl p-4 space-y-2 hover:border-emergency/35 transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                              Channel: {alert.channel}
+                            </span>
+                            <p className="font-mono text-xs text-primary mt-1.5">ID: {alert.conversationId}</p>
+                            <p className="text-sm font-semibold text-foreground mt-1">"{alert.message}"</p>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emergency/10 text-emergency">
+                            {alert.classification?.urgency || 'HIGH'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          🔍 Router Reason: {alert.classification?.reason || 'GBV signs flagged'}
+                        </p>
+                        <div className="flex gap-2 pt-1.5">
+                          <a 
+                            href="tel:1195"
+                            className="text-[10px] font-bold px-2.5 py-1.5 rounded bg-emergency text-emergency-foreground hover:brightness-110 transition-all"
+                          >
+                            Call Helpline (1195)
+                          </a>
+                          <button 
+                            onClick={() => alert(`Initiating outreach protocol for ${alert.conversationId}. SMS verification dispatch initiated.`)}
+                            className="text-[10px] font-bold px-2.5 py-1.5 rounded border border-border bg-background hover:bg-muted text-foreground transition-all"
+                          >
+                            Initiate Outreach
+                          </button>
+                        </div>
                       </div>
-                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-emergency text-emergency-foreground">
-                        {alert.status.toUpperCase()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      📍 {alert.location} • {new Date(alert.createdAt).toLocaleTimeString()}
-                    </p>
-                    {!alert.assignedAmbulance && (
-                      <button className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emergency text-emergency-foreground hover:brightness-110 transition-all">
-                        Assign Ambulance
-                      </button>
-                    )}
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
+            </div>
+
           </div>
 
           {/* Recent Bookings Preview */}

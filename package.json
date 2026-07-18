@@ -1,0 +1,21 @@
+{
+  "name": "mmust-emporium-hackathon",
+  "version": "1.0.0",
+  "description": "AFYAROOT is an offline-first, multi-channel **AI Health Operating System** designed to support patients in rural and low-connectivity environments. Unlike generic chatbots, AFYAROOT links SMS, Web PWAs, and local facility registries into a unified health journey that remembers patient history, evaluates safety concerns like Gender-Based Violence (GBV), verifies medicines, and routes requests to specialized medical AI agents.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samrato/MMUST-EMPORIUM-HACKATHON.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/samrato/MMUST-EMPORIUM-HACKATHON/issues"
+  },
+  "homepage": "https://github.com/samrato/MMUST-EMPORIUM-HACKATHON#readme"
+}

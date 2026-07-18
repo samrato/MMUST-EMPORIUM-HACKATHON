@@ -126,7 +126,7 @@ export default function ChatAI() {
       }))
     };
 
-    const aiResponse = await getGeminiResponse(messageText, context);
+    const aiResponse = await getGeminiResponse(messageText, context, patientId);
     const mentionedHospital = nearbyHospitals.find(h => aiResponse.toLowerCase().includes(h.name.toLowerCase())) || nearbyHospitals[0];
 
     const assistantMessage: Message = { 

@@ -216,11 +216,43 @@ export async function analyzeSymptomsWithAI(
   }
 }
 
-export async function getGeminiResponse(prompt: string, context: any = {}) {
+export async function getGeminiResponse(prompt: string, context: any = {}, patientId: string = "WEB-USER") {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  const url = `${backendUrl}/api/conversations/message`;
+
   try {
-    const text = await callVertexDirectly(`Context: Medical Assistant. Location Context: ${JSON.stringify(context)}. Question: ${prompt}`);
-    return text || "I'm sorry, I couldn't process that request.";
-  } catch {
-    return "The medical AI is currently unavailable. Please check your connection.";
+    const lat = context.user_location?.lat || null;
+    const lng = context.user_location?.lng || null;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: prompt,
+        webUserId: patientId,
+        channel: 'WEB',
+        userLat: lat,
+        userLng: lng
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Orchestrator server returned ${response.status}`);
+    }
+
+    const payload = await response.json();
+    if (payload.success && payload.data?.message?.message) {
+      return payload.data.message.message;
+    }
+    throw new Error("Invalid response format");
+  } catch (error) {
+    console.error("Central Orchestrator Call Failed, falling back to direct client-side Vertex:", error);
+    try {
+      const text = await callVertexDirectly(`Context: Medical Assistant. Location Context: ${JSON.stringify(context)}. Question: ${prompt}`);
+      return text || "I'm sorry, I couldn't process that request.";
+    } catch {
+      return "The medical AI is currently unavailable. Please check your connection.";
+    }
   }
 }

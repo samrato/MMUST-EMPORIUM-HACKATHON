@@ -11,6 +11,9 @@ router.get('/metadata', facilityController.getMetadataCatalogues);
 // GET /api/facilities/nearby - Retrieve nearby facilities using GIS coordinates
 router.get('/nearby', facilityController.getNearbyFacilities);
 
+// POST /api/facilities/sync - Sync facilities with KMHFR Registry using OAuth token
+router.post('/sync', facilityController.syncFacilities);
+
 // GET /api/facilities/:id - Retrieve detailed facility record with live status
 router.get('/:id', facilityController.getFacilityById);
 

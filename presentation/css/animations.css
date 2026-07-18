@@ -1,0 +1,155 @@
+/* 
+ * AFYAROOT Healthcare Interactive Presentation
+ * Animations & Micro-interactions (animations.css)
+ */
+
+/* Entry Animations Framework */
+.anim-fade-in,
+.anim-slide-up,
+.anim-zoom-in,
+.anim-slide-left,
+.anim-slide-right {
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.anim-slide-up {
+  transform: translateY(30px);
+}
+
+.anim-zoom-in {
+  transform: scale(0.95);
+}
+
+.anim-slide-left {
+  transform: translateX(-30px);
+}
+
+.anim-slide-right {
+  transform: translateX(30px);
+}
+
+/* Active State Trigger */
+.slide.active .anim-fade-in {
+  opacity: 1;
+}
+
+.slide.active .anim-slide-up {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide.active .anim-zoom-in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.slide.active .anim-slide-left {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.slide.active .anim-slide-right {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Staggered Delays for Bullet Lists & Grids */
+.slide.active .delay-1 { transition-delay: 0.1s; }
+.slide.active .delay-2 { transition-delay: 0.2s; }
+.slide.active .delay-3 { transition-delay: 0.3s; }
+.slide.active .delay-4 { transition-delay: 0.4s; }
+.slide.active .delay-5 { transition-delay: 0.5s; }
+.slide.active .delay-6 { transition-delay: 0.6s; }
+.slide.active .delay-7 { transition-delay: 0.7s; }
+.slide.active .delay-8 { transition-delay: 0.8s; }
+
+/* Custom Micro-interactions */
+
+/* Heartbeat Line Animation (SVG drawing effect) */
+.thankyou-heartbeat path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawHeartbeat 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes drawHeartbeat {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  40% {
+    stroke-dashoffset: 0;
+  }
+  80%, 100% {
+    stroke-dashoffset: -1000;
+  }
+}
+
+/* Pulse Glow (used on Cover and CTA) */
+.pulse-glow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 191, 99, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(0, 191, 99, 0.45);
+  }
+}
+
+/* Phone demo chat bubble animation */
+@keyframes mockChatBubble {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Central rotating dashboard wheel (Business Model) */
+.spin-clockwise {
+  animation: spinCw 25s linear infinite;
+}
+
+@keyframes spinCw {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Slide Transition Animations (Class-based triggers) */
+.slide-exit-next {
+  opacity: 0 !important;
+  transform: scale(0.96) translateY(-40px) !important;
+}
+
+.slide-exit-prev {
+  opacity: 0 !important;
+  transform: scale(0.96) translateY(40px) !important;
+}
+
+.slide-enter-next {
+  opacity: 1 !important;
+  transform: scale(1) translateY(0) !important;
+}
+
+/* SVG Line Drawing for How it Works Workflow */
+.svg-flow-path {
+  stroke-dasharray: 20px, 10px;
+  animation: flowLine 2s linear infinite;
+}
+
+@keyframes flowLine {
+  from {
+    stroke-dashoffset: 30px;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}

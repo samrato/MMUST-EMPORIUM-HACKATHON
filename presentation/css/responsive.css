@@ -1,0 +1,257 @@
+/* 
+ * AFYAROOT Healthcare Interactive Presentation
+ * Responsive Layout Adaptations (responsive.css)
+ */
+
+@media (max-width: 1440px) {
+  .cover-title {
+    font-size: 4rem;
+  }
+  .slide-title {
+    font-size: 2.4rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .slide {
+    padding: 40px 6%;
+  }
+  
+  .slide-cover-layout {
+    grid-template-columns: 40% 60%;
+    gap: 3%;
+  }
+  
+  .cover-title {
+    font-size: 3.4rem;
+  }
+  
+  .team-grid {
+    gap: 15px;
+  }
+  
+  .cost-layout,
+  .solution-layout,
+  .impact-layout,
+  .intro-layout,
+  .problem-layout,
+  .architecture-layout {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 992px) {
+  .slide {
+    padding: 30px 4%;
+    justify-content: flex-start;
+    overflow-y: auto; /* Enable scrolling for overflow content on tablet/mobile */
+  }
+  
+  .slide-header {
+    margin-bottom: 24px;
+  }
+  
+  .slide-cover-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .cover-visual-container {
+    height: auto;
+    margin-bottom: 20px;
+  }
+  
+  .cover-image-frame {
+    max-width: 260px;
+  }
+  
+  .cover-info {
+    text-align: center;
+    align-items: center;
+  }
+  
+  .cover-logo-wrapper {
+    justify-content: center;
+  }
+  
+  .cover-title {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+  }
+  
+  .cover-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 24px;
+  }
+  
+  .cover-meta {
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .intro-layout,
+  .problem-layout,
+  .solution-layout,
+  .cost-layout,
+  .architecture-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .workflow-track {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    gap: 20px 10px;
+  }
+  
+  .workflow-line {
+    display: none; /* Hide workflow connector line on smaller screens */
+  }
+  
+  .uniqueness-split-layout {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  
+  .uniqueness-spotlight {
+    min-height: auto;
+    padding: 30px;
+  }
+  
+  .problem-split-layout {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  
+  .problem-spotlight {
+    min-height: auto;
+    padding: 30px;
+  }
+  
+  .business-model-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  
+  .business-model-center {
+    display: none; /* Hide middle logo badge on mobile grid */
+  }
+  
+  .sdg-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .cost-chart-container {
+    height: 240px;
+  }
+  
+  .cost-donut-svg {
+    width: 220px;
+    height: 220px;
+  }
+  
+
+  
+
+}
+
+@media (max-width: 768px) {
+  html, body, .presentation-container, .slides-wrapper {
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  
+  .slide {
+    position: relative !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    display: none !important;
+    overflow: visible !important;
+    padding: 60px 24px 80px 24px !important; /* Space for fixed navigation overlay */
+  }
+  
+  .slide.active {
+    display: flex !important;
+  }
+  
+  .slide-content {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 20px 0 !important;
+    overflow: visible !important;
+  }
+
+  .nav-arrows-container {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 999 !important;
+  }
+  
+  .slide-title {
+    font-size: 2rem;
+  }
+  
+  .solutions-list {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+
+  
+
+  
+  .sdg-grid {
+    grid-template-columns: 1fr;
+  }
+  
+
+  
+  .cta-title {
+    font-size: 2.5rem;
+  }
+  
+  .thankyou-title {
+    font-size: 3.5rem;
+  }
+  
+  .thankyou-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .nav-arrows-container {
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .nav-arrow-btn {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .sidebar-toc {
+    display: none; /* Hide sidebar nav on mobile devices */
+  }
+}
+
+@media (max-width: 480px) {
+
+  
+  .workflow-track {
+    grid-template-columns: 1fr;
+  }
+  
+  .cover-title {
+    font-size: 2.2rem;
+  }
+  
+  .cover-meta {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+}

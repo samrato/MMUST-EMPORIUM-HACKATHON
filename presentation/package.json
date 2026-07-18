@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "animejs": "^4.5.0"
+  },
+  "name": "presentation",
+  "version": "1.0.0",
+  "description": "A premium, interactive, and offline-compatible HTML/CSS/JavaScript slide presentation representing the **AFYAROOT Healthcare** pitch deck. Engineered to feel like an Apple Keynote or high-end startup pitch.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

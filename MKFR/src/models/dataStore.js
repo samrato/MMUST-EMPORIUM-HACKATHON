@@ -151,7 +151,9 @@ const defaultData = {
     { symptom: "chest pain", language: "en", risk: "critical", county: "Nairobi", timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
     { symptom: "severe headache", language: "sw", risk: "moderate", county: "Busia", timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString() }
   ],
-  chwReferrals: []
+  chwReferrals: [],
+  conversations: [],
+  messages: []
 };
 
 // Local JSON file DB management
@@ -546,6 +548,180 @@ module.exports = {
         return db.triageSessions[idx];
       }
       return null;
+    }
+  },
+
+  getConversationByPhoneOrWebId: async (phoneNumber, webUserId) => {
+    if (usePostgres) {
+      let query = `SELECT id, phone_number as "phoneNumber", web_user_id as "webUserId", channel, created_at as "createdAt" FROM conversations WHERE `;
+      const params = [];
+      if (phoneNumber && webUserId) {
+        query += `phone_number = $1 OR web_user_id = $2`;
+        params.push(phoneNumber, webUserId);
+      } else if (phoneNumber) {
+        query += `phone_number = $1`;
+        params.push(phoneNumber);
+      } else if (webUserId) {
+        query += `web_user_id = $1`;
+        params.push(webUserId);
+      } else {
+        return null;
+      }
+      const res = await pool.query(query, params);
+      return res.rows[0] || null;
+    } else {
+      const db = readJSON();
+      if (!db.conversations) db.conversations = [];
+      return db.conversations.find(c => 
+        (phoneNumber && c.phoneNumber === phoneNumber) || 
+        (webUserId && c.webUserId === webUserId)
+      ) || null;
+    }
+  },
+
+  createConversation: async (conversation) => {
+    if (usePostgres) {
+      const res = await pool.query(
+        `INSERT INTO conversations (id, phone_number, web_user_id, channel, created_at)
+         VALUES ($1, $2, $3, $4, NOW())
+         RETURNING id, phone_number as "phoneNumber", web_user_id as "webUserId", channel, created_at as "createdAt"`,
+        [conversation.id, conversation.phoneNumber, conversation.webUserId, conversation.channel]
+      );
+      return res.rows[0];
+    } else {
+      const db = readJSON();
+      if (!db.conversations) db.conversations = [];
+      const newConv = {
+        id: conversation.id,
+        phoneNumber: conversation.phoneNumber,
+        webUserId: conversation.webUserId,
+        channel: conversation.channel,
+        createdAt: new Date().toISOString()
+      };
+      db.conversations.push(newConv);
+      writeJSON(db);
+      return newConv;
+    }
+  },
+
+  getMessagesByConversationId: async (conversationId) => {
+    if (usePostgres) {
+      const res = await pool.query(
+        `SELECT id, conversation_id as "conversationId", sender, message, channel, classification, ai_model as "aiModel", status, timestamp
+         FROM messages WHERE conversation_id = $1 ORDER BY timestamp ASC`,
+        [conversationId]
+      );
+      return res.rows;
+    } else {
+      const db = readJSON();
+      if (!db.messages) db.messages = [];
+      return db.messages
+        .filter(m => m.conversationId === conversationId)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    }
+  },
+
+  createMessage: async (msg) => {
+    if (usePostgres) {
+      const res = await pool.query(
+        `INSERT INTO messages (id, conversation_id, sender, message, channel, classification, ai_model, status, timestamp)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+         RETURNING id, conversation_id as "conversationId", sender, message, channel, classification, ai_model as "aiModel", status, timestamp`,
+        [msg.id, msg.conversationId, msg.sender, msg.message, msg.channel, msg.classification, msg.aiModel, msg.status || 'sent']
+      );
+      return res.rows[0];
+    } else {
+      const db = readJSON();
+      if (!db.messages) db.messages = [];
+      const newMsg = {
+        id: msg.id,
+        conversationId: msg.conversationId,
+        sender: msg.sender,
+        message: msg.message,
+        channel: msg.channel,
+        classification: msg.classification,
+        aiModel: msg.aiModel,
+        status: msg.status || 'sent',
+        timestamp: new Date().toISOString()
+      };
+      db.messages.push(newMsg);
+      writeJSON(db);
+      return newMsg;
+    }
+  },
+
+  getMessagesByCategory: async (category) => {
+    if (usePostgres) {
+      const res = await pool.query(
+        `SELECT id, conversation_id as "conversationId", sender, message, channel, classification, ai_model as "aiModel", status, timestamp
+         FROM messages WHERE classification->>'category' = $1 ORDER BY timestamp DESC`,
+        [category]
+      );
+      return res.rows;
+    } else {
+      const db = readJSON();
+      if (!db.messages) db.messages = [];
+      return db.messages
+        .filter(m => m.classification?.category === category)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+  },
+
+  upsertFacility: async (fac) => {
+    if (usePostgres) {
+      await pool.query(
+        `INSERT INTO facilities (id, name, level, keph_level, county, sub_county, latitude, longitude, services, specialties, contact)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         ON CONFLICT (id) DO UPDATE SET
+           name = EXCLUDED.name,
+           level = EXCLUDED.level,
+           keph_level = EXCLUDED.keph_level,
+           county = EXCLUDED.county,
+           sub_county = EXCLUDED.sub_county,
+           latitude = EXCLUDED.latitude,
+           longitude = EXCLUDED.longitude,
+           services = EXCLUDED.services,
+           specialties = EXCLUDED.specialties,
+           contact = EXCLUDED.contact`,
+        [
+          fac.id, 
+          fac.name, 
+          fac.level || 'Health Center', 
+          fac.kephLevel || 3, 
+          fac.county || 'Kakamega', 
+          fac.subCounty || 'Kakamega Central', 
+          fac.latitude ? parseFloat(fac.latitude) : 0.0, 
+          fac.longitude ? parseFloat(fac.longitude) : 0.0, 
+          fac.services || [], 
+          fac.specialties || [], 
+          fac.contact || ''
+        ]
+      );
+    } else {
+      const db = readJSON();
+      if (!db.facilities) db.facilities = [];
+      const idx = db.facilities.findIndex(f => f.id === fac.id);
+      
+      const mapped = {
+        id: fac.id,
+        name: fac.name,
+        level: fac.level || 'Health Center',
+        kephLevel: fac.kephLevel || 3,
+        county: fac.county || 'Kakamega',
+        subCounty: fac.subCounty || 'Kakamega Central',
+        latitude: fac.latitude ? parseFloat(fac.latitude) : 0.0,
+        longitude: fac.longitude ? parseFloat(fac.longitude) : 0.0,
+        services: fac.services || [],
+        specialties: fac.specialties || [],
+        contact: fac.contact || ''
+      };
+
+      if (idx !== -1) {
+        db.facilities[idx] = mapped;
+      } else {
+        db.facilities.push(mapped);
+      }
+      writeJSON(db);
     }
   }
 };

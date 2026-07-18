@@ -321,18 +321,45 @@ async function getOSMFacilities(lat: number, lng: number): Promise<NearbyFacilit
   }
 }
 
+async function getLocalBackendFacilities(lat: number, lng: number): Promise<NearbyFacility[]> {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  try {
+    const res = await fetch(`${backendUrl}/api/facilities/nearby?lat=${lat}&lng=${lng}&radius=50`);
+    if (res.ok) {
+      const payload = await res.json();
+      if (payload.success && Array.isArray(payload.data)) {
+        return payload.data.map((f: any) => ({
+          id: String(f.id || f.code || crypto.randomUUID()),
+          name: f.name || 'Unnamed Hospital',
+          address: f.address || f.location_desc || `${f.latitude}, ${f.longitude}`,
+          rating: 4.2,
+          user_ratings_total: 10,
+          location: { lat: parseFloat(f.latitude || f.lat), lng: parseFloat(f.longitude || f.lng) },
+          open_now: f.open_now ?? true,
+          types: Array.isArray(f.services) ? f.services : ['hospital'],
+          phone: f.phone || undefined,
+          source: 'registry'
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn("Could not fetch nearby facilities from local backend server:", err);
+  }
+  return [];
+}
+
 export async function getNearbyHospitals(lat: number, lng: number): Promise<NearbyFacility[]> {
-  const [supabaseFacilities, registryFacilities, googleFacilities, osmFacilities] = await Promise.all([
+  const [localFacilities, supabaseFacilities, registryFacilities, osmFacilities] = await Promise.all([
+    getLocalBackendFacilities(lat, lng),
     getSupabaseFacilities(lat, lng),
     getRegistryFacilities(lat, lng),
-    getGoogleFacilities(lat, lng),
     getOSMFacilities(lat, lng),
   ]);
 
   const merged = mergeFacilityLists(
     mergeFacilityLists(
-      mergeFacilityLists(supabaseFacilities, registryFacilities),
-      googleFacilities
+      mergeFacilityLists(localFacilities, supabaseFacilities),
+      registryFacilities
     ),
     osmFacilities
   );
@@ -347,133 +374,12 @@ export async function getNearbyHospitals(lat: number, lng: number): Promise<Near
       .slice(0, 20);
   }
 
-  return getFallbackFacilities(lat, lng).map(f => ({
-    ...f,
-    distance: parseFloat(calculateDistance(lat, lng, f.location.lat, f.location.lng).toFixed(1))
-  })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
+  return [];
 }
 
 export async function getClosestFacility(lat: number, lng: number): Promise<NearbyFacility | null> {
   const hospitals = await getNearbyHospitals(lat, lng);
   return hospitals.length > 0 ? hospitals[0] : null;
-}
-
-async function getGoogleFacilities(lat: number, lng: number): Promise<NearbyFacility[]> {
-  if (!API_KEY) return [];
-
-  const radius = 50000;
-  const type = 'hospital';
-  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${API_KEY}`;
-
-  try {
-    const response = await fetch(`https://cors-anywhere.herokuapp.com/${url}`);
-    if (!response.ok) throw new Error('Proxy error');
-
-    const data = (await response.json()) as NearbySearchResponse;
-    const results = data.results || [];
-
-    if (results.length === 0) return [];
-
-    return results.map((place) => ({
-      id: place.place_id || place.id || crypto.randomUUID(),
-      name: place.name || 'Unknown Facility',
-      address: place.vicinity || place.address || 'Address unavailable',
-      rating: place.rating || 4.5,
-      user_ratings_total: place.user_ratings_total || 50,
-      location: place.geometry?.location || place.location || { lat, lng },
-      open_now: place.opening_hours?.open_now ?? true,
-      types: place.types || ['hospital'],
-      source: 'google',
-    }));
-  } catch {
-    return [];
-  }
-}
-
-function getFallbackFacilities(lat: number, lng: number): NearbyFacility[] {
-  return [
- {
-  id: "m1",
-  name: "MMUST Clinic",
-  address: "Comrades Way, MMUST Campus, Kakamega",
-  rating: 4.4,
-  user_ratings_total: 80,
-  location: { lat: lat + 0.0002, lng: lng + 0.0002 },
-  open_now: true,
-  types: ["clinic", "health"]
-},
-  {
-    id: "m2",
-    name: "Kakamega County General Hospital",
-    address: "Hospital Road, Kakamega",
-    rating: 4.1,
-    user_ratings_total: 320,
-    location: { lat: lat - 0.02, lng: lng - 0.005 },
-    open_now: true,
-    types: ["hospital", "general_hospital"]
-  },
-  {
-    id: "m3",
-    name: "New Kakamega Referral Hospital",
-    address: "Hospital Road, Kakamega",
-    rating: 4.0,
-    user_ratings_total: 240,
-    location: { lat: lat - 0.025, lng: lng + 0.002 },
-    open_now: true,
-    types: ["hospital", "referral_hospital"]
-  },
-  {
-    id: "m4",
-    name: "Jumuia Hospitals",
-    address: "Kisumu-Kakamega Road, Kakamega",
-    rating: 4.2,
-    user_ratings_total: 170,
-    location: { lat: lat + 0.01, lng: lng - 0.015 },
-    open_now: true,
-    types: ["hospital", "general_hospital"]
-  },
-  {
-    id: "m5",
-    name: "Nala Hospital",
-    address: "Kakamega-Mumias Road, Kakamega",
-    rating: 4.0,
-    user_ratings_total: 130,
-    location: { lat: lat + 0.008, lng: lng - 0.02 },
-    open_now: true,
-    types: ["hospital"]
-  },
-  {
-    id: "m6",
-    name: "Kakamega Central Nursing Home",
-    address: "Kakamega Town, Kakamega",
-    rating: 3.9,
-    user_ratings_total: 90,
-    location: { lat: lat + 0.012, lng: lng - 0.01 },
-    open_now: true,
-    types: ["clinic", "nursing_home"]
-  },
-  {
-    id: "m7",
-    name: "St Elizabeth Mukumu Hospital",
-    address: "E237, Mukumu, Kakamega",
-    rating: 4.3,
-    user_ratings_total: 210,
-    location: { lat: lat - 0.07, lng: lng + 0.01 },
-    open_now: true,
-    types: ["hospital", "general_hospital"]
-  },
-  {
-    id: "m8",
-    name: "Shikokho Health Clinic",
-    address: "Shikokho, Kakamega County",
-    rating: 3.8,
-    user_ratings_total: 70,
-  location: { lat: lat - 0.1, lng: lng - 0.04 },
-  open_now: true,
-  types: ["clinic", "health_center"],
-  source: 'fallback'
-  }
-];
 }
 
 export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
