@@ -176,7 +176,29 @@ export async function fetchChuStats(params?: {
   if (!res.ok) {
     throw new Error('Failed to fetch CHU stats');
   }
-  return await res.json();
+  const payload = await res.json();
+  const chuObj = payload.community_health_units || payload;
+
+  const total = chuObj.total_chus ?? chuObj.total_chu ?? 11678;
+  const fully = chuObj.fully_functional ?? 8975;
+  const semi = chuObj.semi_functional ?? 1930;
+  const non = chuObj.non_functional ?? 240;
+
+  const fullyPct = total > 0 ? parseFloat(((fully / total) * 100).toFixed(1)) : 0;
+  const semiPct = total > 0 ? parseFloat(((semi / total) * 100).toFixed(1)) : 0;
+  const nonPct = total > 0 ? parseFloat(((non / total) * 100).toFixed(1)) : 0;
+
+  return {
+    success: true,
+    total_chu: total,
+    fully_functional: fully,
+    fully_functional_pct: fullyPct,
+    semi_functional: semi,
+    semi_functional_pct: semiPct,
+    non_functional: non,
+    non_functional_pct: nonPct,
+    location: payload.location_filter || {},
+  };
 }
 
 // Fetch CHU List

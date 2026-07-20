@@ -224,12 +224,16 @@ async function searchFacilities(filters = {}) {
     list = list.filter(f => f.county && f.county.toLowerCase() === county.toLowerCase());
   }
 
-  if (minKephLevel) {
-    list = list.filter(f => f.kephLevel >= parseInt(minKephLevel));
+  if (minKephLevel && minKephLevel !== 'All') {
+    const numericLevel = parseInt(String(minKephLevel).replace(/[^0-9]/g, ''), 10);
+    if (!isNaN(numericLevel)) {
+      list = list.filter(f => (f.kephLevel || f.keph_level || 1) >= numericLevel);
+    }
   }
 
-  if (service) {
-    list = list.filter(f => f.services && f.services.some(srv => srv.toLowerCase() === service.toLowerCase()));
+  if (service && service !== 'All') {
+    const sTerm = service.toLowerCase();
+    list = list.filter(f => f.services && f.services.some(srv => srv.toLowerCase().includes(sTerm)));
   }
 
   if (search) {
@@ -256,8 +260,11 @@ async function searchFacilities(filters = {}) {
       return { ...f, distance_km: dist };
     });
 
-    if (!search && !county) {
-      list = list.filter(f => f.distance_km <= parseFloat(radius));
+    if (!search && (!county || county === 'All')) {
+      const filteredByRadius = list.filter(f => f.distance_km <= parseFloat(radius));
+      if (filteredByRadius.length > 0) {
+        list = filteredByRadius;
+      }
     }
     list.sort((a, b) => a.distance_km - b.distance_km);
   }

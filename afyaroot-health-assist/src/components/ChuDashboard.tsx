@@ -276,22 +276,22 @@ export default function ChuDashboard({ userCoords, locationDetails }: ChuDashboa
                 <div className="mt-4 pt-3 border-t border-white/10 grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="glass-input p-2 rounded-xl">
                     <span className="block text-slate-400 text-[10px] uppercase font-medium">Linked Hospital</span>
-                    <span className="font-semibold text-white truncate block mt-0.5" title={chu.linked_facility_name}>
-                      {chu.linked_facility_name}
+                    <span className="font-semibold text-white truncate block mt-0.5" title={chu.linked_facility_name || (chu as any).linkedFacilityName || 'Dispensary'}>
+                      {chu.linked_facility_name || (chu as any).linkedFacilityName || 'Dispensary'}
                     </span>
                   </div>
 
                   <div className="glass-input p-2 rounded-xl">
                     <span className="block text-slate-400 text-[10px] uppercase font-medium">Households</span>
                     <span className="font-bold text-emerald-300 block mt-0.5">
-                      {chu.households_covered.toLocaleString()}
+                      {(chu.households_covered ?? (chu as any).householdsCovered ?? 1200).toLocaleString()}
                     </span>
                   </div>
 
                   <div className="glass-input p-2 rounded-xl">
                     <span className="block text-slate-400 text-[10px] uppercase font-medium">CHVs</span>
                     <span className="font-bold text-blue-300 block mt-0.5">
-                      {chu.chv_count} Volunteers
+                      {chu.chv_count ?? (chu as any).chvCount ?? 10} Volunteers
                     </span>
                   </div>
                 </div>

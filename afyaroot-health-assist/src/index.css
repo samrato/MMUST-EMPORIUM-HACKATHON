@@ -6,76 +6,92 @@
 
 @layer base {
   :root {
-    --background: 224 50% 5%; /* #070a13 */
-    --foreground: 210 40% 98%;
+    --background: 140 20% 97%;
+    --foreground: 160 30% 10%;
 
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 30% 10%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 30% 10%;
 
-    --primary: 160 84% 39%; /* Emerald Green #10b981 */
-    --primary-foreground: 210 40% 98%;
+    --primary: 122 39% 34%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 91% 60%; /* Electric Blue #3b82f6 */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 140 25% 92%;
+    --secondary-foreground: 122 39% 24%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 140 15% 94%;
+    --muted-foreground: 160 10% 45%;
 
-    --accent: 217 91% 60%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
+    --warning: 25 95% 53%;
+    --warning-foreground: 0 0% 100%;
 
-    --success: 160 84% 39%;
-    --success-foreground: 210 40% 98%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --emergency: 0 84% 60%;
-    --emergency-foreground: 210 40% 98%;
+    --emergency: 0 84% 50%;
+    --emergency-foreground: 0 0% 100%;
 
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 160 84% 39%;
+    --border: 140 20% 88%;
+    --input: 140 20% 88%;
+    --ring: 122 39% 34%;
 
     --radius: 0.85rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 122 39% 34%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 140 25% 92%;
+    --sidebar-accent-foreground: 122 39% 24%;
+    --sidebar-border: 140 20% 88%;
+    --sidebar-ring: 122 39% 34%;
 
     --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
     --font-body: 'Inter', system-ui, sans-serif;
   }
 
   .dark {
-    --background: 224 50% 5%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 160 84% 39%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217 91% 60%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 160 84% 39%;
+    --background: 160 20% 6%;
+    --foreground: 140 20% 95%;
+    --card: 160 20% 9%;
+    --card-foreground: 140 20% 95%;
+    --popover: 160 20% 9%;
+    --popover-foreground: 140 20% 95%;
+    --primary: 122 39% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 160 15% 15%;
+    --secondary-foreground: 140 20% 90%;
+    --muted: 160 10% 18%;
+    --muted-foreground: 140 10% 60%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 10% 18%;
+    --input: 160 10% 18%;
+    --ring: 122 39% 45%;
+    --sidebar-background: 160 20% 8%;
+    --sidebar-foreground: 140 20% 90%;
+    --sidebar-primary: 122 39% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 15% 15%;
+    --sidebar-accent-foreground: 140 20% 90%;
+    --sidebar-border: 160 10% 18%;
+    --sidebar-ring: 122 39% 45%;
   }
 }
 
 @layer base {
   html {
     min-height: 100%;
-    color-scheme: dark;
   }
 
   * {
@@ -86,11 +102,9 @@
     @apply bg-background text-foreground;
     font-family: var(--font-body);
     min-height: 100vh;
-    background: #070a13;
-    background-image: 
-      radial-gradient(ellipse at 20% -10%, rgba(16, 185, 129, 0.15), transparent 45%),
-      radial-gradient(ellipse at 80% 30%, rgba(59, 130, 246, 0.15), transparent 45%),
-      radial-gradient(ellipse at 50% 90%, rgba(16, 185, 129, 0.08), transparent 50%);
+    background-image:
+      radial-gradient(circle at top left, hsl(122 39% 34% / 0.16), transparent 28%),
+      radial-gradient(circle at bottom right, hsl(199 89% 48% / 0.14), transparent 24%);
     background-attachment: fixed;
   }
 
