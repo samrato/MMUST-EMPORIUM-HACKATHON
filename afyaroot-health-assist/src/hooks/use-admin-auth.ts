@@ -8,6 +8,15 @@ const DEFAULT_FACILITY_CODES: Record<string, string> = {
   chepterit: '3333',
   kabiyet: '4444',
   mosoriot: '5555',
+  'kakamega-referral': '1001',
+  'mukumu-hospital': '1002',
+  'mmust-clinic': '1003',
+  'knh-nairobi': '6001',
+  'mtrh-eldoret': '6002',
+  'jootrh-kisumu': '6003',
+  'kakamega-county-director': '7001',
+  'nandi-county-director': '7002',
+  'nairobi-county-director': '7003',
 };
 
 interface AdminSession {
