@@ -12,8 +12,11 @@ const defaultData = {
       name: "Kenyatta National Hospital (KNH)",
       level: "Level 6 (National Referral)",
       kephLevel: 6,
+      operationStatus: "Operational",
       county: "Nairobi",
       subCounty: "Kibra",
+      ward: "Woodley/Kenyatta Golf Course",
+      constituency: "Kibra",
       latitude: -1.3013,
       longitude: 36.8016,
       services: ["Outpatient", "Inpatient", "Maternity", "Laboratory", "Pharmacy", "Emergency Care", "Pediatrics", "Cardiology", "Oncology", "Nephrology", "Orthopedic", "General Surgery"],
@@ -21,12 +24,335 @@ const defaultData = {
       contact: "+254 20 2726300"
     },
     {
-      id: "KMHFR-10002",
-      name: "Kakamega County General Referral Hospital",
-      level: "Level 5 (County Referral)",
-      kephLevel: 5,
+      id: "30386",
+      name: "Kakamega Orthopaedic Hospital",
+      level: "Primary care hospitals",
+      kephLevel: 4,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Malava",
+      ward: "East Kabras",
+      constituency: "Malava",
+      latitude: 0.4485,
+      longitude: 34.8550,
+      services: ["Outpatient", "Inpatient", "Orthopedic Surgery", "Emergency Care"],
+      specialties: ["Orthopedics", "General Surgery"],
+      contact: "+254 56 30001"
+    },
+    {
+      id: "17825",
+      name: "Kakamega Grace Medical Centre",
+      level: "Medical Center",
+      kephLevel: 3,
+      operationStatus: "Operational",
       county: "Kakamega",
       subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
+      latitude: 0.2830,
+      longitude: 34.7520,
+      services: ["Outpatient", "Laboratory", "Pharmacy", "Maternity"],
+      specialties: ["General Medicine"],
+      contact: "+254 56 30002"
+    },
+    {
+      id: "25996",
+      name: "Equity Afia Medical Clinic (Kakamega)",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
+      latitude: 0.2840,
+      longitude: 34.7530,
+      services: ["Outpatient", "Laboratory", "Pharmacy", "Consultation"],
+      specialties: ["General Practice", "Pediatrics"],
+      contact: "+254 700 395395"
+    },
+    {
+      id: "23989",
+      name: "St.Christine Medical Centre-Kakamega",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Sheywe",
+      constituency: "Lurambi",
+      latitude: 0.2820,
+      longitude: 34.7510,
+      services: ["Outpatient", "Laboratory", "Pharmacy"],
+      specialties: ["General Medicine"],
+      contact: "+254 56 30004"
+    },
+    {
+      id: "15914",
+      name: "Kakamega Forest Dispensary",
+      level: "Dispensary",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Shinyalu",
+      ward: "Isukha Central",
+      constituency: "Shinyalu",
+      latitude: 0.2350,
+      longitude: 34.8600,
+      services: ["Outpatient", "Basic Triage", "Immunization"],
+      specialties: ["Nursing"],
+      contact: "+254 56 30005"
+    },
+    {
+      id: "34063",
+      name: "Kakamega Dental Suite",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Mahiakalo",
+      constituency: "Lurambi",
+      latitude: 0.2890,
+      longitude: 34.7600,
+      services: ["Dental Care", "Outpatient", "Oral Surgery"],
+      specialties: ["Dentistry"],
+      contact: "+254 56 30006"
+    },
+    {
+      id: "33831",
+      name: "St. Raphael Kakamega Medical Clinic",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
+      latitude: 0.2850,
+      longitude: 34.7540,
+      services: ["Outpatient", "Laboratory", "Pharmacy"],
+      specialties: ["General Practice"],
+      contact: "+254 56 30007"
+    },
+    {
+      id: "33689",
+      name: "Sonar Imaging Centre-Kakamega",
+      level: "Medical Center",
+      kephLevel: 3,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Mahiakalo",
+      constituency: "Lurambi",
+      latitude: 0.2880,
+      longitude: 34.7610,
+      services: ["Ultrasound", "X-Ray", "Radiology"],
+      specialties: ["Radiology"],
+      contact: "+254 56 30008"
+    },
+    {
+      id: "24868",
+      name: "Oasis Doctors Plaza Kakamega",
+      level: "Primary care hospitals",
+      kephLevel: 4,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
+      latitude: 0.2860,
+      longitude: 34.7550,
+      services: ["Outpatient", "Inpatient", "Maternity", "Consultation", "Pharmacy"],
+      specialties: ["Obstetrics & Gynecology", "Pediatrics", "General Surgery"],
+      contact: "+254 56 30009"
+    },
+    {
+      id: "32949",
+      name: "West Hill Eye Centre-Kakamega",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
+      latitude: 0.2835,
+      longitude: 34.7525,
+      services: ["Ophthalmology", "Optometry", "Eye Surgery"],
+      specialties: ["Ophthalmology"],
+      contact: "+254 56 30010"
+    },
+    {
+      id: "32950",
+      name: "Avenue Health Care Limited-Kakamega",
+      level: "Basic Health Centre",
+      kephLevel: 3,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Sheywe",
+      constituency: "Lurambi",
+      latitude: 0.2815,
+      longitude: 34.7505,
+      services: ["Outpatient", "Laboratory", "Pharmacy", "Emergency Care"],
+      specialties: ["General Medicine", "Pediatrics"],
+      contact: "+254 56 30011"
+    },
+    {
+      id: "21434",
+      name: "Marie Stopes Kakamega Clinic",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Sheywe",
+      constituency: "Lurambi",
+      latitude: 0.2810,
+      longitude: 34.7500,
+      services: ["Reproductive Health", "Family Planning", "Outpatient"],
+      specialties: ["Obstetrics & Gynecology"],
+      contact: "+254 56 30012"
+    },
+    {
+      id: "23968",
+      name: "Kakamega Medcare Clinic",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Sheywe",
+      constituency: "Lurambi",
+      latitude: 0.2812,
+      longitude: 34.7502,
+      services: ["Outpatient", "Laboratory", "Pharmacy"],
+      specialties: ["General Medicine"],
+      contact: "+254 56 30013"
+    },
+    {
+      id: "28940",
+      name: "Eminent Smiles Dental Clinic Kakamega",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Mahiakalo",
+      constituency: "Lurambi",
+      latitude: 0.2885,
+      longitude: 34.7605,
+      services: ["Dental Care", "Oral Hygiene"],
+      specialties: ["Dentistry"],
+      contact: "+254 56 30014"
+    },
+    {
+      id: "24247",
+      name: "Bliss GVS Health Care Ltd Kakamega",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Mahiakalo",
+      constituency: "Lurambi",
+      latitude: 0.2882,
+      longitude: 34.7602,
+      services: ["Outpatient", "Laboratory", "Pharmacy", "Consultation"],
+      specialties: ["General Practice"],
+      contact: "+254 56 30015"
+    },
+    {
+      id: "15892",
+      name: "Gk Prisons Dispensary (Kakamega Central)",
+      level: "Dispensary",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
+      latitude: 0.2845,
+      longitude: 34.7535,
+      services: ["Outpatient", "Basic Triage", "Pharmacy"],
+      specialties: ["General Practice"],
+      contact: "+254 56 30016"
+    },
+    {
+      id: "29077",
+      name: "Kakamega Satelite Blood Transfusion Centre",
+      level: "Satellite Blood Bank",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
+      latitude: 0.2838,
+      longitude: 34.7528,
+      services: ["Blood Donation", "Blood Transfusion Services", "Laboratory"],
+      specialties: ["Hematology"],
+      contact: "+254 56 30017"
+    },
+    {
+      id: "27335",
+      name: "Kakamega High School Medical Clinic",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
+      latitude: 0.2842,
+      longitude: 34.7532,
+      services: ["Outpatient", "First Aid", "Basic Triage"],
+      specialties: ["School Health"],
+      contact: "+254 56 30018"
+    },
+    {
+      id: "23500",
+      name: "Kakamega Hilltop Medical Clinic",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Butsotso East",
+      constituency: "Lurambi",
+      latitude: 0.2900,
+      longitude: 34.7450,
+      services: ["Outpatient", "Laboratory", "Pharmacy"],
+      specialties: ["General Practice"],
+      contact: "+254 56 30019"
+    },
+    {
+      id: "15844",
+      name: "Kakamega Central Nursing Home",
+      level: "Comprehensive Health Centre",
+      kephLevel: 3,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Sheywe",
+      constituency: "Lurambi",
+      latitude: 0.2825,
+      longitude: 34.7515,
+      services: ["Outpatient", "Inpatient", "Maternity", "Pharmacy", "Laboratory"],
+      specialties: ["Nursing Care", "General Medicine"],
+      contact: "+254 56 30020"
+    },
+    {
+      id: "15915",
+      name: "Kakamega County General Hospital",
+      level: "Secondary care hospitals",
+      kephLevel: 5,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
       latitude: 0.2828,
       longitude: 34.7519,
       services: ["Outpatient", "Inpatient", "Maternity", "Laboratory", "Pharmacy", "Emergency Care", "Pediatrics", "Orthopedic", "General Surgery"],
@@ -34,12 +360,47 @@ const defaultData = {
       contact: "+254 56 31122"
     },
     {
+      id: "21905",
+      name: "The Agakhan Medical Centre Kakamega",
+      level: "Medical Clinic",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Mahiakalo",
+      constituency: "Lurambi",
+      latitude: 0.2888,
+      longitude: 34.7608,
+      services: ["Outpatient", "Laboratory", "Pharmacy", "Consultation"],
+      specialties: ["General Medicine", "Pediatrics"],
+      contact: "+254 56 30021"
+    },
+    {
+      id: "21020",
+      name: "Kakamega County Beyond Zero Mobile Clinic",
+      level: "Dispensary",
+      kephLevel: 2,
+      operationStatus: "Operational",
+      county: "Kakamega",
+      subCounty: "Lurambi",
+      ward: "Shirere",
+      constituency: "Lurambi",
+      latitude: 0.2832,
+      longitude: 34.7522,
+      services: ["Mobile Health", "Maternal Health", "Outpatient", "Immunization"],
+      specialties: ["Maternal & Child Health"],
+      contact: "+254 56 30022"
+    },
+    {
       id: "KMHFR-10003",
       name: "Masinde Muliro University Clinic (MMUST Clinic)",
       level: "Level 2 (Dispensary)",
       kephLevel: 2,
+      operationStatus: "Operational",
       county: "Kakamega",
       subCounty: "Lurambi",
+      ward: "Mahiakalo",
+      constituency: "Lurambi",
       latitude: 0.2882,
       longitude: 34.7675,
       services: ["Outpatient", "Laboratory", "Pharmacy", "Basic Triage"],
@@ -47,56 +408,20 @@ const defaultData = {
       contact: "+254 702 597360"
     },
     {
-      id: "KMHFR-10004",
-      name: "M.P. Shah Hospital",
-      level: "Level 5 (County Referral Private)",
-      kephLevel: 5,
-      county: "Nairobi",
-      subCounty: "Westlands",
-      latitude: -1.2647,
-      longitude: 36.8118,
-      services: ["Outpatient", "Inpatient", "Maternity", "Laboratory", "Pharmacy", "Emergency Care", "Pediatrics", "Cardiology", "Oncology", "Nephrology", "Orthopedic", "General Surgery"],
-      specialties: ["Cardiology", "Pediatrics", "General Surgery", "Nephrology"],
-      contact: "+254 20 4291000"
-    },
-    {
-      id: "KMHFR-10005",
-      name: "The Nairobi Hospital",
-      level: "Level 6 (National Referral Private)",
-      kephLevel: 6,
-      county: "Nairobi",
-      subCounty: "Dagoretti North",
-      latitude: -1.2941,
-      longitude: 36.8041,
-      services: ["Outpatient", "Inpatient", "Maternity", "Laboratory", "Pharmacy", "Emergency Care", "Pediatrics", "Cardiology", "Oncology", "Nephrology", "Orthopedic", "General Surgery"],
-      specialties: ["Cardiology", "Oncology", "Radiology", "General Surgery", "Nephrology"],
-      contact: "+254 703 082000"
-    },
-    {
       id: "KMHFR-10006",
       name: "Mukumu Mission Hospital",
       level: "Level 4 (Sub-County Referral)",
       kephLevel: 4,
+      operationStatus: "Operational",
       county: "Kakamega",
       subCounty: "Shinyalu",
+      ward: "Isukha Central",
+      constituency: "Shinyalu",
       latitude: 0.2052,
       longitude: 34.7788,
       services: ["Outpatient", "Inpatient", "Maternity", "Laboratory", "Pharmacy", "Emergency Care", "Pediatrics"],
       specialties: ["General Medicine", "Obstetrics & Gynecology"],
       contact: "+254 722 890456"
-    },
-    {
-      id: "KMHFR-10007",
-      name: "Alupe Sub-County Hospital",
-      level: "Level 4 (Sub-County)",
-      kephLevel: 4,
-      county: "Busia",
-      subCounty: "Teso South",
-      latitude: 0.4912,
-      longitude: 34.1235,
-      services: ["Outpatient", "Inpatient", "Maternity", "Laboratory", "Pharmacy", "Emergency Care", "Pediatrics"],
-      specialties: ["General Medicine"],
-      contact: "+254 711 223344"
     }
   ],
   liveStatus: {
@@ -248,8 +573,39 @@ module.exports = {
       );
       return res.rows;
     } else {
-      return readJSON().facilities;
+      return readJSON().facilities || [];
     }
+  },
+
+  getChus: async () => {
+    if (usePostgres) {
+      try {
+        const res = await pool.query(`SELECT id, code, name, status, county, sub_county as "subCounty", constituency, ward, linked_facility_id as "linkedFacilityId", linked_facility_name as "linkedFacilityName", households_covered as "householdsCovered", chvs_count as "chvsCount", latitude, longitude FROM community_health_units`);
+        return res.rows;
+      } catch (e) {
+        return readJSON().chus || [];
+      }
+    } else {
+      return readJSON().chus || [];
+    }
+  },
+
+  getChuById: async (id) => {
+    const list = await module.exports.getChus();
+    return list.find(c => c.id === id || c.code === id) || null;
+  },
+
+  upsertChu: async (chu) => {
+    const db = readJSON();
+    if (!db.chus) db.chus = [];
+    const idx = db.chus.findIndex(c => c.id === chu.id || c.code === chu.code);
+    if (idx !== -1) {
+      db.chus[idx] = { ...db.chus[idx], ...chu };
+    } else {
+      db.chus.push(chu);
+    }
+    writeJSON(db);
+    return chu;
   },
 
   getFacilityById: async (id) => {

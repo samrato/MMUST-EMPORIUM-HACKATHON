@@ -1,74 +1,92 @@
-# KMHFR API Integration Documentation (Truth Source Layer)
+# AFYAROOT - KMHFR API & Facilities Integration Documentation
 
-This document outlines the official endpoints consumed from the **Kenya Master Health Facility Registry (KMHFR)** portal (http://kmhfr.health.go.ke/) to establish our static foundation. These endpoints allow the system to map all registered hospitals, dispensaries, health centers, and specialties in Kenya.
-
----
-
-## 1. Authentication
-
-KMHFR API uses OAuth2 standard token-based authentication.
-
-### **Endpoint: POST `/api/o/token/`**
-- **Purpose**: Retrieve an access token.
-- **Headers**:
-  - `Content-Type: application/x-www-form-urlencoded`
-- **Request Body**:
-  ```json
-  {
-    "grant_type": "password",
-    "username": "your_client_username",
-    "password": "your_client_password",
-    "client_id": "your_oauth_client_id",
-    "client_secret": "your_oauth_client_secret"
-  }
-  ```
-- **Response**:
-  ```json
-  {
-    "access_token": "eyJhbGciOi...",
-    "expires_in": 86400,
-    "token_type": "Bearer",
-    "scope": "read write"
-  }
-  ```
+This document serves as the complete technical specification for the **AFYAROOT Backend Healthcare Navigation System**, describing integration with the **Kenya Master Health Facility Registry (KMHFR)** portal (`https://kmhfr.health.go.ke` / `https://api.kmhfr.health.go.ke`).
 
 ---
 
-## 2. Facility Registry & Metadata Endpoints
+## 1. System Architecture Overview
 
-To populate the **KMHFR Data Layer (Static Foundation)**, the AFYAROOT backend requires endpoints to fetch facility records, coordinates, levels, and services.
+The system operates a **Dual-Layer Architecture**:
+1. **Live Remote Layer**: Direct live search against official KMHFR API endpoints (`/api/facilities/facilities/` and `/api/chul/units/`).
+2. **Local Synced Cache & Offline Failover**: SQLite / PostgreSQL / file-persisted dataset that ensures 0ms latency for triage, routing, and offline CHW (Community Health Worker) sync.
 
-### **Endpoint 1: Fetch Facilities List (Filtered)**
-* **HTTP Method**: `GET`
-* **URL**: `/api/facilities/facilities/`
+```
++-------------------------------------------------------------------------+
+|                              CLIENT / APP                               |
++-------------------------------------------------------------------------+
+                                    |
+                                    v
++-------------------------------------------------------------------------+
+|                         AFYAROOT REST API SERVER                        |
+|                               (server.js)                               |
++-------------------------------------------------------------------------+
+       |                                                    |
+       v                                                    v
++------------------------------------+    +-------------------------------+
+|  LIVE KMHFR API DIRECT SEARCH      |    | LOCAL DATABASE CACHE LAYER    |
+| (api.kmhfr.health.go.ke)           |    | (PostgreSQL / db.json)        |
++------------------------------------+    +-------------------------------+
+```
+
+---
+
+## 2. API Endpoints Reference
+
+### A. Health Facilities Search & Registry
+
+#### `GET /api/facilities`
+Retrieves facilities filtered by keyword search, location administrative boundaries, KEPH levels, or services.
+
 * **Query Parameters**:
-  - `county`: Filter by county code/name (e.g., `Kakamega`, `Nairobi`)
-  - `keph_level`: Filter by KEPH classification levels (e.g., `2`, `4`, `5`, `6`)
-  - `active`: `true` (Only return operational facilities)
-  - `page_size`: Pagination limit (default `100`)
-* **Headers**:
-  - `Authorization: Bearer <access_token>`
-* **Response Payload (Standard Schema)**:
+  * `search` or `q` *(string, optional)*: Keyword to match facility name, code (e.g. `30386`, `15915`), level, county, sub-county, ward, or status.
+  * `county` *(string, optional)*: Filter by County name (e.g. `Kakamega`, `Nairobi`).
+  * `subCounty` or `constituency` *(string, optional)*: Filter by Sub-County / Constituency (e.g. `Lurambi`, `Malava`).
+  * `ward` *(string, optional)*: Filter by Ward (e.g. `Shirere`, `East Kabras`, `Sheywe`, `Mahiakalo`).
+  * `minKephLevel` *(number, optional)*: Minimum KEPH level (e.g., `2` for Dispensary, `4` for Level 4 Hospital, `5` for Level 5 Referral).
+  * `service` *(string, optional)*: Service capability filter (e.g., `Emergency Care`, `Maternity`, `Orthopedics`).
+
+* **Example Request**:
+  ```http
+  GET /api/facilities?search=kakamega
+  ```
+
+* **Example Response**:
   ```json
   {
-    "count": 14250,
-    "next": "http://api.kmhfr.health.go.ke/api/facilities/facilities/?page=2",
-    "previous": null,
-    "results": [
+    "success": true,
+    "count": 25,
+    "data": [
       {
-        "id": "7662c930-b3a6-4a9c-a110-388a1e27a9e6",
-        "code": 10002,
-        "name": "Kakamega County General Referral Hospital",
-        "facility_type_name": "County Referral Hospital",
-        "keph_level": "Level 5",
-        "keph_level_value": 5,
-        "county_name": "Kakamega",
-        "sub_county_name": "Lurambi",
-        "constituency_name": "Lurambi",
-        "ward_name": "Sheywe",
-        "lat": 0.2828,
-        "long": 34.7519,
-        "is_open": true
+        "id": "30386",
+        "name": "Kakamega Orthopaedic Hospital",
+        "level": "Primary care hospitals",
+        "kephLevel": 4,
+        "operationStatus": "Operational",
+        "county": "Kakamega",
+        "subCounty": "Malava",
+        "ward": "East Kabras",
+        "constituency": "Malava",
+        "latitude": 0.4485,
+        "longitude": 34.855,
+        "services": ["Outpatient", "Inpatient", "Orthopedic Surgery", "Emergency Care"],
+        "specialties": ["Orthopedics", "General Surgery"],
+        "contact": "+254 56 30001"
+      },
+      {
+        "id": "15915",
+        "name": "Kakamega County General Hospital",
+        "level": "Secondary care hospitals",
+        "kephLevel": 5,
+        "operationStatus": "Operational",
+        "county": "Kakamega",
+        "subCounty": "Lurambi",
+        "ward": "Shirere",
+        "constituency": "Lurambi",
+        "latitude": 0.2828,
+        "longitude": 34.7519,
+        "services": ["Outpatient", "Inpatient", "Maternity", "Laboratory", "Pharmacy", "Emergency Care"],
+        "specialties": ["Obstetrics & Gynecology", "Pediatrics", "General Surgery"],
+        "contact": "+254 56 31122"
       }
     ]
   }
@@ -76,78 +94,299 @@ To populate the **KMHFR Data Layer (Static Foundation)**, the AFYAROOT backend r
 
 ---
 
-### **Endpoint 2: Fetch Detailed Facility Info (GIS, Services & Contacts)**
-This endpoint fetches precise GIS points, contact channels, and operational capabilities.
-* **HTTP Method**: `GET`
-* **URL**: `/api/facilities/facilities/{facility_id}/`
-* **Headers**:
-  - `Authorization: Bearer <access_token>`
-* **Response Payload**:
+#### `GET /api/facilities/nearby`
+Retrieves facilities sorted by GIS proximity (Haversine distance algorithm) from user coordinates.
+
+* **Query Parameters**:
+  * `lat` *(number, required)*: User latitude (e.g. `0.2828`).
+  * `lng` *(number, required)*: User longitude (e.g. `34.7519`).
+  * `radius` *(number, optional)*: Search radius in km (default `20`).
+
+* **Example Request**:
+  ```http
+  GET /api/facilities/nearby?lat=0.2828&lng=34.7519&radius=10
+  ```
+
+---
+
+#### `GET /api/facilities/:id`
+Retrieves detailed static facility record combined with the **Live Workload Status Layer** (queue counts, doctor availability, bed capacity, trust freshness rating).
+
+* **Example Request**:
+  ```http
+  GET /api/facilities/15915
+  ```
+
+---
+
+### B. Community Health Units (CHUs / CHULs)
+
+#### `GET /api/facilities/chu`
+Retrieves Community Health Units filtered by keyword search, location (county, constituency, ward), or functionality status.
+
+* **Query Parameters**:
+  * `search` or `q` *(string, optional)*: Keyword to search CHU name, code (e.g., `11678-01`), linked facility, or location.
+  * `county` *(string, optional)*: Filter by County name (e.g. `Kakamega`).
+  * `constituency` or `subCounty` *(string, optional)*: Filter by Constituency / Sub-County (e.g. `Lurambi`).
+  * `ward` *(string, optional)*: Filter by Ward (e.g. `Shirere`).
+  * `status` *(string, optional)*: `Fully-Functional`, `Semi-Functional`, or `Non-Functional`.
+
+* **Example Request**:
+  ```http
+  GET /api/facilities/chu?ward=Shirere
+  ```
+
+* **Example Response**:
   ```json
   {
-    "id": "7662c930-b3a6-4a9c-a110-388a1e27a9e6",
-    "code": 10002,
-    "name": "Kakamega County General Referral Hospital",
-    "keph_level": "Level 5",
-    "coordinates": {
-      "type": "Point",
-      "coordinates": [34.7519, 0.2828] // [longitude, latitude]
+    "success": true,
+    "count": 1,
+    "data": [
+      {
+        "id": "CHU-3001",
+        "code": "11678-01",
+        "name": "Shirere Community Health Unit",
+        "status": "Fully-Functional",
+        "county": "Kakamega",
+        "subCounty": "Lurambi",
+        "constituency": "Lurambi",
+        "ward": "Shirere",
+        "linkedFacilityId": "15915",
+        "linkedFacilityName": "Kakamega County General Hospital",
+        "householdsCovered": 1250,
+        "chvsCount": 10,
+        "latitude": 0.2828,
+        "longitude": 34.7519
+      }
+    ]
+  }
+  ```
+
+---
+
+#### `GET /api/facilities/chu/stats`
+Computes **live, non-hardcoded functionality statistics** for Community Health Units at national, county, constituency, or ward level.
+
+* **Query Parameters**:
+  * `county` *(string, optional)*
+  * `constituency` or `subCounty` *(string, optional)*
+  * `ward` *(string, optional)*
+
+* **Example Request (National Level)**:
+  ```http
+  GET /api/facilities/chu/stats
+  ```
+* **Response**:
+  ```json
+  {
+    "success": true,
+    "location_filter": {
+      "county": "All Counties (National)",
+      "constituency": "All Constituencies",
+      "ward": "All Wards"
     },
-    "contacts": [
-      { "contact_type_name": "LANDLINE", "contact": "+254 56 31122" },
-      { "contact_type_name": "EMAIL", "contact": "info@kakamegareferral.go.ke" }
-    ],
-    "services": [
-      { "service_name": "Outpatient Services", "category": "General Outpatient" },
-      { "service_name": "Emergency Care", "category": "Emergency Services" },
-      { "service_name": "Maternity Services", "category": "Reproductive Health" },
-      { "service_name": "Basic Laboratory Services", "category": "Diagnostics" }
-    ]
+    "community_health_units": {
+      "total_chus": 11678,
+      "fully_functional": 8975,
+      "semi_functional": 1930,
+      "non_functional": 240,
+      "functional_rate": "76.9%"
+    }
   }
   ```
 
----
-
-### **Endpoint 3: Retrieve Services Catalogue**
-Returns the master index of all services that facilities can offer in Kenya.
-* **HTTP Method**: `GET`
-* **URL**: `/api/facilities/services/`
-* **Headers**:
-  - `Authorization: Bearer <access_token>`
-* **Response Payload**:
+* **Example Request (County Level Filter)**:
+  ```http
+  GET /api/facilities/chu/stats?county=Kakamega
+  ```
+* **Response**:
   ```json
   {
-    "results": [
-      { "id": "1", "name": "Outpatient" },
-      { "id": "2", "name": "Emergency Care" },
-      { "id": "3", "name": "Maternity" },
-      { "id": "4", "name": "Laboratory" }
-    ]
+    "success": true,
+    "location_filter": {
+      "county": "Kakamega",
+      "constituency": "All Constituencies",
+      "ward": "All Wards"
+    },
+    "community_health_units": {
+      "total_chus": 6,
+      "fully_functional": 4,
+      "semi_functional": 1,
+      "non_functional": 1,
+      "functional_rate": "66.7%"
+    }
   }
   ```
 
 ---
 
-### **Endpoint 4: Retrieve Specialties Catalogue**
-Returns the clinical specialties (e.g. Oncology, Cardiology) to map complex triages.
-* **HTTP Method**: `GET`
-* **URL**: `/api/facilities/specialities/`
-* **Response Payload**:
+### D. Automatic Zero-Search GPS Location Resolution
+
+When user GPS coordinates (`lat`, `lng`) are passed to `/api/facilities`, `/api/facilities/chu`, or `/api/facilities/chu/stats`:
+1. The user **does not need to type any search query** or select location names.
+2. The system automatically resolves the user's exact current **Ward**, **Sub-County / Constituency**, and **County**.
+3. All local health facilities & CHUs in the user's vicinity are **automatically returned and sorted by proximity (closest first with `distance_km`)**.
+4. Local CHU functionality statistics are automatically computed for the user's detected location.
+
+* **Example Request (Passing Only GPS Coordinates)**:
+  ```http
+  GET /api/facilities/chu/stats?lat=0.2828&lng=34.7519
+  ```
+* **Auto-Detected Response**:
   ```json
   {
-    "results": [
-      { "id": "10", "name": "Cardiology" },
-      { "id": "11", "name": "Oncology" },
-      { "id": "12", "name": "General Surgery" }
+    "success": true,
+    "auto_detected_from_gps": {
+      "lat": 0.2828,
+      "lng": 34.7519,
+      "detected_ward": "Shirere",
+      "detected_sub_county": "Lurambi",
+      "detected_county": "Kakamega"
+    },
+    "location_filter": {
+      "county": "Kakamega",
+      "constituency": "Lurambi",
+      "ward": "Shirere"
+    },
+    "community_health_units": {
+      "total_chus": 1,
+      "fully_functional": 1,
+      "semi_functional": 0,
+      "non_functional": 0,
+      "functional_rate": "100.0%"
+    },
+    "units": [
+      {
+        "id": "CHU-3001",
+        "code": "11678-01",
+        "name": "Shirere Community Health Unit",
+        "status": "Fully-Functional",
+        "county": "Kakamega",
+        "subCounty": "Lurambi",
+        "ward": "Shirere",
+        "distance_km": 0
+      }
     ]
   }
   ```
 
 ---
 
-## 3. Data Integration Strategy in AFYAROOT
+### E. Live Registry Sync & Metadata
 
-Since KMHFR is a static dictionary that rarely changes, the AFYAROOT backend implements a caching layer. 
-1. **Initial Seed Sync**: During deployment, the system calls `/api/facilities/facilities/` and caches operational details into our database.
-2. **Weekly Sync Cron**: A background task updates coordinate changes and new facilities.
-3. **Local Failover**: In the event of KMHFR downtime, the system fails over to the local database cache to prevent disruption of triage and routing.
+#### `POST /api/facilities/sync`
+Synchronizes local database cache with official live KMHFR OAuth API (`https://api.kmhfr.health.go.ke`).
+
+#### `GET /api/facilities/metadata`
+Returns index catalogues of KEPH levels, services, and specialties.
+
+---
+
+## 3. Remote KMHFR Official API Integration
+
+AFYAROOT directly queries official KMHFR OAuth REST endpoints when credentials are set in environment variables:
+
+| Remote Endpoint | Purpose |
+|---|---|
+| `POST https://api.kmhfr.health.go.ke/o/token/` | Retrieves Bearer OAuth2 Access Token |
+| `GET https://api.kmhfr.health.go.ke/api/facilities/facilities/` | Query active facilities by search/county/keph_level |
+| `GET https://api.kmhfr.health.go.ke/api/chul/units/` | Query Community Health Units live |
+| `GET https://api.kmhfr.health.go.ke/api/facilities/services/` | Master healthcare services index |
+
+---
+
+## 5. Frontend Integration Guide (JavaScript & React Examples)
+
+### A. Zero-Search Auto-Location Hook (HTML / Vanilla JS / React)
+Automatically gets user GPS coordinates and fetches nearby facilities & CHUs without requiring any manual search input:
+
+```javascript
+// Get user's current GPS position and load local facilities & health stats
+function loadLocalHealthData() {
+  if (!navigator.geolocation) {
+    console.warn("Geolocation not supported by browser");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    const { latitude, longitude } = position.coords;
+
+    // 1. Fetch nearby facilities sorted by proximity (closest first)
+    const facRes = await fetch(`http://localhost:5000/api/facilities?lat=${latitude}&lng=${longitude}`);
+    const facData = await facRes.json();
+    console.log("Closest Facilities:", facData.data);
+
+    // 2. Fetch CHU functionality stats for detected GPS location
+    const statsRes = await fetch(`http://localhost:5000/api/facilities/chu/stats?lat=${latitude}&lng=${longitude}`);
+    const statsData = await statsRes.json();
+    console.log("Detected Location:", statsData.auto_detected_from_gps);
+    console.log("Local CHU Stats:", statsData.community_health_units);
+  }, (err) => {
+    console.error("GPS location permission denied:", err);
+  });
+}
+```
+
+### B. Search Input Bar Integration
+```javascript
+// Connect a UI search bar to query KMHFR registry
+async function handleFacilitySearch(keyword) {
+  const res = await fetch(`http://localhost:5000/api/facilities?search=${encodeURIComponent(keyword)}`);
+  const result = await res.json();
+  return result.data; // Array of matching health facilities
+}
+```
+
+### C. County & Ward Dropdown Filter Integration
+```javascript
+// Load CHU functionality dashboard for selected county or ward
+async function loadCountyDashboard(countyName, wardName = '') {
+  let url = `http://localhost:5000/api/facilities/chu/stats?county=${encodeURIComponent(countyName)}`;
+  if (wardName) url += `&ward=${encodeURIComponent(wardName)}`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.community_health_units;
+  /* Returns:
+     {
+       total_chus: 6,
+       fully_functional: 4,
+       semi_functional: 1,
+       non_functional: 1,
+       functional_rate: "66.7%"
+     }
+  */
+}
+```
+
+### D. React Custom Hook Example
+```jsx
+import { useState, useEffect } from 'react';
+
+export function useLocalHealthRegistry() {
+  const [facilities, setFacilities] = useState([]);
+  const [chuStats, setChuStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      
+      const [facRes, statsRes] = await Promise.all([
+        fetch(`http://localhost:5000/api/facilities?lat=${latitude}&lng=${longitude}`),
+        fetch(`http://localhost:5000/api/facilities/chu/stats?lat=${latitude}&lng=${longitude}`)
+      ]);
+
+      const facData = await facRes.json();
+      const statsData = await statsRes.json();
+
+      setFacilities(facData.data || []);
+      setChuStats(statsData);
+      setLoading(false);
+    });
+  }, []);
+
+  return { facilities, chuStats, loading };
+}
+```
+

@@ -7,8 +7,9 @@ const { calculateFreshness } = require('../utils/helpers');
  */
 exports.getAllFacilities = async (req, res) => {
   try {
-    const { county, minKephLevel, service } = req.query;
-    const facilities = await kmhfrService.searchFacilities({ county, minKephLevel, service });
+    const { county, minKephLevel, service, search, q, lat, lng, radius } = req.query;
+    const searchQuery = search || q;
+    const facilities = await kmhfrService.searchFacilities({ county, minKephLevel, service, search: searchQuery, lat, lng, radius });
 
     return res.status(200).json({
       success: true,
@@ -149,6 +150,55 @@ exports.syncFacilities = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: error.message || "Failed to synchronize facility registry with KMHFR."
+    });
+  }
+};
+
+/**
+ * Get Community Health Units (CHUs / CHULs) by search, location filters, or user GPS coordinates
+ */
+exports.getCommunityHealthUnits = async (req, res) => {
+  try {
+    const { search, q, county, constituency, subCounty, ward, status, lat, lng } = req.query;
+    const searchQuery = search || q;
+    const chus = await kmhfrService.searchCommunityHealthUnits({
+      search: searchQuery,
+      county,
+      constituency,
+      subCounty,
+      ward,
+      status,
+      lat,
+      lng
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: chus.length,
+      data: chus
+    });
+  } catch (error) {
+    console.error("Error in facility controller (getCommunityHealthUnits):", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error retrieving Community Health Units."
+    });
+  }
+};
+
+/**
+ * Get Community Health Unit functionality statistics (live calculations by county, constituency, ward, or user GPS coordinates)
+ */
+exports.getChuStats = async (req, res) => {
+  try {
+    const { county, constituency, subCounty, ward, lat, lng } = req.query;
+    const stats = await kmhfrService.getChuStatistics({ county, constituency, subCounty, ward, lat, lng });
+    return res.status(200).json(stats);
+  } catch (error) {
+    console.error("Error in facility controller (getChuStats):", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error computing Community Health Unit statistics."
     });
   }
 };
