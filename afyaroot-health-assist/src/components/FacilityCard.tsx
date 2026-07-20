@@ -27,28 +27,46 @@ export default function FacilityCard({
     hours_since_update: 0.2,
   };
 
-  const getEmergencyBadge = (status: string) => {
+  const getEmergencyBadge = (status: string, queueLen: number) => {
     switch (status) {
       case 'critical':
         return (
-          <span className="flex items-center justify-center gap-1.5 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 text-[11px] font-bold animate-pulse">
-            <AlertCircle className="w-3 h-3 shrink-0" />
-            <span>CRITICAL</span>
-          </span>
+          <div className="group/er relative flex items-center justify-center">
+            <span className="flex items-center justify-center gap-1 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 text-[11px] font-bold animate-pulse cursor-help">
+              <AlertCircle className="w-3 h-3 shrink-0" />
+              <span>CRITICAL</span>
+            </span>
+            {/* Context Tooltip */}
+            <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/er:block w-48 p-2 rounded-xl bg-slate-900 border border-red-500/40 text-[10px] text-red-300 shadow-xl z-20 text-center">
+              ⚠️ High Emergency Intake & Overflow Queue ({queueLen} waiting)
+            </div>
+          </div>
         );
       case 'busy':
         return (
-          <span className="flex items-center justify-center gap-1.5 px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[11px] font-bold">
-            <Clock className="w-3 h-3 shrink-0" />
-            <span>BUSY</span>
-          </span>
+          <div className="group/er relative flex items-center justify-center">
+            <span className="flex items-center justify-center gap-1 px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[11px] font-bold cursor-help">
+              <Clock className="w-3 h-3 shrink-0" />
+              <span>BUSY</span>
+            </span>
+            {/* Context Tooltip */}
+            <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/er:block w-48 p-2 rounded-xl bg-slate-900 border border-amber-500/40 text-[10px] text-amber-300 shadow-xl z-20 text-center">
+              ⚡ Moderate Patient Queue ({queueLen} waiting in outpatient)
+            </div>
+          </div>
         );
       default:
         return (
-          <span className="flex items-center justify-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[11px] font-bold">
-            <CheckCircle2 className="w-3 h-3 shrink-0" />
-            <span>NORMAL</span>
-          </span>
+          <div className="group/er relative flex items-center justify-center">
+            <span className="flex items-center justify-center gap-1 px-2 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[11px] font-bold cursor-help">
+              <CheckCircle2 className="w-3 h-3 shrink-0" />
+              <span>NORMAL</span>
+            </span>
+            {/* Context Tooltip */}
+            <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/er:block w-48 p-2 rounded-xl bg-slate-900 border border-emerald-500/40 text-[10px] text-emerald-300 shadow-xl z-20 text-center">
+              ✅ Smooth Intake Operations ({queueLen} waiting)
+            </div>
+          </div>
         );
     }
   };
@@ -141,7 +159,7 @@ export default function FacilityCard({
             <div className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">
               ER Status
             </div>
-            {getEmergencyBadge(live.emergency_status)}
+            {getEmergencyBadge(live.emergency_status, live.outpatient_queue_length)}
           </div>
         </div>
 
@@ -185,10 +203,10 @@ export default function FacilityCard({
 
         <button
           onClick={() => onBookAppointment(facility)}
-          className="py-2.5 px-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20 transition transform active:scale-95"
+          className="py-2.5 px-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/25 transition transform active:scale-95 border border-emerald-400/30"
         >
           <Calendar className="w-3.5 h-3.5 shrink-0" />
-          <span className="truncate">Book</span>
+          <span className="truncate">Book Appointment</span>
         </button>
       </div>
     </div>
