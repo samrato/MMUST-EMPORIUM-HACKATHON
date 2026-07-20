@@ -83,9 +83,6 @@ export default function HeroLocationBanner({
 
           const geocoded = await reverseGeocode(lat, lng);
           setLocationDetails(geocoded);
-          if (geocoded.county && selectedCounty === 'All') {
-            setSelectedCounty(geocoded.county);
-          }
           setIsLocating(false);
         },
         async (error) => {

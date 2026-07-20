@@ -220,8 +220,12 @@ async function searchFacilities(filters = {}) {
 
   let list = await dataStore.getFacilities();
 
-  if (county) {
-    list = list.filter(f => f.county && f.county.toLowerCase() === county.toLowerCase());
+  if (county && county !== 'All') {
+    const cTerm = county.toLowerCase().replace('county', '').trim();
+    const matchedCounty = list.filter(f => f.county && f.county.toLowerCase().includes(cTerm));
+    if (matchedCounty.length > 0) {
+      list = matchedCounty;
+    }
   }
 
   if (minKephLevel && minKephLevel !== 'All') {
