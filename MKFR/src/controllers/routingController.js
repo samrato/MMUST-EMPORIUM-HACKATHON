@@ -1,36 +1,54 @@
 const routingEngine = require('../services/routingEngine');
 const dataStore = require('../models/dataStore');
 
+const aiTriageService = require('../services/aiTriageService');
+
 /**
  * Perform System Routing & Scoring to determine the best facility
- * POST /api/route
+ * POST /api/route or GET /api/route?symptom={symptom}&lat={lat}&lng={lng}
  */
 exports.getRoutes = async (req, res) => {
   try {
-    const { userLat, userLng, requiredServices = [], isEmergency = false, sessionId } = req.body;
+    const rawLat = req.body?.userLat ?? req.body?.lat ?? req.query?.lat ?? req.query?.userLat;
+    const rawLng = req.body?.userLng ?? req.query?.lng ?? req.query?.userLng;
+    const symptom = req.body?.symptom ?? req.query?.symptom;
+    const sessionId = req.body?.sessionId ?? req.query?.sessionId;
+    let requiredServices = req.body?.requiredServices ?? (req.query?.service ? [req.query.service] : []);
+    let isEmergency = req.body?.isEmergency ?? (req.query?.isEmergency === 'true');
 
     // Validate coordinates
-    if (userLat === undefined || userLng === undefined) {
+    if (rawLat === undefined || rawLng === undefined) {
       return res.status(400).json({
         success: false,
-        error: "Missing parameters: 'userLat' and 'userLng' coordinates are required."
+        error: "Missing parameters: 'userLat' (or 'lat') and 'userLng' (or 'lng') coordinates are required."
       });
     }
 
-    const lat = parseFloat(userLat);
-    const lng = parseFloat(userLng);
+    const lat = parseFloat(rawLat);
+    const lng = parseFloat(rawLng);
 
     if (isNaN(lat) || isNaN(lng)) {
       return res.status(400).json({
         success: false,
-        error: "Coordinates ('userLat', 'userLng') must be valid numbers."
+        error: "Coordinates must be valid numbers."
       });
     }
 
     // Resolving symptoms triage parameters
-    let services = [...requiredServices];
+    let services = Array.isArray(requiredServices) ? [...requiredServices] : [];
     let emergency = !!isEmergency;
     let enrichedQueryDetails = null;
+
+    if (symptom && services.length === 0) {
+      const triage = aiTriageService.performTriage(symptom);
+      services = triage.required_services || [];
+      if (triage.is_emergency) emergency = true;
+      enrichedQueryDetails = {
+        symptom,
+        risk_class: triage.risk,
+        urgency: triage.urgency
+      };
+    }
 
     // Connects the Doctor Triage Session database to Routing Engine
     if (sessionId) {

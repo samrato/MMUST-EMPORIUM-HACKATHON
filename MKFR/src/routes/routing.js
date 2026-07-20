@@ -4,5 +4,6 @@ const routingController = require('../controllers/routingController');
 
 // POST /api/route - Retrieve scored & ranked facility list based on user location and triage
 router.post('/', routingController.getRoutes);
+router.get('/', routingController.getRoutes);
 
 module.exports = router;

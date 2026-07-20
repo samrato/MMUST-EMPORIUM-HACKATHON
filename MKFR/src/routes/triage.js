@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const triageController = require('../controllers/triageController');
 
+// POST /api/triage (Direct symptom triage)
+router.post('/', triageController.analyzeSymptoms);
+
 // POST /api/triage/analyze (Legacy single-turn check)
 router.post('/analyze', triageController.analyzeSymptoms);
 
@@ -12,3 +15,4 @@ router.post('/start', triageController.startTriageSession);
 router.post('/respond', triageController.respondToTriage);
 
 module.exports = router;
+

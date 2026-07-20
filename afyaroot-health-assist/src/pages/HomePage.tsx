@@ -1,692 +1,242 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { 
-  ArrowRight, BarChart3, Calendar, AlertTriangle, Download, MapPin, 
-  MessageCircle, ShieldCheck, Stethoscope, Wifi, Activity, Plus, Heart, 
-  Smile, CheckCircle2, Camera, Mic, FileText, X, Navigation, Phone, 
-  Droplets, Moon, Sparkles, Brain
+  Facility, fetchFacilities 
+} from '@/services/afyaApi';
+import HeroLocationBanner from '@/components/HeroLocationBanner';
+import FacilityCard from '@/components/FacilityCard';
+import ChuDashboard from '@/components/ChuDashboard';
+import DoctorTriageModal from '@/components/DoctorTriageModal';
+import BookingModal from '@/components/BookingModal';
+import FacilityDetailModal from '@/components/FacilityDetailModal';
+import { 
+  Building2, Users, Stethoscope, Sparkles, RefreshCw, AlertCircle, 
+  Search, ShieldCheck, MapPin, Activity, HeartPulse 
 } from 'lucide-react';
-import PwaInstallButton from '@/components/PwaInstallButton';
-import { usePwa } from '@/hooks/use-pwa';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { t } from '@/services/languageService';
-import { useUser } from '@/hooks/use-user';
-
-interface Goal {
-  id: number;
-  text: string;
-  completed: boolean;
-}
-
-interface TimelineEvent {
-  time: string;
-  date?: string;
-  icon: any;
-  iconColor: string;
-  bgClass: string;
-  text: string;
-}
 
 export default function HomePage() {
-  const navigate = useNavigate();
-  const { lang } = useLanguage();
-  const { canInstall, installLabel, isInstalled } = usePwa();
-  const { patientId } = useUser();
+  const [activeTab, setActiveTab] = useState<'facilities' | 'chu'>('facilities');
 
-  // Dynamic user health metrics persisted in localStorage
-  const [water, setWater] = useState<number>(1.25);
-  const [sleep, setSleep] = useState<string>("6h 45m");
-  const [bp, setBp] = useState<string>("120/80");
-  const [mood, setMood] = useState<string>("");
-  const [moodResponse, setMoodResponse] = useState<string>("");
-  const [showEmergency, setShowEmergency] = useState<boolean>(false);
-  const [uploadType, setUploadType] = useState<string | null>(null);
+  // GPS & Location state
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationDetails, setLocationDetails] = useState<{ ward: string; subCounty: string; county: string } | null>(null);
+  const [isLocating, setIsLocating] = useState<boolean>(true);
 
-  // Today's goals
-  const [goals, setGoals] = useState<Goal[]>([
-    { id: 1, text: "Drink 2L of water", completed: false },
-    { id: 2, text: "Walk 30 minutes", completed: false },
-    { id: 3, text: "Take current medical prescriptions", completed: false },
-    { id: 4, text: "Record daily health metrics", completed: false },
-    { id: 5, text: "Complete AI wellness check-in", completed: false },
-  ]);
+  // Search & Filters state
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedCounty, setSelectedCounty] = useState<string>('All');
+  const [selectedKephLevel, setSelectedKephLevel] = useState<string>('All');
+  const [selectedService, setSelectedService] = useState<string>('All');
 
-  // Dynamic timelines and suggestions from backend messages database
-  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
-  const [aiSuggestion, setAiSuggestion] = useState<string>("");
+  // Facilities data state
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [loadingFacilities, setLoadingFacilities] = useState<boolean>(true);
+  const [facilitiesError, setFacilitiesError] = useState<string | null>(null);
 
-  // ==========================================
-  // DYNAMIC LOADING & STATE SYNCHRONIZATION
-  // ==========================================
-  useEffect(() => {
-    // 1. Load metrics from localStorage
-    const savedWater = localStorage.getItem(`afya_water_${patientId}`);
-    if (savedWater) setWater(parseFloat(savedWater));
+  // Modals state
+  const [isTriageModalOpen, setIsTriageModalOpen] = useState<boolean>(false);
+  const [selectedFacilityForBooking, setSelectedFacilityForBooking] = useState<Facility | null>(null);
+  const [selectedFacilityForDetail, setSelectedFacilityForDetail] = useState<Facility | null>(null);
 
-    const savedSleep = localStorage.getItem(`afya_sleep_${patientId}`);
-    if (savedSleep) setSleep(savedSleep);
-
-    const savedBp = localStorage.getItem(`afya_bp_${patientId}`);
-    if (savedBp) setBp(savedBp);
-
-    const savedGoals = localStorage.getItem(`afya_goals_${patientId}`);
-    if (savedGoals) {
-      setGoals(JSON.parse(savedGoals));
+  // Load facilities from backend API (http://localhost:5000/api/facilities)
+  const loadFacilities = async () => {
+    setLoadingFacilities(true);
+    setFacilitiesError(null);
+    try {
+      const data = await fetchFacilities({
+        lat: userCoords?.lat,
+        lng: userCoords?.lng,
+        search: searchQuery || undefined,
+        county: selectedCounty !== 'All' ? selectedCounty : undefined,
+        minKephLevel: selectedKephLevel !== 'All' ? selectedKephLevel : undefined,
+        service: selectedService !== 'All' ? selectedService : undefined,
+      });
+      setFacilities(data);
+    } catch (err: any) {
+      console.error('Error fetching facilities:', err);
+      setFacilitiesError('Could not load facilities from backend API on http://localhost:5000.');
+    } finally {
+      setLoadingFacilities(false);
     }
+  };
 
-    // 2. Fetch real messages from backend to build timeline & suggestions
-    const fetchHistory = async () => {
-      try {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-        const res = await fetch(`${backendUrl}/api/conversations/lookup?webUserId=${patientId}`);
-        if (res.ok) {
-          const payload = await res.json();
-          if (payload.success && payload.messages && payload.messages.length > 0) {
-            // Map messages to timeline events
-            const events: TimelineEvent[] = payload.messages
-              .filter((m: any) => m.sender === 'user')
-              .slice(-6) // Show last 6 messages
-              .map((m: any) => {
-                const category = m.classification?.category || '';
-                const isEmergency = category === 'EMERGENCY' || category === 'GBV';
-                const isMed = category === 'MEDICINE_VERIFICATION';
-                
-                let icon = MessageCircle;
-                let iconColor = 'text-accent';
-                let bgClass = 'bg-accent/15';
-
-                if (isEmergency) {
-                  icon = AlertTriangle;
-                  iconColor = 'text-emergency';
-                  bgClass = 'bg-emergency/15';
-                } else if (isMed) {
-                  icon = Camera;
-                  iconColor = 'text-primary';
-                  bgClass = 'bg-primary/15';
-                }
-
-                const timestamp = new Date(m.timestamp);
-                return {
-                  time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                  date: timestamp.toLocaleDateString([], { month: 'short', day: 'numeric' }),
-                  icon,
-                  iconColor,
-                  bgClass,
-                  text: m.message
-                };
-              })
-              .reverse(); // Newest first
-
-            setTimeline(events);
-
-            // Find last agent reply for proactive companion card
-            const agentMsgs = payload.messages.filter((m: any) => m.sender === 'agent');
-            if (agentMsgs.length > 0) {
-              setAiSuggestion(agentMsgs[agentMsgs.length - 1].message);
-            }
-          }
-        }
-      } catch (err) {
-        console.warn("Could not fetch real timeline history from backend:", err);
-      }
-    };
-
-    void fetchHistory();
-  }, [patientId]);
-
-  // Sync water goals when water increments
   useEffect(() => {
-    setGoals(prev => {
-      const updated = prev.map(g => g.id === 1 ? { ...g, completed: water >= 2.0 } : g);
-      localStorage.setItem(`afya_goals_${patientId}`, JSON.stringify(updated));
-      return updated;
-    });
-  }, [water, patientId]);
+    loadFacilities();
+  }, [userCoords, searchQuery, selectedCounty, selectedKephLevel, selectedService]);
 
-  // Handle Increments & Local Updates
-  const handleWaterIncrement = () => {
-    const nextWater = Math.min(4.0, water + 0.25);
-    setWater(nextWater);
-    localStorage.setItem(`afya_water_${patientId}`, nextWater.toString());
-  };
-
-  const handleSleepToggle = () => {
-    const nextSleep = sleep === "6h 45m" ? "7h 15m" : "6h 45m";
-    setSleep(nextSleep);
-    localStorage.setItem(`afya_sleep_${patientId}`, nextSleep);
-  };
-
-  const handleBpToggle = () => {
-    const nextBp = bp === "120/80" ? "124/82" : "120/80";
-    setBp(nextBp);
-    localStorage.setItem(`afya_bp_${patientId}`, nextBp);
-  };
-
-  const toggleGoal = (id: number) => {
-    setGoals(prev => {
-      const updated = prev.map(g => g.id === id ? { ...g, completed: !g.completed } : g);
-      localStorage.setItem(`afya_goals_${patientId}`, JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const completedCount = goals.filter(g => g.completed).length;
-
-  const handleMoodSelect = (selectedMood: string, reply: string) => {
-    setMood(selectedMood);
-    setMoodResponse(reply);
-    // Mark check-in goal completed
-    setGoals(prev => {
-      const updated = prev.map(g => g.id === 5 ? { ...g, completed: true } : g);
-      localStorage.setItem(`afya_goals_${patientId}`, JSON.stringify(updated));
-      return updated;
-    });
-    setTimeout(() => {
-      setMoodResponse("");
-    }, 8000);
+  const handleGetDirections = (facility: Facility) => {
+    if (facility.coordinates?.lat && facility.coordinates?.lng) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${facility.coordinates.lat},${facility.coordinates.lng}`;
+      window.open(url, '_blank');
+    } else {
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name + ' ' + facility.county)}`;
+      window.open(url, '_blank');
+    }
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* ========================================== */}
-      {/* EMERGENCY MODE CAPABILITY */}
-      {/* ========================================== */}
-      {showEmergency ? (
-        <section className="relative overflow-hidden rounded-[2rem] border-2 border-emergency bg-emergency/10 p-6 shadow-xl backdrop-blur-md animate-in fade-in zoom-in duration-300">
-          <button 
-            onClick={() => setShowEmergency(false)}
-            className="absolute right-4 top-4 rounded-full bg-emergency/20 p-2 text-emergency hover:bg-emergency/35 transition"
+    <div className="space-y-8 pb-16">
+      {/* Auto-GPS Location Hero Banner */}
+      <HeroLocationBanner
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCounty={selectedCounty}
+        setSelectedCounty={setSelectedCounty}
+        selectedKephLevel={selectedKephLevel}
+        setSelectedKephLevel={setSelectedKephLevel}
+        selectedService={selectedService}
+        setSelectedService={setSelectedService}
+        onOpenTriageModal={() => setIsTriageModalOpen(true)}
+        userCoords={userCoords}
+        setUserCoords={setUserCoords}
+        locationDetails={locationDetails}
+        setLocationDetails={setLocationDetails}
+        isLocating={isLocating}
+        setIsLocating={setIsLocating}
+      />
+
+      {/* Primary Navigation Tabs */}
+      <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl glass-card border border-white/10">
+          <button
+            onClick={() => setActiveTab('facilities')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition ${
+              activeTab === 'facilities'
+                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+            }`}
           >
-            <X className="h-5 w-5" />
-          </button>
-          
-          <div className="flex items-center gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emergency text-emergency-foreground animate-pulse">
-              <AlertTriangle className="h-6 w-6" />
+            <Building2 className="w-4 h-4" />
+            <span>Facilities & Reality Cards</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-slate-900/60 text-[10px] font-mono text-emerald-300">
+              {facilities.length}
             </span>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emergency">Critical Emergency Active</p>
-              <h2 className="text-2xl font-bold text-foreground mt-1">Symptom matches emergency criteria</h2>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-card border border-emergency/25 p-5 shadow-sm">
-              <p className="text-xs font-semibold text-muted-foreground uppercase">Recommended ER Unit</p>
-              <h3 className="text-lg font-bold text-foreground mt-2">Kakamega County General Referral Hospital</h3>
-              <p className="text-sm text-muted-foreground mt-1">Level 5 County Referral • Open 24 Hours</p>
-              
-              <div className="mt-4 flex gap-6 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground">Distance</p>
-                  <p className="font-bold mt-1 text-foreground">1.8 km</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Queue Status</p>
-                  <p className="font-bold text-success mt-1">10 min wait</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col justify-between gap-3">
-              <button 
-                onClick={() => navigate('/emergency')}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emergency py-4 text-sm font-bold text-emergency-foreground shadow-lg shadow-emergency/15 transition hover:bg-emergency/90 active:scale-95"
-              >
-                <Navigation className="h-4 w-4" />
-                Navigate Now (Get Route)
-              </button>
-              
-              <a 
-                href="tel:1195"
-                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-emergency py-4 text-sm font-bold text-emergency hover:bg-emergency/5 active:scale-95 transition"
-              >
-                <Phone className="h-4 w-4" />
-                Call GBV Helpline (1195)
-              </a>
-
-              <a 
-                href="tel:999"
-                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-emergency/50 bg-background/50 py-4 text-sm font-bold text-foreground hover:bg-background active:scale-95 transition"
-              >
-                <Phone className="h-4 w-4" />
-                Call Police / Ambulance (999)
-              </a>
-            </div>
-          </div>
-        </section>
-      ) : (
-        /* Top Banner & Emergency Activator */
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Rural Health Intelligence</p>
-            <h1 className="mt-1 text-2xl font-bold text-foreground flex items-center gap-2">
-              Jambo! 
-              <span className="font-mono text-sm px-3 py-1 rounded bg-secondary text-secondary-foreground font-semibold">
-                Patient #{patientId.slice(0, 8)}
-              </span>
-            </h1>
-          </div>
-          <button 
-            onClick={() => setShowEmergency(true)}
-            className="flex items-center gap-2 rounded-2xl bg-emergency/10 border border-emergency/20 px-4 py-3 text-sm font-bold text-emergency hover:bg-emergency/20 active:scale-95 transition-all"
-          >
-            <AlertTriangle className="h-4.5 w-4.5 animate-pulse" />
-            Emergency Mode
           </button>
+
+          <button
+            onClick={() => setActiveTab('chu')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition ${
+              activeTab === 'chu'
+                ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>CHU Dashboard</span>
+          </button>
+        </div>
+
+        {/* Quick Triage Trigger */}
+        <button
+          onClick={() => setIsTriageModalOpen(true)}
+          className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-2xl glass-card hover:border-emerald-500/40 text-emerald-300 text-xs font-semibold transition"
+        >
+          <Stethoscope className="w-4 h-4 text-emerald-400 animate-pulse" />
+          <span>Launch AI Symptom Checker</span>
+        </button>
+      </div>
+
+      {/* Tab 1: Facilities & Hospital Reality Cards */}
+      {activeTab === 'facilities' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                <span>Verified Facilities</span>
+                <span className="text-xs text-slate-400 font-normal">
+                  (Sorted closest first by distance)
+                </span>
+              </h2>
+              <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
+                Real-time queue lengths, active doctor count, bed capacity, and data trust level.
+              </p>
+            </div>
+
+            <button
+              onClick={loadFacilities}
+              className="p-2.5 rounded-xl glass-input hover:bg-slate-800 text-slate-300 transition"
+              title="Refresh facility list"
+            >
+              <RefreshCw className={`w-4 h-4 ${loadingFacilities ? 'animate-spin text-emerald-400' : ''}`} />
+            </button>
+          </div>
+
+          {facilitiesError && (
+            <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
+              {facilitiesError}
+            </div>
+          )}
+
+          {loadingFacilities ? (
+            <div className="text-center py-16 glass-card rounded-3xl">
+              <RefreshCw className="w-8 h-8 animate-spin text-emerald-400 mx-auto mb-3" />
+              <p className="text-slate-300 font-semibold text-sm">Querying KMHFR Hospital Registry...</p>
+              <p className="text-slate-500 text-xs mt-1">Connecting to backend at http://localhost:5000</p>
+            </div>
+          ) : facilities.length === 0 ? (
+            <div className="text-center py-16 glass-card rounded-3xl">
+              <Building2 className="w-10 h-10 text-slate-500 mx-auto mb-3" />
+              <p className="text-white font-bold text-base">No matching facilities found</p>
+              <p className="text-slate-400 text-xs mt-1">
+                Try clearing your search query or adjusting county / level / service filters.
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCounty('All');
+                  setSelectedKephLevel('All');
+                  setSelectedService('All');
+                }}
+                className="mt-4 px-4 py-2 rounded-xl bg-emerald-500 text-white text-xs font-bold"
+              >
+                Reset All Filters
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {facilities.map((fac) => (
+                <FacilityCard
+                  key={fac.id}
+                  facility={fac}
+                  onViewDetails={(facility) => setSelectedFacilityForDetail(facility)}
+                  onBookAppointment={(facility) => setSelectedFacilityForBooking(facility)}
+                  onGetDirections={handleGetDirections}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* ========================================== */}
-      {/* AFYAROOT COPILOT WORKSPACE (PROACTIVE AI) */}
-      {/* ========================================== */}
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        
-        {/* Proactive Companion Panel */}
-        <div className="rounded-[2rem] border border-border bg-card/85 p-6 shadow-sm flex flex-col justify-between space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-primary">
-              <Brain className="h-4 w-4 text-primary" />
-              Proactive Health Companion
-            </div>
-            <h2 className="text-xl font-bold text-foreground">AI Suggestion & Alert</h2>
-            <p className="text-sm leading-6 text-muted-foreground italic">
-              {aiSuggestion ? `"${aiSuggestion.slice(0, 360)}..."` : `"Jambo! I am your AI Health Companion. Let's start tracking your health journey. Use the quick buttons below to scan medicine, ask questions, or record metrics!"`}
-            </p>
-          </div>
+      {/* Tab 2: Community Health Units (CHU) Dashboard */}
+      {activeTab === 'chu' && (
+        <ChuDashboard userCoords={userCoords} locationDetails={locationDetails} />
+      )}
 
-          <div className="flex flex-wrap gap-3">
-            <button 
-              onClick={() => navigate('/chat')}
-              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/10 transition hover:bg-primary/95 active:scale-95"
-            >
-              Consult AI Companion
-              <ArrowRight className="h-4 w-4" />
-            </button>
-            <button 
-              onClick={() => navigate('/booking')}
-              className="inline-flex items-center gap-2 rounded-2xl bg-success/15 border border-success/20 px-5 py-3.5 text-sm font-bold text-success hover:bg-success/25 transition active:scale-95"
-            >
-              Book Clinical Appointment
-            </button>
-          </div>
-        </div>
+      {/* AI Doctor Triage & Routing Modal */}
+      <DoctorTriageModal
+        isOpen={isTriageModalOpen}
+        onClose={() => setIsTriageModalOpen(false)}
+        userCoords={userCoords}
+        locationDetails={locationDetails}
+        onBookAppointment={(facility) => setSelectedFacilityForBooking(facility)}
+        onGetDirections={handleGetDirections}
+      />
 
-        {/* Goal Missions Panel */}
-        <div className="rounded-[2rem] border border-border bg-card/85 p-6 shadow-sm flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-foreground">Today's Missions</h3>
-              <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
-                Progress: {completedCount} / {goals.length}
-              </span>
-            </div>
-            
-            {/* Live Progress Bar */}
-            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all duration-500 rounded-full"
-                style={{ width: `${(completedCount / goals.length) * 100}%` }}
-              />
-            </div>
+      {/* Patient Appointment Booking Modal */}
+      <BookingModal
+        isOpen={!!selectedFacilityForBooking}
+        onClose={() => setSelectedFacilityForBooking(null)}
+        facility={selectedFacilityForBooking}
+      />
 
-            <div className="space-y-2 mt-4">
-              {goals.map(g => (
-                <button
-                  key={g.id}
-                  onClick={() => toggleGoal(g.id)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-border bg-background/50 hover:bg-background/90 text-left transition group"
-                >
-                  <CheckCircle2 className={`h-5 w-5 transition ${g.completed ? 'text-primary' : 'text-muted-foreground opacity-60 group-hover:opacity-100'}`} />
-                  <span className={`text-sm font-medium ${g.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                    {g.text}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-      </section>
-
-      {/* ========================================== */}
-      {/* TODAY'S HEALTH SUMMARY (INTERACTIVE WORKSPACE) */}
-      {/* ========================================== */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        
-        {/* Water tracker */}
-        <div className="rounded-[1.75rem] border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-[150px]">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Water Intake</p>
-            <Droplets className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-2xl font-bold text-foreground">{water.toFixed(2)}L</p>
-              <p className="text-xs text-muted-foreground mt-1">Goal: 2.00L</p>
-            </div>
-            <button 
-              onClick={handleWaterIncrement}
-              className="rounded-full bg-primary/10 text-primary p-2 hover:bg-primary/20 transition active:scale-90"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Sleep tracker */}
-        <div className="rounded-[1.75rem] border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-[150px]">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Sleep Analysis</p>
-            <Moon className="h-5 w-5 text-accent" />
-          </div>
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-2xl font-bold text-foreground">{sleep}</p>
-              <p className="text-xs text-success mt-1">✓ 7h target optimal</p>
-            </div>
-            <button 
-              onClick={handleSleepToggle}
-              className="text-xs font-bold text-accent bg-accent/10 px-3 py-1.5 rounded-full hover:bg-accent/20 transition"
-            >
-              Adjust
-            </button>
-          </div>
-        </div>
-
-        {/* Blood pressure */}
-        <div className="rounded-[1.75rem] border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-[150px]">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Blood Pressure</p>
-            <Heart className="h-5 w-5 text-emergency" />
-          </div>
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-2xl font-bold text-foreground">{bp} mmHg</p>
-              <p className="text-xs text-success mt-1">✓ Normal range</p>
-            </div>
-            <button 
-              onClick={handleBpToggle}
-              className="text-xs font-bold text-emergency bg-emergency/10 px-3 py-1.5 rounded-full hover:bg-emergency/20 transition"
-            >
-              Measure
-            </button>
-          </div>
-        </div>
-
-        {/* Medical Status Card */}
-        <div className="rounded-[1.75rem] border border-border bg-card p-5 shadow-sm flex flex-col justify-between h-[150px]">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Medical Follow-up</p>
-            <Calendar className="h-5 w-5 text-success" />
-          </div>
-          <div>
-            <p className="text-lg font-bold text-foreground">Active Case Sync</p>
-            <p className="text-xs text-muted-foreground mt-1">Timeline mapped from central server logs</p>
-          </div>
-        </div>
-
-      </section>
-
-      {/* ========================================== */}
-      {/* INTERACTIVE INPUT PATHWAYS (EMOJIS, SCAN, MIC) */}
-      {/* ========================================== */}
-      <section className="rounded-[2rem] border border-border bg-card p-6 shadow-sm space-y-6">
-        <div className="space-y-2">
-          <h3 className="text-lg font-bold text-foreground">How are you feeling right now?</h3>
-          <p className="text-sm text-muted-foreground">Select an emoji or upload inputs to query the health copilot.</p>
-        </div>
-
-        {/* Emoji selector */}
-        <div className="grid grid-cols-5 gap-3 max-w-md">
-          <button 
-            onClick={() => handleMoodSelect("healthy", "Awesome! I'm glad you're feeling great. Keep up the good work and stay hydrated!")}
-            className={`rounded-2xl p-3 border text-2xl flex justify-center items-center hover:scale-105 active:scale-95 transition-all ${mood === 'healthy' ? 'bg-primary/10 border-primary' : 'bg-background border-border'}`}
-          >
-            😊
-          </button>
-          <button 
-            onClick={() => handleMoodSelect("sick", "I'm sorry you feel sick. If you have fever or headache, check symptoms or ask me what to do.")}
-            className={`rounded-2xl p-3 border text-2xl flex justify-center items-center hover:scale-105 active:scale-95 transition-all ${mood === 'sick' ? 'bg-primary/10 border-primary' : 'bg-background border-border'}`}
-          >
-            🤢
-          </button>
-          <button 
-            onClick={() => handleMoodSelect("tired", "Take some rest. Ensure you sleep well tonight, and I'll prompt you for your metrics tomorrow.")}
-            className={`rounded-2xl p-3 border text-2xl flex justify-center items-center hover:scale-105 active:scale-95 transition-all ${mood === 'tired' ? 'bg-primary/10 border-primary' : 'bg-background border-border'}`}
-          >
-            😴
-          </button>
-          <button 
-            onClick={() => handleMoodSelect("pain", "Headaches or other physical pain? Let me search for nearby clinics or ask questions to get context.")}
-            className={`rounded-2xl p-3 border text-2xl flex justify-center items-center hover:scale-105 active:scale-95 transition-all ${mood === 'pain' ? 'bg-primary/10 border-primary' : 'bg-background border-border'}`}
-          >
-            🤕
-          </button>
-          <button 
-            onClick={() => handleMoodSelect("anxious", "I hear you. Take a deep breath. I am here to help. If you ever feel unsafe, use emergency mode.")}
-            className={`rounded-2xl p-3 border text-2xl flex justify-center items-center hover:scale-105 active:scale-95 transition-all ${mood === 'anxious' ? 'bg-primary/10 border-primary' : 'bg-background border-border'}`}
-          >
-            😰
-          </button>
-        </div>
-
-        {/* Proactive Mood Feedback */}
-        {moodResponse && (
-          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 text-sm text-foreground flex gap-2 items-start animate-in fade-in slide-in-from-top-4 duration-300">
-            <Sparkles className="h-5 w-5 text-primary shrink-0" />
-            <p>{moodResponse}</p>
-          </div>
-        )}
-
-        {/* Multi-modal inputs */}
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-          <button 
-            onClick={() => setUploadType(prev => prev === 'camera' ? null : 'camera')}
-            className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-border bg-background hover:bg-muted/30 transition-all active:scale-95 text-center"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Camera className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-bold text-foreground">Scan packaging</p>
-              <p className="text-xs text-muted-foreground mt-1">Verify medicine labels</p>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => setUploadType(prev => prev === 'voice' ? null : 'voice')}
-            className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-border bg-background hover:bg-muted/30 transition-all active:scale-95 text-center"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-              <Mic className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-bold text-foreground">Speak naturally</p>
-              <p className="text-xs text-muted-foreground mt-1">Simulate voice consultation</p>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => setUploadType(prev => prev === 'doc' ? null : 'doc')}
-            className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-border bg-background hover:bg-muted/30 transition-all active:scale-95 text-center"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-success/10 text-success">
-              <FileText className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-bold text-foreground">Upload reports</p>
-              <p className="text-xs text-muted-foreground mt-1">Scan blood work/lab reports</p>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => navigate('/facilities')}
-            className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-border bg-background hover:bg-muted/30 transition-all active:scale-95 text-center"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-warning/10 text-warning">
-              <MapPin className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-bold text-foreground">Share Location</p>
-              <p className="text-xs text-muted-foreground mt-1">Coordinate closest clinics</p>
-            </div>
-          </button>
-        </div>
-
-        {/* Modal Simulators */}
-        {uploadType === 'camera' && (
-          <div className="p-5 rounded-2xl border border-border bg-background/50 flex flex-col items-center gap-3 animate-in fade-in duration-200">
-            <p className="text-sm font-bold text-foreground">Camera Scan Simulator</p>
-            <div className="h-44 w-full max-w-sm rounded-xl border border-dashed border-muted flex items-center justify-center text-xs text-muted-foreground bg-muted/10">
-              [ Camera Feed Simulated ]
-            </div>
-            <button 
-              onClick={() => {
-                setUploadType(null);
-                setGoals(prev => {
-                  const updated = prev.map(g => g.id === 3 ? { ...g, completed: true } : g);
-                  localStorage.setItem(`afya_goals_${patientId}`, JSON.stringify(updated));
-                  return updated;
-                });
-                alert("Scan Simulated: Amoxicillin label recognized. Registered in your medication logs.");
-              }}
-              className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-            >
-              Simulate Scan Package (Amoxicillin)
-            </button>
-          </div>
-        )}
-
-        {uploadType === 'voice' && (
-          <div className="p-5 rounded-2xl border border-border bg-background/50 flex flex-col items-center gap-3 animate-in fade-in duration-200">
-            <p className="text-sm font-bold text-foreground">Voice Transcription Simulator</p>
-            <button 
-              onClick={() => {
-                setUploadType(null);
-                navigate('/chat', { state: { initialText: "I've had severe neck stiffness and fever since last night." } });
-              }}
-              className="rounded-xl bg-accent px-4 py-2 text-xs font-bold text-accent-foreground"
-            >
-              Simulate Speaking: "Severe neck stiffness and fever"
-            </button>
-          </div>
-        )}
-
-        {uploadType === 'doc' && (
-          <div className="p-5 rounded-2xl border border-border bg-background/50 flex flex-col items-center gap-3 animate-in fade-in duration-200">
-            <p className="text-sm font-bold text-foreground">Lab PDF Scanner Simulator</p>
-            <button 
-              onClick={() => {
-                setUploadType(null);
-                alert("Simulated PDF parsing: Malaria Rapid Diagnostic Test (RDT) results parsed: Positive.");
-                navigate('/chat', { state: { initialText: "My RDT report shows Positive. What are the next steps?" } });
-              }}
-              className="rounded-xl bg-success px-4 py-2 text-xs font-bold text-success-foreground"
-            >
-              Simulate Uploading PDF Lab Report (RDT positive)
-            </button>
-          </div>
-        )}
-      </section>
-
-      {/* ========================================== */}
-      {/* AI TIMELINE (HEALTH HISTORY WORKFLOW) */}
-      {/* ========================================== */}
-      <section className="grid gap-6 md:grid-cols-[1fr_1fr]">
-        
-        {/* Timeline View */}
-        <div className="rounded-[2rem] border border-border bg-card p-6 shadow-sm space-y-6">
-          <h3 className="text-lg font-bold text-foreground font-sans">Health Journey Timeline</h3>
-          
-          {timeline.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No recent queries in this conversation thread yet. Messages you send to the AI will populate your dynamic timeline.</p>
-          ) : (
-            <div className="relative border-l border-muted pl-6 space-y-6">
-              {timeline.map((ev, i) => {
-                const EvIcon = ev.icon;
-                return (
-                  <div key={i} className="relative group animate-in slide-in-from-left-4 duration-300">
-                    {/* Timeline dot */}
-                    <span className={`absolute -left-[37px] top-1.5 flex h-7.5 w-7.5 items-center justify-center rounded-full ${ev.bgClass} border border-background shadow-sm`}>
-                      <EvIcon className={`h-4 w-4 ${ev.iconColor}`} />
-                    </span>
-                    <div>
-                      <span className="text-xs font-bold text-muted-foreground">
-                        {ev.date ? `${ev.date} at ` : ''}{ev.time}
-                      </span>
-                      <p className="text-sm font-medium text-foreground mt-1 leading-5">"{ev.text}"</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* PWA Install Promo or App Coverage */}
-        <div className="flex flex-col justify-between gap-4">
-          
-          {(canInstall || isInstalled) && (
-            <div className="rounded-[2rem] border border-primary/15 bg-primary/5 p-6 shadow-sm space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Progressive Web App</p>
-              <h4 className="text-xl font-bold text-foreground">Use AFYAROOT like a native app.</h4>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Install it to your home screen for faster access, offline support, and a cleaner experience.
-              </p>
-              {isInstalled ? (
-                <div className="inline-flex items-center gap-2 rounded-2xl bg-success/10 px-4 py-3 text-sm font-semibold text-success">
-                  <span className="h-2.5 w-2.5 rounded-full bg-success" />
-                  Installed and ready offline
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <PwaInstallButton className="w-full sm:w-auto" />
-                  <p className="text-xs text-muted-foreground">{installLabel} to open faster next time.</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Quick Action Navigation Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              onClick={() => navigate('/symptoms')}
-              className="rounded-2xl border border-border bg-card/60 p-4 text-left hover:bg-card hover:scale-[1.02] active:scale-95 transition-all shadow-sm"
-            >
-              <Stethoscope className="h-5 w-5 text-primary" />
-              <p className="text-sm font-bold text-foreground mt-3">Triage Engine</p>
-              <p className="text-xs text-muted-foreground mt-1">Start Symptom Check</p>
-            </button>
-            <button 
-              onClick={() => navigate('/facilities')}
-              className="rounded-2xl border border-border bg-card/60 p-4 text-left hover:bg-card hover:scale-[1.02] active:scale-95 transition-all shadow-sm"
-            >
-              <MapPin className="h-5 w-5 text-accent" />
-              <p className="text-sm font-bold text-foreground mt-3">Hospitals</p>
-              <p className="text-xs text-muted-foreground mt-1">Search KMHFR Clinics</p>
-            </button>
-            <button 
-              onClick={() => navigate('/chat')}
-              className="rounded-2xl border border-border bg-card/60 p-4 text-left hover:bg-card hover:scale-[1.02] active:scale-95 transition-all shadow-sm"
-            >
-              <MessageCircle className="h-5 w-5 text-warning" />
-              <p className="text-sm font-bold text-foreground mt-3">AI Consultation</p>
-              <p className="text-xs text-muted-foreground mt-1">Chat in plain Swahili</p>
-            </button>
-            <button 
-              onClick={() => navigate('/booking')}
-              className="rounded-2xl border border-border bg-card/60 p-4 text-left hover:bg-card hover:scale-[1.02] active:scale-95 transition-all shadow-sm"
-            >
-              <Calendar className="h-5 w-5 text-success" />
-              <p className="text-sm font-bold text-foreground mt-3">Scheduler</p>
-              <p className="text-xs text-muted-foreground mt-1">Book Appointments</p>
-            </button>
-          </div>
-
-        </div>
-
-      </section>
+      {/* Facility Detail Modal */}
+      <FacilityDetailModal
+        isOpen={!!selectedFacilityForDetail}
+        onClose={() => setSelectedFacilityForDetail(null)}
+        facility={selectedFacilityForDetail}
+        onBookAppointment={(facility) => setSelectedFacilityForBooking(facility)}
+        onGetDirections={handleGetDirections}
+      />
     </div>
   );
 }
