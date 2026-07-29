@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -43,7 +43,7 @@
     --input: 140 20% 88%;
     --ring: 122 39% 34%;
 
-    --radius: 0.75rem;
+    --radius: 0.85rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -54,8 +54,8 @@
     --sidebar-border: 140 20% 88%;
     --sidebar-ring: 122 39% 34%;
 
-    --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
-    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
   }
 
   .dark {
@@ -103,8 +103,8 @@
     font-family: var(--font-body);
     min-height: 100vh;
     background-image:
-      radial-gradient(circle at top left, hsl(122 39% 34% / 0.16), transparent 26%),
-      radial-gradient(circle at bottom right, hsl(199 89% 48% / 0.12), transparent 22%);
+      radial-gradient(circle at top left, hsl(122 39% 34% / 0.16), transparent 28%),
+      radial-gradient(circle at bottom right, hsl(199 89% 48% / 0.14), transparent 24%);
     background-attachment: fixed;
   }
 
@@ -114,16 +114,50 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 }
 
 @layer components {
+  .glass-card {
+    background: rgba(18, 26, 47, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:border-emerald-500/30 hover:shadow-emerald-500/10 hover:shadow-xl hover:-translate-y-0.5;
+  }
+
+  .glass-input {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .glass-input:focus {
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+  }
+
   .emergency-pulse {
     animation: emergency-pulse 1.5s ease-in-out infinite;
   }
+
+  .trust-glow {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+  }
+
+  .blue-glow {
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+  }
+
   .fade-slide-up {
     animation: fade-slide-up 0.4s ease-out forwards;
   }
+
   .card-hover {
     @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
@@ -136,11 +170,12 @@
 }
 
 @keyframes emergency-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 hsl(0 84% 50% / 0.4); }
-  50% { transform: scale(1.05); box-shadow: 0 0 0 20px hsl(0 84% 50% / 0); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50% { transform: scale(1.03); box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
 }
 
 @keyframes fade-slide-up {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+

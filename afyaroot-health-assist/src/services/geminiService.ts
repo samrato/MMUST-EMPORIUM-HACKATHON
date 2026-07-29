@@ -138,7 +138,7 @@ async function callVertexDirectly(prompt: string) {
 export async function analyzeSymptomsWithAI(
   symptoms: string,
   options?: { language?: Language; userLoc?: { lat: number; lng: number } }
-): Promise<SymptomAnalysisResult | null> {
+): Promise<SymptomAnalysisResult> {
   const outputLanguage = getSymptomOutputLanguage(options?.language);
   
   let nearbyHospitals: NearbyHospitalInput[] = [];
@@ -156,64 +156,106 @@ export async function analyzeSymptomsWithAI(
     }
   }
 
-  const prompt = `
-    You are a medical symptom triage assistant for an educational health support application in Kenya.
-    Analyze user-reported symptoms and return structured health guidance.
-    User input: "${symptoms}"
-    Response language: ${outputLanguage.label}
+  // Baseline deterministic decision engine
+  const engineResult = runHealthcareDecisionEngine({
+    user_input: symptoms,
+    nearby_hospitals: nearbyHospitals,
+    preferred_language: options?.language === 'sw' ? 'sw' : 'en'
+  });
 
-    Return ONLY valid JSON in this format:
-    {
-      "condition": "Likely condition name",
-      "urgency": "low | medium | high | emergency",
-      "description": "Brief description of why you chose this",
-      "recommendations": ["step 1", "step 2"],
-      "warnings": ["warning 1"]
-    }
-  `;
-
+  // 1. Try calling central backend API /api/triage
   try {
-    const text = await callVertexDirectly(prompt);
-    // Extract JSON from potential markdown/text markers
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not parse JSON from AI response: " + text);
-    
-    const aiResult = JSON.parse(jsonMatch[0]) as {
-      condition?: string;
-      urgency?: string;
-      description?: string;
-      recommendations?: string[];
-      warnings?: string[];
-    };
-    
-    const engineResult = runHealthcareDecisionEngine({
-      user_input: symptoms,
-      nearby_hospitals: nearbyHospitals,
-      preferred_language: options?.language === 'sw' ? 'sw' : 'en',
-      ai_condition: aiResult.condition
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const res = await fetch(`${backendUrl}/api/triage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        symptoms,
+        county: 'Kakamega',
+        language: options?.language === 'sw' ? 'sw' : 'en'
+      })
     });
 
-    const recommendations = toStringArray(aiResult.recommendations);
-    const warnings = toStringArray(aiResult.warnings);
-    
-    return {
-      condition: aiResult.condition || engineResult.possible_conditions[0] || "Assessment Required",
-      confidence: 0.95,
-      urgency: engineResult.urgency, 
-      description: aiResult.description || engineResult.explanation,
-      recommendations,
-      suggestedFacilityType: engineResult.recommended_facility.type as any,
-      matchedSymptoms: engineResult.matched_symptoms,
-      possibleConditions: engineResult.possible_conditions,
-      recommendedFacility: engineResult.recommended_facility,
-      guidance: [...new Set([...engineResult.guidance, ...recommendations])],
-      explanation: engineResult.explanation,
-      structuredResult: engineResult,
-    };
-  } catch (error) {
-    console.error("AI Analysis Failed:", error);
-    return null;
+    if (res.ok) {
+      const payload = await res.json();
+      if (payload.success && payload.data) {
+        const d = payload.data;
+        const urgency = toUrgency(d.urgency || d.risk || engineResult.urgency);
+        return {
+          condition: d.symptom_summary || engineResult.possible_conditions[0] || "Clinical Health Assessment",
+          confidence: 0.96,
+          urgency,
+          description: d.advice || d.disclaimer || engineResult.explanation,
+          recommendations: d.required_services || engineResult.guidance,
+          suggestedFacilityType: (d.recommended_keph_level ? 'hospital' : engineResult.recommended_facility.type) as any,
+          matchedSymptoms: engineResult.matched_symptoms,
+          possibleConditions: engineResult.possible_conditions,
+          recommendedFacility: engineResult.recommended_facility,
+          guidance: d.required_services ? [...new Set([...d.required_services, ...engineResult.guidance])] : engineResult.guidance,
+          explanation: d.advice || engineResult.explanation,
+          structuredResult: engineResult,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("Backend /api/triage call failed, proceeding to direct Vertex / Engine:", err);
   }
+
+  // 2. Try direct Vertex call if available
+  try {
+    const prompt = `
+      You are a medical symptom triage assistant for an educational health support application in Kenya.
+      Analyze user-reported symptoms and return structured health guidance.
+      User input: "${symptoms}"
+      Response language: ${outputLanguage.label}
+
+      Return ONLY valid JSON in this format:
+      {
+        "condition": "Likely condition name",
+        "urgency": "low | medium | high | emergency",
+        "description": "Brief description of why you chose this",
+        "recommendations": ["step 1", "step 2"],
+        "warnings": ["warning 1"]
+      }
+    `;
+    const text = await callVertexDirectly(prompt);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const aiResult = JSON.parse(jsonMatch[0]);
+      return {
+        condition: aiResult.condition || engineResult.possible_conditions[0] || "Assessment Required",
+        confidence: 0.95,
+        urgency: toUrgency(aiResult.urgency || engineResult.urgency),
+        description: aiResult.description || engineResult.explanation,
+        recommendations: toStringArray(aiResult.recommendations),
+        suggestedFacilityType: engineResult.recommended_facility.type as any,
+        matchedSymptoms: engineResult.matched_symptoms,
+        possibleConditions: engineResult.possible_conditions,
+        recommendedFacility: engineResult.recommended_facility,
+        guidance: [...new Set([...engineResult.guidance, ...toStringArray(aiResult.recommendations)])],
+        explanation: engineResult.explanation,
+        structuredResult: engineResult,
+      };
+    }
+  } catch (err) {
+    console.warn("Vertex AI direct call failed, returning Decision Engine result:", err);
+  }
+
+  // 3. Fallback to Decision Engine result - ALWAYS returns a valid result!
+  return {
+    condition: engineResult.possible_conditions[0] || "Clinical Assessment",
+    confidence: 0.92,
+    urgency: engineResult.urgency,
+    description: engineResult.explanation,
+    recommendations: engineResult.guidance,
+    suggestedFacilityType: engineResult.recommended_facility.type as any,
+    matchedSymptoms: engineResult.matched_symptoms,
+    possibleConditions: engineResult.possible_conditions,
+    recommendedFacility: engineResult.recommended_facility,
+    guidance: engineResult.guidance,
+    explanation: engineResult.explanation,
+    structuredResult: engineResult,
+  };
 }
 
 export async function getGeminiResponse(prompt: string, context: any = {}, patientId: string = "WEB-USER") {

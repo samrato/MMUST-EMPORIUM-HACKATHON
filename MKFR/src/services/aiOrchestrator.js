@@ -384,26 +384,40 @@ async function processUserMessage(params) {
   } else {
     // Medical/Triage search flow
     let hospitalText = "";
+    const hasClarification = triageResult.clarification_questions && triageResult.clarification_questions.length > 0;
+    const isExplicitHospitalSearch = triageResult.category === "FACILITY_SEARCH" || /hospital|clinic|dispensary|doctor|route|directions|where to go/i.test(text);
+    const isMinorLowUrgency = (triageResult.urgency === "LOW" || triageResult.urgency === "LOW_RISK") && !isExplicitHospitalSearch;
 
-    // If clarification questions are requested, ask them
-    if (triageResult.clarification_questions && triageResult.clarification_questions.length > 0) {
-      finalRawResponse = `I understand you are reporting symptoms. To help me triage your situation, please answer these questions:\n\n` + 
+    if (hasClarification) {
+      // 1. Gather context first - DO NOT attach hospital recommendations while asking clarification questions
+      finalRawResponse = `I understand you are reporting symptoms. To help me triage your situation accurately, please answer these questions:\n\n` + 
                          triageResult.clarification_questions.map((q, i) => `${i+1}. ${q}`).join('\n');
+    } else if (isMinorLowUrgency) {
+      // 2. Minor symptom advice - supportive home care, no hospital spam
+      finalRawResponse = `**Triage Assessment:** ${triageResult.possible_conditions.join(', ') || 'Minor Symptom'}\n` +
+                         `**Urgency:** Normal / Low Urgency\n\n` +
+                         `**Self-Care & Home Guidance:**\n` +
+                         `• Rest in a comfortable, quiet environment and stay well-hydrated.\n` +
+                         `• Monitor your symptoms closely over the next 24 hours.\n` +
+                         `• If symptoms persist, worsen, or if you develop fever, severe pain, or difficulty breathing, please consult a healthcare professional.`;
     } else {
-      // General triage advice
-      finalRawResponse = `**Triage Category:** ${triageResult.category}\n` +
-                         `**Urgency Level:** ${triageResult.urgency}\n` +
-                         `**Possible Conditions under consideration:** ${triageResult.possible_conditions.join(', ') || 'N/A'}\n\n` +
-                         `Please consult a medical professional for actual diagnosis.`;
+      // 3. Moderate / High / Emergency or explicit hospital search
+      finalRawResponse = `**Triage Assessment:** ${triageResult.possible_conditions.join(', ') || 'Health Assessment'}\n` +
+                         `**Urgency Level:** ${triageResult.urgency}\n\n` +
+                         `**Clinical Advice:**\n` +
+                         (triageResult.required_services && triageResult.required_services.length > 0 ? `Required Services: ${triageResult.required_services.join(', ')}\n\n` : '') +
+                         `Please consult a medical professional for formal clinical diagnosis.`;
     }
 
-    // Check if hospital is needed and location is supplied
-    if (triageResult.needs_hospital && userLat && userLng) {
+    // Only attach hospital recommendations if NOT asking clarification AND NOT minor low urgency (unless user requested hospitals)
+    const shouldAttachHospitals = !hasClarification && (!isMinorLowUrgency || isExplicitHospitalSearch) && triageResult.needs_hospital && userLat && userLng;
+
+    if (shouldAttachHospitals) {
       console.log(`[KMHFR Query] Fetching clinics near (${userLat}, ${userLng})`);
       const lat = parseFloat(userLat);
       const lng = parseFloat(userLng);
 
-      const isEmergency = triageResult.category === "EMERGENCY" || triageResult.urgency === "CRITICAL";
+      const isEmergency = triageResult.category === "EMERGENCY" || triageResult.urgency === "CRITICAL" || triageResult.urgency === "HIGH";
 
       // Query database facilities
       const facilities = await routingEngine.routeAndScore({
@@ -432,7 +446,7 @@ async function processUserMessage(params) {
       }
     }
 
-    // Append hospital details if any
+    // Append hospital details if appropriate
     if (hospitalText) {
       finalRawResponse += hospitalText;
     }
