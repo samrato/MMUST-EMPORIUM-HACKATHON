@@ -269,69 +269,269 @@
       <!-- ==========================================
            SLIDE 6: HOW IT WORKS
            ========================================== -->
+      <!-- ==========================================
+           SLIDE 6: HOW IT WORKS & ARCHITECTURE
+           ========================================== -->
+      <!-- ==========================================
+           SLIDE 6: HOW IT WORKS & ARCHITECTURE
+           ========================================== -->
       <section class="slide" id="slide-6">
         <header class="slide-header">
           <div class="slide-title-wrapper">
             <span class="slide-category">Mechanism & Process Flow</span>
-            <h2 class="slide-title">How It Works</h2>
+            <h2 class="slide-title">How It Works & Architecture</h2>
+          </div>
+          <div class="slide-tabs">
+            <button class="slide-tab-btn active" data-target="tab-workflow">
+              <span class="tab-btn-icon">🔄</span>
+              <span>Process Flow (01-06)</span>
+            </button>
+            <button class="slide-tab-btn" data-target="tab-architecture">
+              <span class="tab-btn-icon">⚡</span>
+              <span>System Architecture Map</span>
+            </button>
           </div>
         </header>
+
         <div class="slide-content">
-          <div class="workflow-container">
-            <div class="workflow-track">
-              <!-- Connecting Progress Line -->
-              <div class="workflow-line">
-                <div class="workflow-line-progress"></div>
+          <!-- TAB 1: 01-06 Process Flow -->
+          <div class="tab-pane active" id="tab-workflow">
+            <div class="workflow-container">
+              <div class="workflow-track">
+                <!-- Connecting Progress Line -->
+                <div class="workflow-line">
+                  <div class="workflow-line-progress"></div>
+                </div>
+                
+                <!-- Node 1: User Input -->
+                <div class="workflow-node anim-zoom-in delay-1">
+                  <div class="workflow-node-circle">
+                    <span class="node-icon">📱</span>
+                  </div>
+                  <div class="node-badge">01 | INPUT</div>
+                  <h3 class="workflow-node-title">User Input</h3>
+                  <p class="workflow-node-desc">Patient reports symptoms via SMS (Kabambe) or Web portal.</p>
+                  <div class="node-tech-tag">Feature & Smart Phones</div>
+                </div>
+
+                <!-- Node 2: Data Processing -->
+                <div class="workflow-node anim-zoom-in delay-2">
+                  <div class="workflow-node-circle">
+                    <span class="node-icon">⚡</span>
+                  </div>
+                  <div class="node-badge">02 | GATEWAY</div>
+                  <h3 class="workflow-node-title">Data Processing</h3>
+                  <p class="workflow-node-desc">Gateway bridge cleanses, verifies, and routes incoming patient queries.</p>
+                  <div class="node-tech-tag">Ingestion & Routing</div>
+                </div>
+
+                <!-- Node 3: AI Analysis -->
+                <div class="workflow-node anim-zoom-in delay-3">
+                  <div class="workflow-node-circle">
+                    <span class="node-icon">🧠</span>
+                  </div>
+                  <div class="node-badge">03 | AI BRAIN</div>
+                  <h3 class="workflow-node-title">AI Analysis</h3>
+                  <p class="workflow-node-desc">Central backend classifies queries using local medical AI or cloud models.</p>
+                  <div class="node-tech-tag">Medical Intelligence Engine</div>
+                </div>
+
+                <!-- Node 4: Health Rec -->
+                <div class="workflow-node anim-zoom-in delay-4">
+                  <div class="workflow-node-circle">
+                    <span class="node-icon">🛡️</span>
+                  </div>
+                  <div class="node-badge">04 | TRIAGE</div>
+                  <h3 class="workflow-node-title">Recommendation</h3>
+                  <p class="workflow-node-desc">AI orchestrator compiles triage advice & checks GBV safety flows.</p>
+                  <div class="node-tech-tag">Triage & GBV Safety</div>
+                </div>
+
+                <!-- Node 5: Intelligent Routing -->
+                <div class="workflow-node anim-zoom-in delay-5">
+                  <div class="workflow-node-circle">
+                    <span class="node-icon">🗺️</span>
+                  </div>
+                  <div class="node-badge">05 | GIS ROUTE</div>
+                  <h3 class="workflow-node-title">Intelligent Routing</h3>
+                  <p class="workflow-node-desc">Queries KMHFR GIS database to select nearest level 1-5 facility.</p>
+                  <div class="node-tech-tag">Kenya Facility GIS Index</div>
+                </div>
+
+                <!-- Node 6: Emergency -->
+                <div class="workflow-node anim-zoom-in delay-6">
+                  <div class="workflow-node-circle">
+                    <span class="node-icon">🚨</span>
+                  </div>
+                  <div class="node-badge">06 | DISPATCH</div>
+                  <h3 class="workflow-node-title">Emergency Response</h3>
+                  <p class="workflow-node-desc">Dispatches alerts to clinics or triggers secure Counselors & Helpline 1195.</p>
+                  <div class="node-tech-tag">Helpline 1195 & SMS</div>
+                </div>
               </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: System Architecture Map -->
+          <div class="tab-pane" id="tab-architecture">
+            <div class="arch-diagram-wrapper">
               
-              <!-- Node 1: User Input -->
-              <div class="workflow-node anim-zoom-in delay-1">
-                <div class="workflow-node-circle">
-                  <span>01</span>
+              <!-- Tier 1: Client Devices -->
+              <div class="arch-column arch-clients">
+                <div class="arch-col-header">
+                  <span class="arch-col-icon">📱</span>
+                  <h4>1. Client Devices</h4>
+                  <span class="header-flow-arrow">➔</span>
                 </div>
-                <h3 class="workflow-node-title">User Input</h3>
-                <p class="workflow-node-desc">Patient reports symptoms via SMS (SIM800 GSM Client) or Web portal.</p>
-              </div>
-              <!-- Node 2: Pre-Processing -->
-              <div class="workflow-node anim-zoom-in delay-2">
-                <div class="workflow-node-circle">
-                  <span>02</span>
+                
+                <!-- Card 1: Kabambe -->
+                <div class="arch-card feature-phone-card">
+                  <div class="arch-card-header">
+                    <span class="device-symbol">📟</span>
+                    <div>
+                      <h5>Kabambe (Feature Phone)</h5>
+                      <span class="arch-subtext">Offline SMS Channel</span>
+                    </div>
+                  </div>
+                  <p>Standard SMS text via local telecom operator tower.</p>
+                  <div class="arch-specs">
+                    <span>Low Bandwidth</span>
+                    <span>100% Offline</span>
+                  </div>
                 </div>
-                <h3 class="workflow-node-title">Data Processing</h3>
-                <p class="workflow-node-desc">MQTT broker & Port 4000 gateway bridge cleanses and routes inputs.</p>
-              </div>
-              <!-- Node 3: AI Analysis -->
-              <div class="workflow-node anim-zoom-in delay-3">
-                <div class="workflow-node-circle">
-                  <span>03</span>
+
+                <!-- Card 2: Smartphone -->
+                <div class="arch-card smartphone-card">
+                  <div class="arch-card-header">
+                    <span class="device-symbol">📲</span>
+                    <div>
+                      <h5>Smartphone & Web</h5>
+                      <span class="arch-subtext">Interactive & Voice Input</span>
+                    </div>
+                  </div>
+                  <p>Voice-to-text logging & rich portal interface.</p>
+                  <div class="arch-specs">
+                    <span>3G / 4G / 5G</span>
+                    <span>Speech API</span>
+                  </div>
                 </div>
-                <h3 class="workflow-node-title">AI Analysis</h3>
-                <p class="workflow-node-desc">Central backend classifies queries using Gemini or local BioMistral via Ollama.</p>
               </div>
-              <!-- Node 4: Health Rec -->
-              <div class="workflow-node anim-zoom-in delay-4">
-                <div class="workflow-node-circle">
-                  <span>04</span>
+
+              <!-- Tier 2: Ingestion Gateway -->
+              <div class="arch-column arch-gateway">
+                <div class="arch-col-header">
+                  <span class="arch-col-icon">⚡</span>
+                  <h4>2. Ingestion Gateway</h4>
+                  <span class="header-flow-arrow">➔</span>
                 </div>
-                <h3 class="workflow-node-title">Recommendation</h3>
-                <p class="workflow-node-desc">AI orchestrator compiles triage advice & checks GBV safety flows.</p>
-              </div>
-              <!-- Node 5: Intelligent Routing -->
-              <div class="workflow-node anim-zoom-in delay-5">
-                <div class="workflow-node-circle">
-                  <span>05</span>
+                
+                <div class="arch-card gateway-card">
+                  <div class="arch-card-header">
+                    <span class="device-symbol">📡</span>
+                    <div>
+                      <h5>IoT SMS Dispatch Node</h5>
+                      <span class="arch-subtext">Rural Dispatch Kit</span>
+                    </div>
+                  </div>
+                  <p>Receives patient messages from rural health posts and forwards them securely.</p>
                 </div>
-                <h3 class="workflow-node-title">Intelligent Routing</h3>
-                <p class="workflow-node-desc">System queries KMHFR GIS database to select nearest level 1-5 facility.</p>
-              </div>
-              <!-- Node 6: Emergency -->
-              <div class="workflow-node anim-zoom-in delay-6">
-                <div class="workflow-node-circle">
-                  <span>06</span>
+
+                <div class="arch-card broker-card">
+                  <div class="arch-card-header">
+                    <span class="device-symbol">🔀</span>
+                    <div>
+                      <h5>Central Data Gateway</h5>
+                      <span class="arch-subtext">Data Cleansing Bridge</span>
+                    </div>
+                  </div>
+                  <p>Cleanses, normalizes payload headers, & queues triage tasks.</p>
+                  <div class="arch-specs">
+                    <span>Data Security</span>
+                    <span>Priority Queue</span>
+                  </div>
                 </div>
-                <h3 class="workflow-node-title">Emergency Response</h3>
-                <p class="workflow-node-desc">Dispatches alerts to clinics or triggers secure Counselors & Helpline 1195.</p>
               </div>
+
+              <!-- Tier 3: AI & GIS Servers -->
+              <div class="arch-column arch-backend">
+                <div class="arch-col-header">
+                  <span class="arch-col-icon">🖥️</span>
+                  <h4>3. AI & GIS Servers</h4>
+                  <span class="header-flow-arrow">➔</span>
+                </div>
+                
+                <div class="arch-card edge-ai-card">
+                  <div class="arch-card-header">
+                    <span class="device-symbol">⚙️</span>
+                    <div>
+                      <h5>Offline Local Edge AI</h5>
+                      <span class="arch-subtext">Privacy-First Medical Engine</span>
+                    </div>
+                  </div>
+                  <p>Runs offline in county server hardware. Zero internet latency.</p>
+                  <div class="arch-specs">
+                    <span>Privacy First</span>
+                    <span>100% Offline</span>
+                  </div>
+                </div>
+
+                <div class="arch-card cloud-ai-card">
+                  <div class="arch-card-header">
+                    <span class="device-symbol">☁️</span>
+                    <div>
+                      <h5>Cloud AI Intelligence</h5>
+                      <span class="arch-subtext">Advanced Diagnostic Scaler</span>
+                    </div>
+                  </div>
+                  <p>Handles complex medical queries when connectivity is available.</p>
+                </div>
+
+                <div class="arch-card gis-card">
+                  <div class="arch-card-header">
+                    <span class="device-symbol">🗺️</span>
+                    <div>
+                      <h5>KMHFR GIS Database</h5>
+                      <span class="arch-subtext">Level 1-5 Facility Registry</span>
+                    </div>
+                  </div>
+                  <p>Geospatial index matching patient needs to closest clinic.</p>
+                </div>
+              </div>
+
+              <!-- Tier 4: Dispatch & Emergency -->
+              <div class="arch-column arch-dispatch">
+                <div class="arch-col-header">
+                  <span class="arch-col-icon">🚨</span>
+                  <h4>4. Dispatch & Emergency</h4>
+                </div>
+                
+                <div class="arch-card response-card">
+                  <div class="arch-card-header">
+                    <span class="device-symbol">💬</span>
+                    <div>
+                      <h5>Patient Triage Advice</h5>
+                      <span class="arch-subtext">SMS / Web Response</span>
+                    </div>
+                  </div>
+                  <p>Sends clear diagnostic guidance back to Kabambe or Smartphone.</p>
+                </div>
+
+                <div class="arch-card gbv-card">
+                  <div class="arch-card-header">
+                    <span class="device-symbol">🛡️</span>
+                    <div>
+                      <h5>GBV & Helpline 1195</h5>
+                      <span class="arch-subtext">Emergency Safety Relay</span>
+                    </div>
+                  </div>
+                  <p>Instant secure alert dispatch to crisis counselors & Kenya Helpline 1195.</p>
+                  <div class="arch-specs">
+                    <span>Covert Mode</span>
+                    <span>Helpline 1195</span>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
