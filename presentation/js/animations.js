@@ -8,8 +8,37 @@ class SlideAnimations {
     this.chatInterval = null;
     this.workflowInterval = null;
     this.init();
+    this.setupSlideTabs();
     this.setupProblemCardClicks();
     this.setupUniquenessCardClicks();
+  }
+
+  setupSlideTabs() {
+    const tabBtns = document.querySelectorAll('.slide-tab-btn');
+    tabBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const targetId = btn.getAttribute('data-target');
+        
+        const header = btn.closest('.slide-header');
+        if (header) {
+          header.querySelectorAll('.slide-tab-btn').forEach(b => b.classList.remove('active'));
+        }
+        btn.classList.add('active');
+
+        const slide = btn.closest('.slide');
+        if (slide) {
+          const panes = slide.querySelectorAll('.tab-pane');
+          panes.forEach((pane) => {
+            if (pane.id === targetId) {
+              pane.classList.add('active');
+            } else {
+              pane.classList.remove('active');
+            }
+          });
+        }
+      });
+    });
   }
 
   init() {
