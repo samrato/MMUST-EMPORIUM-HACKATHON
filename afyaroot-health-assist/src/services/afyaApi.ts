@@ -257,10 +257,20 @@ export async function getSmartRoute(symptom: string, lat: number, lng: number): 
 
 // Submit Patient Booking
 export async function submitBooking(bookingData: BookingInput): Promise<BookingResponse> {
+  const payload = {
+    ...bookingData,
+    facilityId: bookingData.facility_id || (bookingData as any).facilityId,
+    patientName: bookingData.patient_name || (bookingData as any).patientName,
+    phoneNumber: bookingData.phone_number || (bookingData as any).phoneNumber,
+    date: bookingData.booking_date || (bookingData as any).date,
+    time: bookingData.booking_time || (bookingData as any).time || '09:00 AM',
+    serviceNeeded: bookingData.service_requested || (bookingData as any).serviceNeeded || 'Outpatient Consultation',
+  };
+
   const res = await fetch(`${BASE_URL}/bookings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bookingData),
+    body: JSON.stringify(payload),
   });
   const data = await res.json();
   return data;
