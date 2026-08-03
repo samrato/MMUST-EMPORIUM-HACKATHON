@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Navigation, MapPin, ExternalLink, ShieldCheck, Compass, 
-  Volume2, VolumeX, Clock, Route, CheckCircle2, ArrowRightCircle 
+  Volume2, VolumeX, Clock, Route, CheckCircle2, Locate, Radio
 } from 'lucide-react';
 import { buildFallbackEmergencyRoute, buildEmergencyVoiceScript } from '@/services/directionsService';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -28,9 +28,29 @@ export default function RouteMapModal({
   const { lang } = useLanguage();
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [activeTab, setActiveTab] = useState<'map' | 'steps'>('map');
+  const [liveCoords, setLiveCoords] = useState<{ lat: number; lng: number } | null>(userCoords || null);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
 
   useEffect(() => {
-    // Stop speech synthesis when closing
+    if (userCoords) {
+      setLiveCoords(userCoords);
+    } else if ('geolocation' in navigator && isOpen) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setIsLocating(false);
+        },
+        (err) => {
+          console.warn('Live GPS lookup fallback:', err);
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+  }, [userCoords, isOpen]);
+
+  useEffect(() => {
     return () => {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -45,22 +65,22 @@ export default function RouteMapModal({
     typeof facility.coordinates?.lng === 'number' &&
     facility.coordinates.lat !== 0;
 
-  const hasUserCoords =
-    typeof userCoords?.lat === 'number' &&
-    typeof userCoords?.lng === 'number' &&
-    userCoords.lat !== 0;
+  const hasLiveCoords =
+    typeof liveCoords?.lat === 'number' &&
+    typeof liveCoords?.lng === 'number' &&
+    liveCoords.lat !== 0;
 
-  // Origin coordinates fallback (defaulting to center of Kakamega if GPS not granted)
-  const originCoords = hasUserCoords
-    ? userCoords!
-    : { lat: 0.2833, lng: 34.7523 };
+  // Origin coordinates (User's Current Location)
+  const originCoords = hasLiveCoords
+    ? liveCoords!
+    : { lat: 0.3012066, lng: 34.7535487 }; // Default Kakamega coordinates
 
-  // Destination coordinates fallback
+  // Destination coordinates (Hospital Location)
   const destCoords = hasFacilityCoords
     ? facility.coordinates!
     : { lat: 0.2829523, lng: 34.7548635 };
 
-  // Compute step-by-step route instructions
+  // Compute step-by-step turn-by-turn route instructions
   const routeInstructions = buildFallbackEmergencyRoute(
     originCoords,
     destCoords,
@@ -68,27 +88,15 @@ export default function RouteMapModal({
     lang
   );
 
-  // Embedded map URL
-  let embedUrl = '';
-  if (hasUserCoords && hasFacilityCoords) {
-    embedUrl = `https://maps.google.com/maps?saddr=${originCoords.lat},${originCoords.lng}&daddr=${destCoords.lat},${destCoords.lng}&output=embed`;
-  } else if (hasFacilityCoords) {
-    embedUrl = `https://maps.google.com/maps?q=${destCoords.lat},${destCoords.lng}&t=m&z=15&output=embed`;
-  } else {
-    const queryStr = encodeURIComponent(`${facility.name}, ${facility.county || 'Kenya'}`);
-    embedUrl = `https://maps.google.com/maps?q=${queryStr}&t=m&z=14&output=embed`;
-  }
+  // Embedded Google Maps Directions URL connecting Origin -> Destination
+  let embedUrl = `https://maps.google.com/maps?saddr=${originCoords.lat},${originCoords.lng}&daddr=${destCoords.lat},${destCoords.lng}&output=embed`;
 
   // External fallback URL for native Google Maps app
-  const externalUrl = hasFacilityCoords
-    ? (hasUserCoords
-        ? `https://www.google.com/maps/dir/?api=1&origin=${originCoords.lat},${originCoords.lng}&destination=${destCoords.lat},${destCoords.lng}`
-        : `https://www.google.com/maps/dir/?api=1&destination=${destCoords.lat},${destCoords.lng}`)
-    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(facility.name + ', ' + (facility.county || 'Kenya'))}`;
+  const externalUrl = `https://www.google.com/maps/dir/?api=1&origin=${originCoords.lat},${originCoords.lng}&destination=${destCoords.lat},${destCoords.lng}`;
 
   const handleToggleVoice = () => {
     if (!('speechSynthesis' in window)) {
-      alert('Voice synthesis not supported in this browser.');
+      alert('Voice synthesis not supported in browser.');
       return;
     }
 
@@ -119,8 +127,9 @@ export default function RouteMapModal({
               <Navigation className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#00dc33]">
-                In-App Turn-By-Turn Route Guidance
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#00dc33] flex items-center gap-1.5">
+                <Radio className="w-3.5 h-3.5 animate-pulse" />
+                Live Route & Location Directions
               </span>
               <h2 className="text-xl font-extrabold text-white font-heading truncate max-w-xs sm:max-w-md">
                 {facility.name}
@@ -162,46 +171,66 @@ export default function RouteMapModal({
           </div>
         </div>
 
-        {/* Route Overview Metrics Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-2xl bg-white/5 border border-[#00dc33]/20 mb-4 text-xs">
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-black/40 border border-white/5">
-            <Route className="w-4 h-4 text-[#00dc33] shrink-0" />
-            <div>
-              <span className="text-[10px] text-slate-400 font-semibold block uppercase">Est. Distance</span>
-              <span className="font-extrabold text-white text-sm">{routeInstructions.totalDistance}</span>
+        {/* Live Location: Origin ("You Are Here") to Destination ("Hospital") Card */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-white/5 border border-[#00dc33]/25 mb-4 text-xs">
+          
+          {/* Origin: You Are Here */}
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-black/50 border border-emerald-500/30">
+            <div className="relative flex items-center justify-center">
+              <span className="absolute w-4 h-4 rounded-full bg-[#00dc33]/40 animate-ping" />
+              <Locate className="w-5 h-5 text-[#00dc33] relative z-10" />
             </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-black/40 border border-white/5">
-            <Clock className="w-4 h-4 text-[#00dc33] shrink-0" />
             <div>
-              <span className="text-[10px] text-slate-400 font-semibold block uppercase">Est. Duration</span>
-              <span className="font-extrabold text-white text-sm">{routeInstructions.totalDuration}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-black/40 border border-white/5">
-            <MapPin className="w-4 h-4 text-[#00dc33] shrink-0" />
-            <div>
-              <span className="text-[10px] text-slate-400 font-semibold block uppercase">Destination</span>
-              <span className="font-extrabold text-white text-xs truncate max-w-[110px] block">
-                {facility.county || 'Kenya'}
+              <span className="text-[10px] font-black uppercase text-[#00dc33] tracking-wider block">
+                Start: You Are Here (Current GPS)
               </span>
+              <p className="font-bold text-white text-xs mt-0.5 truncate">
+                {isLocating ? 'Detecting your GPS position...' : `${originCoords.lat.toFixed(4)}, ${originCoords.lng.toFixed(4)}`}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-black/40 border border-white/5">
-            <ShieldCheck className="w-4 h-4 text-[#00dc33] shrink-0" />
+          {/* Destination: Hospital */}
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-black/50 border border-white/10">
+            <MapPin className="w-5 h-5 text-blue-400 shrink-0" />
             <div>
-              <span className="text-[10px] text-slate-400 font-semibold block uppercase">GPS Status</span>
-              <span className="font-extrabold text-[#00dc33] text-xs block">
-                {hasUserCoords ? 'Active GPS' : 'City Center'}
+              <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider block">
+                End: Target Destination
               </span>
+              <p className="font-bold text-white text-xs mt-0.5 truncate">
+                {facility.name} ({facility.county || 'Kenya'})
+              </p>
             </div>
+          </div>
+
+        </div>
+
+        {/* Route Metrics Summary */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 mb-4 text-xs">
+          <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
+            <span className="text-[10px] text-slate-400 font-semibold block uppercase">Est. Distance</span>
+            <span className="font-extrabold text-[#00dc33] text-sm mt-0.5 block">{routeInstructions.totalDistance}</span>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
+            <span className="text-[10px] text-slate-400 font-semibold block uppercase">Est. Duration</span>
+            <span className="font-extrabold text-white text-sm mt-0.5 block">{routeInstructions.totalDuration}</span>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
+            <span className="text-[10px] text-slate-400 font-semibold block uppercase">Navigation Mode</span>
+            <span className="font-extrabold text-white text-xs mt-0.5 block">Driving / Transit</span>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
+            <span className="text-[10px] text-slate-400 font-semibold block uppercase">GPS Accuracy</span>
+            <span className="font-extrabold text-[#00dc33] text-xs mt-0.5 block">
+              {hasLiveCoords ? 'HIGH (Locked)' : 'Approximate'}
+            </span>
           </div>
         </div>
 
-        {/* View Toggle Tabs for Mobile */}
+        {/* Mobile View Toggle */}
         <div className="flex items-center gap-2 mb-3 lg:hidden">
           <button
             onClick={() => setActiveTab('map')}
@@ -211,7 +240,7 @@ export default function RouteMapModal({
                 : 'bg-white/5 text-slate-300 border-white/10'
             }`}
           >
-            Interactive Map
+            Interactive Map & Route
           </button>
           <button
             onClick={() => setActiveTab('steps')}
@@ -225,14 +254,14 @@ export default function RouteMapModal({
           </button>
         </div>
 
-        {/* Main Content Area: Split View (Interactive Map + Turn-by-Turn Instructions) */}
+        {/* Main Content Area: Interactive Route Map + Turn-by-Turn Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[420px] sm:h-[480px]">
           
-          {/* Left Column: Interactive Route Map */}
+          {/* Left Column: Interactive Map Frame displaying Origin -> Destination route */}
           <div className={`lg:col-span-7 h-full ${activeTab === 'steps' ? 'hidden lg:block' : 'block'}`}>
             <div className="relative w-full h-full rounded-2xl overflow-hidden border border-[#00dc33]/30 bg-black/60 shadow-inner">
               <iframe
-                title={`Route map to ${facility.name}`}
+                title={`Route map from current location to ${facility.name}`}
                 src={embedUrl}
                 width="100%"
                 height="100%"
@@ -245,14 +274,14 @@ export default function RouteMapModal({
             </div>
           </div>
 
-          {/* Right Column: Step-by-Step Navigation Instructions */}
+          {/* Right Column: Step-by-Step Directions */}
           <div className={`lg:col-span-5 h-full ${activeTab === 'map' ? 'hidden lg:block' : 'block'}`}>
             <div className="h-full rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between overflow-y-auto">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-[#00dc33] flex items-center gap-1.5 font-heading">
                     <Compass className="w-4 h-4" />
-                    Turn-By-Turn Navigation Steps
+                    Turn-By-Turn Route Steps
                   </span>
                   <span className="text-[10px] font-mono text-slate-400">
                     {routeInstructions.steps.length} Steps
@@ -260,6 +289,18 @@ export default function RouteMapModal({
                 </div>
 
                 <div className="space-y-3 pr-1">
+                  {/* Step 0: You Are Here */}
+                  <div className="p-3 rounded-xl bg-[#00dc33]/15 border border-[#00dc33]/30 flex items-center gap-3">
+                    <Locate className="w-5 h-5 text-[#00dc33] shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-extrabold text-white">Start: You Are Here</h4>
+                      <p className="text-[11px] text-slate-300 font-medium truncate">
+                        GPS Location ({originCoords.lat.toFixed(4)}, {originCoords.lng.toFixed(4)})
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Route Steps */}
                   {routeInstructions.steps.map((step, index) => (
                     <div
                       key={index}
@@ -283,11 +324,11 @@ export default function RouteMapModal({
                     </div>
                   ))}
 
-                  {/* Final Destination Arrival Card */}
-                  <div className="p-3 rounded-xl bg-[#00dc33]/10 border border-[#00dc33]/30 flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-[#00dc33] shrink-0" />
+                  {/* Final Destination Arrival */}
+                  <div className="p-3 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />
                     <div>
-                      <h4 className="text-xs font-extrabold text-white">Arrive at Destination</h4>
+                      <h4 className="text-xs font-extrabold text-white">Arrive at Hospital</h4>
                       <p className="text-[11px] text-slate-300 font-medium truncate max-w-[200px]">
                         {facility.name}
                       </p>
@@ -304,7 +345,7 @@ export default function RouteMapModal({
         <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-white/10 text-xs">
           <span className="text-slate-400 flex items-center gap-1.5 font-medium">
             <Compass className="w-4 h-4 text-[#00dc33]" />
-            Turn-by-turn directions calculated live inside AfyaRoot.
+            Active GPS route path drawn live from your location.
           </span>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
