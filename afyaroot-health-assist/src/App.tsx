@@ -16,7 +16,6 @@ import FacilitiesPage from "./pages/FacilitiesPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import BookingPage from "./pages/BookingPage";
 import SettingsPage from "./pages/SettingsPage";
-import ContactPage from "./pages/ContactPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminBookingsPage from "./pages/AdminBookingsPage";
@@ -76,7 +75,6 @@ const App = () => (
                 <Route path="/facilities" element={<FacilitiesPage />} />
                 <Route path="/analytics" element={<Navigate to="/admin/analytics" replace />} />
                 <Route path="/booking" element={<BookingPage />} />
-                <Route path="/contact" element={<ContactPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/login" element={<Navigate to="/admin/login" replace />} />
                 <Route path="/signin" element={<Navigate to="/admin/login" replace />} />

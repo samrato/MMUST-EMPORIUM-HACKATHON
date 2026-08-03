@@ -26,7 +26,6 @@ const navItems = [
   { to: '/chat', icon: MessageCircle, labelKey: 'chat' as const, description: 'Ask the health assistant anything' },
   { to: '/facilities', icon: MapPin, labelKey: 'facilities' as const, description: 'Nearby hospitals and clinics' },
   { to: '/booking', icon: Calendar, labelKey: 'booking' as const, description: 'Book appointments and follow-ups' },
-  { to: '/contact', icon: Mail, labelKey: 'contact' as const, description: 'Get in touch with our support team' },
   { to: '/settings', icon: Settings, labelKey: 'settings' as const, description: 'Language and device preferences' },
 ];
 
