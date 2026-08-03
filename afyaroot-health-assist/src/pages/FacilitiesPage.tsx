@@ -5,6 +5,7 @@ import FacilityCard from '@/components/FacilityCard';
 import DoctorTriageModal from '@/components/DoctorTriageModal';
 import BookingModal from '@/components/BookingModal';
 import FacilityDetailModal from '@/components/FacilityDetailModal';
+import RouteMapModal from '@/components/RouteMapModal';
 import { 
   Building2, MapPin, RefreshCw, Search, ShieldCheck, Stethoscope 
 } from 'lucide-react';
@@ -31,10 +32,11 @@ export default function FacilitiesPage() {
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState<boolean>(false);
 
-  // Modals
+  // Modals state
   const [isTriageModalOpen, setIsTriageModalOpen] = useState<boolean>(false);
   const [selectedFacilityForBooking, setSelectedFacilityForBooking] = useState<Facility | null>(null);
   const [selectedFacilityForDetail, setSelectedFacilityForDetail] = useState<Facility | null>(null);
+  const [selectedFacilityForRoute, setSelectedFacilityForRoute] = useState<Facility | null>(null);
 
   const loadFacilities = async () => {
     setLoading(true);
@@ -95,16 +97,7 @@ export default function FacilitiesPage() {
   };
 
   const handleGetDirections = (facility: Facility) => {
-    const url = getDirectionsUrl(
-      {
-        lat: facility.coordinates?.lat,
-        lng: facility.coordinates?.lng,
-        name: facility.name,
-        county: facility.county,
-      },
-      userCoords
-    );
-    window.open(url, '_blank');
+    setSelectedFacilityForRoute(facility);
   };
 
   return (
@@ -215,6 +208,13 @@ export default function FacilitiesPage() {
         facility={selectedFacilityForDetail}
         onBookAppointment={(facility) => setSelectedFacilityForBooking(facility)}
         onGetDirections={handleGetDirections}
+      />
+
+      <RouteMapModal
+        isOpen={!!selectedFacilityForRoute}
+        onClose={() => setSelectedFacilityForRoute(null)}
+        facility={selectedFacilityForRoute}
+        userCoords={userCoords}
       />
     </div>
   );

@@ -9,6 +9,7 @@ import ChuDashboard from '@/components/ChuDashboard';
 import DoctorTriageModal from '@/components/DoctorTriageModal';
 import BookingModal from '@/components/BookingModal';
 import FacilityDetailModal from '@/components/FacilityDetailModal';
+import RouteMapModal from '@/components/RouteMapModal';
 import { 
   Building2, Users, Stethoscope, Sparkles, RefreshCw, AlertCircle, 
   Search, ShieldCheck, MapPin, Activity, HeartPulse 
@@ -37,6 +38,13 @@ export default function HomePage() {
   const [isTriageModalOpen, setIsTriageModalOpen] = useState<boolean>(false);
   const [selectedFacilityForBooking, setSelectedFacilityForBooking] = useState<Facility | null>(null);
   const [selectedFacilityForDetail, setSelectedFacilityForDetail] = useState<Facility | null>(null);
+  const [selectedFacilityForRoute, setSelectedFacilityForRoute] = useState<Facility | null>(null);
+
+  const handleLocationDetected = (lat: number, lng: number, details: { ward: string; subCounty: string; county: string }) => {
+    setUserCoords({ lat, lng });
+    setLocationDetails(details);
+    setIsLocating(false);
+  };
 
   // Load facilities from backend API (http://localhost:5000/api/facilities)
   const loadFacilities = async () => {
@@ -54,7 +62,7 @@ export default function HomePage() {
       setFacilities(data);
     } catch (err: any) {
       console.error('Error fetching facilities:', err);
-      setFacilitiesError('Could not load facilities from KMHFR hospital registry. Please check your network connection.');
+      setFacilitiesError('Could not load facilities registry. Please check backend status.');
     } finally {
       setLoadingFacilities(false);
     }
@@ -65,16 +73,7 @@ export default function HomePage() {
   }, [userCoords, searchQuery, selectedCounty, selectedKephLevel, selectedService]);
 
   const handleGetDirections = (facility: Facility) => {
-    const url = getDirectionsUrl(
-      {
-        lat: facility.coordinates?.lat,
-        lng: facility.coordinates?.lng,
-        name: facility.name,
-        county: facility.county,
-      },
-      userCoords
-    );
-    window.open(url, '_blank');
+    setSelectedFacilityForRoute(facility);
   };
 
   return (
@@ -239,6 +238,14 @@ export default function HomePage() {
         facility={selectedFacilityForDetail}
         onBookAppointment={(facility) => setSelectedFacilityForBooking(facility)}
         onGetDirections={handleGetDirections}
+      />
+
+      {/* In-App Interactive Route Map Modal */}
+      <RouteMapModal
+        isOpen={!!selectedFacilityForRoute}
+        onClose={() => setSelectedFacilityForRoute(null)}
+        facility={selectedFacilityForRoute}
+        userCoords={userCoords}
       />
     </div>
   );
