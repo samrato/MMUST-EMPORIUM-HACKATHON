@@ -104,20 +104,32 @@ export default function BookingPage() {
 
   const [locating, setLocating] = useState(false);
 
-  const loadNearbyFacilities = useCallback(() => {
+  const loadNearbyFacilities = useCallback(async () => {
     setLoadingFacilities(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        const data = await getNearbyHospitals(pos.coords.latitude, pos.coords.longitude);
+
+    const fetchForCoords = async (lat: number, lng: number) => {
+      try {
+        const data = await getNearbyHospitals(lat, lng);
         const withDistance = data.map(f => ({
           ...f,
-          distance: parseFloat(calculateDistance(pos.coords.latitude, pos.coords.longitude, f.location.lat, f.location.lng).toFixed(1))
+          distance: parseFloat(calculateDistance(lat, lng, f.location.lat, f.location.lng).toFixed(1))
         })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
         setFacilities(withDistance);
+      } catch (err) {
+        console.warn('Facility lookup error:', err);
+      } finally {
         setLoadingFacilities(false);
-      }, () => setLoadingFacilities(false));
+      }
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fetchForCoords(pos.coords.latitude, pos.coords.longitude),
+        () => fetchForCoords(0.2833, 34.7523),
+        { timeout: 5000 }
+      );
     } else {
-      setLoadingFacilities(false);
+      await fetchForCoords(0.2833, 34.7523);
     }
   }, []);
 
