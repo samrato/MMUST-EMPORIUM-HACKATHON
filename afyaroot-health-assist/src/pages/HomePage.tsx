@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Facility, fetchFacilities 
 } from '@/services/afyaApi';
+import { getDirectionsUrl } from '@/services/placesService';
 import HeroLocationBanner from '@/components/HeroLocationBanner';
 import FacilityCard from '@/components/FacilityCard';
 import ChuDashboard from '@/components/ChuDashboard';
@@ -64,13 +65,16 @@ export default function HomePage() {
   }, [userCoords, searchQuery, selectedCounty, selectedKephLevel, selectedService]);
 
   const handleGetDirections = (facility: Facility) => {
-    if (facility.coordinates?.lat && facility.coordinates?.lng) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${facility.coordinates.lat},${facility.coordinates.lng}`;
-      window.open(url, '_blank');
-    } else {
-      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name + ' ' + facility.county)}`;
-      window.open(url, '_blank');
-    }
+    const url = getDirectionsUrl(
+      {
+        lat: facility.coordinates?.lat,
+        lng: facility.coordinates?.lng,
+        name: facility.name,
+        county: facility.county,
+      },
+      userCoords
+    );
+    window.open(url, '_blank');
   };
 
   return (

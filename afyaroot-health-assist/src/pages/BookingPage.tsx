@@ -382,7 +382,7 @@ export default function BookingPage() {
                   </div>
                   {app.facility_id && (
                     <a 
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${app.facility_name}`}
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(app.facility_name + ', Kenya')}`}
                       target="_blank" rel="noopener noreferrer"
                       className="text-[10px] font-black text-primary uppercase flex items-center gap-1.5"
                     >

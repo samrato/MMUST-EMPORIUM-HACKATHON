@@ -9,6 +9,7 @@ import {
   Building2, MapPin, RefreshCw, Search, ShieldCheck, Stethoscope 
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getDirectionsUrl } from '@/services/placesService';
 
 export default function FacilitiesPage() {
   const { toast } = useToast();
@@ -94,13 +95,16 @@ export default function FacilitiesPage() {
   };
 
   const handleGetDirections = (facility: Facility) => {
-    if (facility.coordinates?.lat && facility.coordinates?.lng) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${facility.coordinates.lat},${facility.coordinates.lng}`;
-      window.open(url, '_blank');
-    } else {
-      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name + ' ' + facility.county)}`;
-      window.open(url, '_blank');
-    }
+    const url = getDirectionsUrl(
+      {
+        lat: facility.coordinates?.lat,
+        lng: facility.coordinates?.lng,
+        name: facility.name,
+        county: facility.county,
+      },
+      userCoords
+    );
+    window.open(url, '_blank');
   };
 
   return (

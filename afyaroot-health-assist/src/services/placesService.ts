@@ -393,3 +393,18 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 }
+
+export function getDirectionsUrl(
+  destination: { lat?: number; lng?: number; name?: string; county?: string },
+  origin?: { lat: number; lng: number } | null
+): string {
+  const hasCoords = typeof destination.lat === 'number' && typeof destination.lng === 'number' && destination.lat !== 0;
+  const destParam = hasCoords
+    ? `${destination.lat},${destination.lng}`
+    : encodeURIComponent(`${destination.name || 'Hospital'}, ${destination.county || 'Kenya'}`);
+
+  if (origin?.lat && origin?.lng) {
+    return `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${destParam}`;
+  }
+  return `https://www.google.com/maps/dir/?api=1&destination=${destParam}`;
+}
