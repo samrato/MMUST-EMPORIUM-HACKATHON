@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { 
   Facility, fetchFacilities 
 } from '@/services/afyaApi';
+import { getDirectionsUrl } from '@/services/placesService';
 import HeroLocationBanner from '@/components/HeroLocationBanner';
 import FacilityCard from '@/components/FacilityCard';
 import ChuDashboard from '@/components/ChuDashboard';
 import DoctorTriageModal from '@/components/DoctorTriageModal';
 import BookingModal from '@/components/BookingModal';
 import FacilityDetailModal from '@/components/FacilityDetailModal';
+import RouteMapModal from '@/components/RouteMapModal';
 import { 
   Building2, Users, Stethoscope, Sparkles, RefreshCw, AlertCircle, 
   Search, ShieldCheck, MapPin, Activity, HeartPulse 
@@ -36,6 +38,13 @@ export default function HomePage() {
   const [isTriageModalOpen, setIsTriageModalOpen] = useState<boolean>(false);
   const [selectedFacilityForBooking, setSelectedFacilityForBooking] = useState<Facility | null>(null);
   const [selectedFacilityForDetail, setSelectedFacilityForDetail] = useState<Facility | null>(null);
+  const [selectedFacilityForRoute, setSelectedFacilityForRoute] = useState<Facility | null>(null);
+
+  const handleLocationDetected = (lat: number, lng: number, details: { ward: string; subCounty: string; county: string }) => {
+    setUserCoords({ lat, lng });
+    setLocationDetails(details);
+    setIsLocating(false);
+  };
 
   // Load facilities from backend API (http://localhost:5000/api/facilities)
   const loadFacilities = async () => {
@@ -53,7 +62,7 @@ export default function HomePage() {
       setFacilities(data);
     } catch (err: any) {
       console.error('Error fetching facilities:', err);
-      setFacilitiesError('Could not load facilities from backend API on http://localhost:5000.');
+      setFacilitiesError('Could not load facilities registry. Please check backend status.');
     } finally {
       setLoadingFacilities(false);
     }
@@ -64,13 +73,7 @@ export default function HomePage() {
   }, [userCoords, searchQuery, selectedCounty, selectedKephLevel, selectedService]);
 
   const handleGetDirections = (facility: Facility) => {
-    if (facility.coordinates?.lat && facility.coordinates?.lng) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${facility.coordinates.lat},${facility.coordinates.lng}`;
-      window.open(url, '_blank');
-    } else {
-      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name + ' ' + facility.county)}`;
-      window.open(url, '_blank');
-    }
+    setSelectedFacilityForRoute(facility);
   };
 
   return (
@@ -96,28 +99,28 @@ export default function HomePage() {
 
       {/* Primary Navigation Tabs */}
       <div className="flex items-center justify-between border-b border-white/10 pb-4">
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl glass-card border border-white/10">
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#08060d] border border-[#00dc33]/20">
           <button
             onClick={() => setActiveTab('facilities')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition ${
               activeTab === 'facilities'
-                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-[#00dc33] text-black shadow-lg shadow-[#00dc33]/25'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
             }`}
           >
             <Building2 className="w-4 h-4" />
             <span>Facilities & Reality Cards</span>
-            <span className="ml-1 px-2 py-0.5 rounded-full bg-slate-900/60 text-[10px] font-mono text-emerald-300">
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-black/40 text-[10px] font-mono text-[#00dc33]">
               {facilities.length}
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab('chu')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition ${
               activeTab === 'chu'
-                ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                ? 'bg-[#00dc33] text-black shadow-lg shadow-[#00dc33]/25'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -128,9 +131,9 @@ export default function HomePage() {
         {/* Quick Triage Trigger */}
         <button
           onClick={() => setIsTriageModalOpen(true)}
-          className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-2xl glass-card hover:border-emerald-500/40 text-emerald-300 text-xs font-semibold transition"
+          className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#08060d] border border-[#00dc33]/30 hover:border-[#00dc33] text-[#00dc33] text-xs font-bold transition"
         >
-          <Stethoscope className="w-4 h-4 text-emerald-400 animate-pulse" />
+          <Stethoscope className="w-4 h-4 text-[#00dc33] animate-pulse" />
           <span>Launch AI Symptom Checker</span>
         </button>
       </div>
@@ -167,10 +170,9 @@ export default function HomePage() {
           )}
 
           {loadingFacilities ? (
-            <div className="text-center py-16 glass-card rounded-3xl">
-              <RefreshCw className="w-8 h-8 animate-spin text-emerald-400 mx-auto mb-3" />
-              <p className="text-slate-300 font-semibold text-sm">Querying KMHFR Hospital Registry...</p>
-              <p className="text-slate-500 text-xs mt-1">Connecting to backend at http://localhost:5000</p>
+            <div className="text-center py-16 bg-[#08060d] border border-[#00dc33]/20 rounded-3xl">
+              <RefreshCw className="w-8 h-8 animate-spin text-[#00dc33] mx-auto mb-3" />
+              <p className="text-slate-200 font-extrabold text-sm">Querying KMHFR Hospital Registry...</p>
             </div>
           ) : facilities.length === 0 ? (
             <div className="text-center py-16 glass-card rounded-3xl">
@@ -236,6 +238,14 @@ export default function HomePage() {
         facility={selectedFacilityForDetail}
         onBookAppointment={(facility) => setSelectedFacilityForBooking(facility)}
         onGetDirections={handleGetDirections}
+      />
+
+      {/* In-App Interactive Route Map Modal */}
+      <RouteMapModal
+        isOpen={!!selectedFacilityForRoute}
+        onClose={() => setSelectedFacilityForRoute(null)}
+        facility={selectedFacilityForRoute}
+        userCoords={userCoords}
       />
     </div>
   );

@@ -6,13 +6,19 @@ const notificationService = require('../services/notificationService');
  */
 exports.createBooking = async (req, res) => {
   try {
-    const { facilityId, patientName, phoneNumber, date, time, serviceNeeded, language = 'en' } = req.body;
+    const facilityId = req.body.facilityId || req.body.facility_id;
+    const patientName = req.body.patientName || req.body.patient_name;
+    const phoneNumber = req.body.phoneNumber || req.body.phone_number;
+    const date = req.body.date || req.body.booking_date;
+    const time = req.body.time || req.body.booking_time || '09:00 AM';
+    const serviceNeeded = req.body.serviceNeeded || req.body.service_requested || 'Outpatient Consultation';
+    const language = req.body.language || 'en';
 
     // Validate inputs
-    if (!facilityId || !patientName || !phoneNumber || !date || !time || !serviceNeeded) {
+    if (!facilityId || !patientName || !phoneNumber || !date) {
       return res.status(400).json({
         success: false,
-        error: "Missing required booking fields: 'facilityId', 'patientName', 'phoneNumber', 'date', 'time', and 'serviceNeeded' are mandatory."
+        error: "Missing required booking fields: 'facilityId', 'patientName', 'phoneNumber', and 'date' are mandatory."
       });
     }
 

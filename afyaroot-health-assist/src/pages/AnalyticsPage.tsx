@@ -71,13 +71,13 @@ function persistReviewedAlertIds(alertIds: string[]) {
 
 function buildDirectionsLink(alert: EmergencyAdminAlert) {
   if (alert.coordinates && alert.destinationName) {
-    return `https://www.google.com/maps/dir/?api=1&origin=${alert.coordinates.lat},${alert.coordinates.lng}&destination=${encodeURIComponent(alert.destinationName)}`;
+    return `https://www.google.com/maps/dir/?api=1&origin=${alert.coordinates.lat},${alert.coordinates.lng}&destination=${encodeURIComponent(alert.destinationName + ', Kenya')}`;
   }
   if (alert.coordinates) {
-    return `https://www.google.com/maps/search/?api=1&query=${alert.coordinates.lat},${alert.coordinates.lng}`;
+    return `https://www.google.com/maps/dir/?api=1&destination=${alert.coordinates.lat},${alert.coordinates.lng}`;
   }
   if (alert.destinationName) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(alert.destinationName)}`;
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(alert.destinationName + ', Kenya')}`;
   }
   return null;
 }

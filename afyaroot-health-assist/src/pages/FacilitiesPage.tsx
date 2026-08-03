@@ -5,10 +5,12 @@ import FacilityCard from '@/components/FacilityCard';
 import DoctorTriageModal from '@/components/DoctorTriageModal';
 import BookingModal from '@/components/BookingModal';
 import FacilityDetailModal from '@/components/FacilityDetailModal';
+import RouteMapModal from '@/components/RouteMapModal';
 import { 
   Building2, MapPin, RefreshCw, Search, ShieldCheck, Stethoscope 
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getDirectionsUrl } from '@/services/placesService';
 
 export default function FacilitiesPage() {
   const { toast } = useToast();
@@ -30,10 +32,11 @@ export default function FacilitiesPage() {
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState<boolean>(false);
 
-  // Modals
+  // Modals state
   const [isTriageModalOpen, setIsTriageModalOpen] = useState<boolean>(false);
   const [selectedFacilityForBooking, setSelectedFacilityForBooking] = useState<Facility | null>(null);
   const [selectedFacilityForDetail, setSelectedFacilityForDetail] = useState<Facility | null>(null);
+  const [selectedFacilityForRoute, setSelectedFacilityForRoute] = useState<Facility | null>(null);
 
   const loadFacilities = async () => {
     setLoading(true);
@@ -50,7 +53,7 @@ export default function FacilitiesPage() {
       setFacilities(data);
     } catch (err: any) {
       console.error('Error fetching facilities:', err);
-      setError('Could not load facilities from KMHFR registry backend on http://localhost:5000.');
+      setError('Could not load facilities from KMHFR registry. Please check your network connection.');
     } finally {
       setLoading(false);
     }
@@ -94,13 +97,7 @@ export default function FacilitiesPage() {
   };
 
   const handleGetDirections = (facility: Facility) => {
-    if (facility.coordinates?.lat && facility.coordinates?.lng) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${facility.coordinates.lat},${facility.coordinates.lng}`;
-      window.open(url, '_blank');
-    } else {
-      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.name + ' ' + facility.county)}`;
-      window.open(url, '_blank');
-    }
+    setSelectedFacilityForRoute(facility);
   };
 
   return (
@@ -211,6 +208,13 @@ export default function FacilitiesPage() {
         facility={selectedFacilityForDetail}
         onBookAppointment={(facility) => setSelectedFacilityForBooking(facility)}
         onGetDirections={handleGetDirections}
+      />
+
+      <RouteMapModal
+        isOpen={!!selectedFacilityForRoute}
+        onClose={() => setSelectedFacilityForRoute(null)}
+        facility={selectedFacilityForRoute}
+        userCoords={userCoords}
       />
     </div>
   );

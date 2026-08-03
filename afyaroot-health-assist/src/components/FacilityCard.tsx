@@ -72,25 +72,25 @@ export default function FacilityCard({
   };
 
   return (
-    <div className="glass-card-hover rounded-3xl p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden group h-full border border-white/10">
+    <div className="rounded-3xl bg-[#08060d] p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden group h-full border border-[#00dc33]/20 shadow-xl transition-all duration-300 hover:border-[#00dc33]/50 hover:shadow-2xl hover:shadow-[#00dc33]/10 hover:-translate-y-1">
       {/* Background Glow */}
-      <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition pointer-events-none" />
+      <div className="absolute top-0 right-0 w-36 h-36 bg-[#00dc33]/5 rounded-full blur-2xl group-hover:bg-[#00dc33]/15 transition pointer-events-none" />
 
       <div>
         {/* Top Header: Code, Level & Data Freshness Trust */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="px-2.5 py-1 rounded-lg bg-slate-800/90 border border-white/10 text-slate-300 font-mono text-xs font-bold">
+            <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-slate-200 font-mono text-xs font-bold">
               #{facility.code}
             </span>
-            <span className="px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-300 text-xs font-semibold">
+            <span className="px-2.5 py-1 rounded-lg bg-[#00dc33]/15 border border-[#00dc33]/30 text-[#00dc33] text-xs font-bold">
               {facility.keph_level}
             </span>
           </div>
 
           {/* Trust Indicator */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold tracking-wide trust-glow">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#00dc33]/10 border border-[#00dc33]/30 text-[#00dc33] text-[11px] font-bold tracking-wide trust-glow">
+            <span className="w-2 h-2 rounded-full bg-[#00dc33] animate-ping" />
             <span>HIGH TRUST</span>
             <span className="text-slate-400 font-normal">• Live Portal</span>
           </div>
@@ -98,11 +98,11 @@ export default function FacilityCard({
 
         {/* Facility Title & Distance */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-lg sm:text-xl font-black text-white group-hover:text-emerald-400 transition leading-snug line-clamp-2">
+          <h3 className="text-lg sm:text-xl font-extrabold text-white group-hover:text-[#00dc33] transition leading-snug line-clamp-2 font-heading">
             {facility.name}
           </h3>
           {facility.distance_km !== undefined && (
-            <span className="shrink-0 font-bold text-xs text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-800/50">
+            <span className="shrink-0 font-bold text-xs text-[#00dc33] bg-[#00dc33]/10 px-2.5 py-1 rounded-lg border border-[#00dc33]/30">
               {facility.distance_km < 1
                 ? `${Math.round(facility.distance_km * 1000)}m`
                 : `${facility.distance_km.toFixed(1)} km`}
@@ -111,8 +111,8 @@ export default function FacilityCard({
         </div>
 
         {/* Location Subtitle */}
-        <div className="flex items-center gap-1.5 mt-2 text-slate-300 text-xs">
-          <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+        <div className="flex items-center gap-1.5 mt-2 text-slate-300 text-xs font-medium">
+          <MapPin className="w-3.5 h-3.5 text-[#00dc33] shrink-0" />
           <span className="truncate">
             {facility.ward ? `${facility.ward}, ` : ''}
             {facility.sub_county || facility.constituency || 'Sub-County'}, {facility.county}
@@ -122,41 +122,41 @@ export default function FacilityCard({
         {/* Live Workload Badges Grid */}
         <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {/* Outpatient Queue */}
-          <div className="p-2 sm:p-2.5 rounded-2xl glass-input flex flex-col items-center justify-center text-center">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px] uppercase tracking-wider font-semibold">
+          <div className="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center text-center">
+            <div className="flex items-center gap-1 text-slate-400 text-[10px] uppercase tracking-wider font-bold">
               <Users className="w-3 h-3 text-blue-400 shrink-0" />
               <span>Queue</span>
             </div>
-            <span className="text-sm sm:text-base font-black text-white mt-0.5">
+            <span className="text-sm sm:text-base font-extrabold text-white mt-0.5">
               {live.outpatient_queue_length} <span className="text-[10px] font-normal text-slate-400">waiting</span>
             </span>
           </div>
 
           {/* Active Doctors */}
-          <div className="p-2 sm:p-2.5 rounded-2xl glass-input flex flex-col items-center justify-center text-center">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px] uppercase tracking-wider font-semibold">
-              <UserCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+          <div className="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center text-center">
+            <div className="flex items-center gap-1 text-slate-400 text-[10px] uppercase tracking-wider font-bold">
+              <UserCheck className="w-3 h-3 text-[#00dc33] shrink-0" />
               <span>Doctors</span>
             </div>
-            <span className="text-sm sm:text-base font-black text-white mt-0.5">
+            <span className="text-sm sm:text-base font-extrabold text-white mt-0.5">
               {live.active_doctors} <span className="text-[10px] font-normal text-slate-400">docs</span>
             </span>
           </div>
 
           {/* Free Beds */}
-          <div className="p-2 sm:p-2.5 rounded-2xl glass-input flex flex-col items-center justify-center text-center">
-            <div className="flex items-center gap-1 text-slate-400 text-[10px] uppercase tracking-wider font-semibold">
-              <BedDouble className="w-3 h-3 text-teal-400 shrink-0" />
+          <div className="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center text-center">
+            <div className="flex items-center gap-1 text-slate-400 text-[10px] uppercase tracking-wider font-bold">
+              <BedDouble className="w-3.5 h-3.5 text-[#00dc33] shrink-0" />
               <span>Beds</span>
             </div>
-            <span className="text-sm sm:text-base font-black text-white mt-0.5">
+            <span className="text-sm sm:text-base font-extrabold text-white mt-0.5">
               {live.free_beds} <span className="text-[10px] font-normal text-slate-400">free</span>
             </span>
           </div>
 
           {/* ER Status */}
-          <div className="p-2 sm:p-2.5 rounded-2xl glass-input flex flex-col items-center justify-center text-center">
-            <div className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-0.5">
+          <div className="p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center text-center">
+            <div className="text-slate-400 text-[10px] uppercase tracking-wider font-bold mb-0.5">
               ER Status
             </div>
             {getEmergencyBadge(live.emergency_status, live.outpatient_queue_length)}
@@ -169,13 +169,13 @@ export default function FacilityCard({
             {facility.services.slice(0, 4).map((s, idx) => (
               <span
                 key={idx}
-                className="px-2.5 py-0.5 rounded-full bg-slate-800/90 text-slate-300 text-[11px] font-medium border border-white/5"
+                className="px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300 text-[11px] font-bold border border-white/10"
               >
                 {s}
               </span>
             ))}
             {facility.services.length > 4 && (
-              <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[11px]">
+              <span className="px-2 py-0.5 rounded-full bg-white/5 text-slate-400 text-[11px] font-bold">
                 +{facility.services.length - 4} more
               </span>
             )}
@@ -187,7 +187,7 @@ export default function FacilityCard({
       <div className="mt-5 pt-4 border-t border-white/10 grid grid-cols-3 gap-2">
         <button
           onClick={() => onViewDetails(facility)}
-          className="py-2.5 px-2 rounded-xl glass-input hover:bg-slate-800 text-slate-200 font-bold text-xs flex items-center justify-center gap-1 transition"
+          className="py-2.5 px-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-slate-200 font-bold text-xs flex items-center justify-center gap-1 transition"
         >
           <Eye className="w-3.5 h-3.5 text-blue-400 shrink-0" />
           <span>Details</span>
@@ -195,17 +195,17 @@ export default function FacilityCard({
 
         <button
           onClick={() => onGetDirections(facility)}
-          className="py-2.5 px-2 rounded-xl glass-input hover:bg-slate-800 text-slate-200 font-bold text-xs flex items-center justify-center gap-1 transition"
+          className="py-2.5 px-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-slate-200 font-bold text-xs flex items-center justify-center gap-1 transition"
         >
-          <Navigation className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <Navigation className="w-3.5 h-3.5 text-[#00dc33] shrink-0" />
           <span>Directions</span>
         </button>
 
         <button
           onClick={() => onBookAppointment(facility)}
-          className="py-2.5 px-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/25 transition transform active:scale-95 border border-emerald-400/30"
+          className="py-2.5 px-2 rounded-xl bg-[#00dc33] hover:bg-[#00dc33]/90 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-[#00dc33]/25 transition transform active:scale-95 border border-[#00dc33]/40"
         >
-          <Calendar className="w-3.5 h-3.5 shrink-0" />
+          <Calendar className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
           <span className="truncate">Book Appointment</span>
         </button>
       </div>

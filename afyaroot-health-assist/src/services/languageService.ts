@@ -10,7 +10,7 @@ export const languages: Record<Language, string> = {
 
 type TranslationKeys =
   | 'appName' | 'home' | 'symptoms' | 'emergency' | 'chat' | 'facilities'
-  | 'analytics' | 'booking' | 'settings' | 'welcomeTitle' | 'welcomeSubtitle'
+  | 'analytics' | 'booking' | 'settings' | 'contact' | 'welcomeTitle' | 'welcomeSubtitle'
   | 'checkSymptoms' | 'emergencyHelp' | 'findFacility' | 'talkToAI'
   | 'enterSymptom' | 'send' | 'analyzing' | 'urgencyEmergency' | 'urgencyHigh'
   | 'urgencyNormal' | 'bookAppointment' | 'selectFacility' | 'selectDate'
@@ -28,6 +28,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     analytics: 'Analytics',
     booking: 'Booking',
     settings: 'Settings',
+    contact: 'Contact Us',
     welcomeTitle: 'Your AI Health Assistant',
     welcomeSubtitle: 'Get instant health guidance, find facilities, and access emergency help — even offline.',
     checkSymptoms: 'Check Symptoms',
@@ -60,6 +61,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     analytics: 'Takwimu',
     booking: 'Uhifadhi',
     settings: 'Mipangilio',
+    contact: 'Wasiliana Nasi',
     welcomeTitle: 'Msaidizi wako wa Afya wa AI',
     welcomeSubtitle: 'Pata ushauri wa afya papo hapo, tafuta vituo, na upate msaada wa dharura — hata bila mtandao.',
     checkSymptoms: 'Angalia Dalili',
@@ -92,6 +94,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     analytics: 'Takwimu',
     booking: 'Booking',
     settings: 'Ng\'alechut',
+    contact: 'Ng\'alalech',
     welcomeTitle: 'AI ne konech ko',
     welcomeSubtitle: 'Nyone konetisyet ak konech ko, chok bik ab sayet, ak konech ko saa ne.',
     checkSymptoms: 'Check Dalili',
@@ -124,6 +127,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     analytics: 'Ebibalilo',
     booking: 'Okhutesha',
     settings: 'Emitsemba',
+    contact: 'Huulila Efwe',
     welcomeTitle: 'Omufasanyi we Obulamu bwa AI',
     welcomeSubtitle: 'Fumila obulagirizi bwe obulamu, khola ebitsio, ne obufasanyi bwe obuhasi.',
     checkSymptoms: 'Lola Ebimanyi',
@@ -156,6 +160,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     analytics: 'Nonro',
     booking: 'Chano',
     settings: 'Loso',
+    contact: 'Tudore Kodech',
     welcomeTitle: 'Jakony mar Ngima mar AI',
     welcomeSubtitle: 'Yud kony mar ngima piyo, yud kar thieth, kendo yud kony mar kinde — kata ka ionge e mtandao.',
     checkSymptoms: 'Non Ranyisi',
