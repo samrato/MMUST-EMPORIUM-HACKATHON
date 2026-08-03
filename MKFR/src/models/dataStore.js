@@ -532,7 +532,10 @@ async function initDB() {
     pool = new Pool(poolConfig);
     await pool.query('SELECT NOW()');
     usePostgres = true;
-    console.log(`📡 [Database] PostgreSQL connected successfully to '${poolConfig.database}' on ${poolConfig.host}:${poolConfig.port}`);
+    const dbTarget = process.env.DATABASE_URL
+      ? 'Neon PostgreSQL Cloud DB (neondb)'
+      : `'${poolConfig.database}' on ${poolConfig.host}:${poolConfig.port}`;
+    console.log(`📡 [Database] PostgreSQL connected successfully to ${dbTarget}`);
     
     const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
     await pool.query(schemaSql);
