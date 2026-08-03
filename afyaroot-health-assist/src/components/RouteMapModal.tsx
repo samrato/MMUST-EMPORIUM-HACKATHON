@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
-import { X, Navigation, MapPin, ExternalLink, ShieldCheck, Compass, Layers } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  X, Navigation, MapPin, ExternalLink, ShieldCheck, Compass, 
+  Volume2, VolumeX, Clock, Route, CheckCircle2, ArrowRightCircle 
+} from 'lucide-react';
+import { buildFallbackEmergencyRoute, buildEmergencyVoiceScript } from '@/services/directionsService';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface RouteMapModalProps {
   isOpen: boolean;
@@ -20,7 +25,18 @@ export default function RouteMapModal({
   facility,
   userCoords,
 }: RouteMapModalProps) {
-  const [mapType, setMapType] = useState<'directions' | 'place'>('directions');
+  const { lang } = useLanguage();
+  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
+  const [activeTab, setActiveTab] = useState<'map' | 'steps'>('map');
+
+  useEffect(() => {
+    // Stop speech synthesis when closing
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [isOpen]);
 
   if (!isOpen || !facility) return null;
 
@@ -34,27 +50,67 @@ export default function RouteMapModal({
     typeof userCoords?.lng === 'number' &&
     userCoords.lat !== 0;
 
-  // Build embedded map URL
+  // Origin coordinates fallback (defaulting to center of Kakamega if GPS not granted)
+  const originCoords = hasUserCoords
+    ? userCoords!
+    : { lat: 0.2833, lng: 34.7523 };
+
+  // Destination coordinates fallback
+  const destCoords = hasFacilityCoords
+    ? facility.coordinates!
+    : { lat: 0.2829523, lng: 34.7548635 };
+
+  // Compute step-by-step route instructions
+  const routeInstructions = buildFallbackEmergencyRoute(
+    originCoords,
+    destCoords,
+    facility.name,
+    lang
+  );
+
+  // Embedded map URL
   let embedUrl = '';
   if (hasUserCoords && hasFacilityCoords) {
-    embedUrl = `https://maps.google.com/maps?saddr=${userCoords!.lat},${userCoords!.lng}&daddr=${facility.coordinates!.lat},${facility.coordinates!.lng}&output=embed`;
+    embedUrl = `https://maps.google.com/maps?saddr=${originCoords.lat},${originCoords.lng}&daddr=${destCoords.lat},${destCoords.lng}&output=embed`;
   } else if (hasFacilityCoords) {
-    embedUrl = `https://maps.google.com/maps?q=${facility.coordinates!.lat},${facility.coordinates!.lng}&t=m&z=15&output=embed`;
+    embedUrl = `https://maps.google.com/maps?q=${destCoords.lat},${destCoords.lng}&t=m&z=15&output=embed`;
   } else {
     const queryStr = encodeURIComponent(`${facility.name}, ${facility.county || 'Kenya'}`);
     embedUrl = `https://maps.google.com/maps?q=${queryStr}&t=m&z=14&output=embed`;
   }
 
-  // External fallback URL for native Google Maps app launch
+  // External fallback URL for native Google Maps app
   const externalUrl = hasFacilityCoords
     ? (hasUserCoords
-        ? `https://www.google.com/maps/dir/?api=1&origin=${userCoords!.lat},${userCoords!.lng}&destination=${facility.coordinates!.lat},${facility.coordinates!.lng}`
-        : `https://www.google.com/maps/dir/?api=1&destination=${facility.coordinates!.lat},${facility.coordinates!.lng}`)
+        ? `https://www.google.com/maps/dir/?api=1&origin=${originCoords.lat},${originCoords.lng}&destination=${destCoords.lat},${destCoords.lng}`
+        : `https://www.google.com/maps/dir/?api=1&destination=${destCoords.lat},${destCoords.lng}`)
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(facility.name + ', ' + (facility.county || 'Kenya'))}`;
+
+  const handleToggleVoice = () => {
+    if (!('speechSynthesis' in window)) {
+      alert('Voice synthesis not supported in this browser.');
+      return;
+    }
+
+    if (isPlayingVoice) {
+      window.speechSynthesis.cancel();
+      setIsPlayingVoice(false);
+    } else {
+      const scriptText = buildEmergencyVoiceScript(facility.name, routeInstructions, lang);
+      const utterance = new SpeechSynthesisUtterance(scriptText);
+      utterance.rate = 0.9;
+      utterance.onend = () => setIsPlayingVoice(false);
+      utterance.onerror = () => setIsPlayingVoice(false);
+      
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+      setIsPlayingVoice(true);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md font-sans overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-[#08060d] text-white rounded-3xl p-5 sm:p-7 border border-[#00dc33]/30 shadow-2xl my-6 fade-slide-up overflow-hidden">
+      <div className="relative w-full max-w-5xl bg-[#08060d] text-white rounded-3xl p-5 sm:p-7 border border-[#00dc33]/30 shadow-2xl my-6 fade-slide-up overflow-hidden">
         
         {/* Header bar */}
         <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
@@ -64,7 +120,7 @@ export default function RouteMapModal({
             </div>
             <div>
               <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#00dc33]">
-                In-App Interactive Route Navigation
+                In-App Turn-By-Turn Route Guidance
               </span>
               <h2 className="text-xl font-extrabold text-white font-heading truncate max-w-xs sm:max-w-md">
                 {facility.name}
@@ -73,6 +129,19 @@ export default function RouteMapModal({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleToggleVoice}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold transition border ${
+                isPlayingVoice
+                  ? 'bg-red-500/20 text-red-400 border-red-500/40 animate-pulse'
+                  : 'bg-[#00dc33]/15 text-[#00dc33] border-[#00dc33]/30 hover:bg-[#00dc33]/25'
+              }`}
+              title="Voice Route Assistant"
+            >
+              {isPlayingVoice ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              <span>{isPlayingVoice ? 'Stop Voice' : 'Voice Guide'}</span>
+            </button>
+
             <a
               href={externalUrl}
               target="_blank"
@@ -83,6 +152,7 @@ export default function RouteMapModal({
               <ExternalLink className="w-3.5 h-3.5" />
               <span>External App</span>
             </a>
+
             <button
               onClick={onClose}
               className="p-2.5 rounded-full bg-white/10 text-slate-300 hover:text-white hover:bg-white/20 transition"
@@ -92,51 +162,149 @@ export default function RouteMapModal({
           </div>
         </div>
 
-        {/* Location & Coordinates summary */}
-        <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/10 mb-4 text-xs font-medium text-slate-300">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-[#00dc33] shrink-0" />
-            <span>
-              {facility.ward ? `${facility.ward}, ` : ''}
-              {facility.sub_county ? `${facility.sub_county}, ` : ''}
-              {facility.county || 'Kenya'}
-            </span>
+        {/* Route Overview Metrics Bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-2xl bg-white/5 border border-[#00dc33]/20 mb-4 text-xs">
+          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-black/40 border border-white/5">
+            <Route className="w-4 h-4 text-[#00dc33] shrink-0" />
+            <div>
+              <span className="text-[10px] text-slate-400 font-semibold block uppercase">Est. Distance</span>
+              <span className="font-extrabold text-white text-sm">{routeInstructions.totalDistance}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 text-[11px]">
-            {hasUserCoords && (
-              <span className="px-2 py-0.5 rounded-md bg-[#00dc33]/15 text-[#00dc33] font-bold border border-[#00dc33]/30">
-                GPS Location Locked
+          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-black/40 border border-white/5">
+            <Clock className="w-4 h-4 text-[#00dc33] shrink-0" />
+            <div>
+              <span className="text-[10px] text-slate-400 font-semibold block uppercase">Est. Duration</span>
+              <span className="font-extrabold text-white text-sm">{routeInstructions.totalDuration}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-black/40 border border-white/5">
+            <MapPin className="w-4 h-4 text-[#00dc33] shrink-0" />
+            <div>
+              <span className="text-[10px] text-slate-400 font-semibold block uppercase">Destination</span>
+              <span className="font-extrabold text-white text-xs truncate max-w-[110px] block">
+                {facility.county || 'Kenya'}
               </span>
-            )}
-            <span className="text-slate-400">
-              {hasFacilityCoords
-                ? `Coords: ${facility.coordinates!.lat.toFixed(4)}, ${facility.coordinates!.lng.toFixed(4)}`
-                : 'KMHFR Verified Location'}
-            </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-black/40 border border-white/5">
+            <ShieldCheck className="w-4 h-4 text-[#00dc33] shrink-0" />
+            <div>
+              <span className="text-[10px] text-slate-400 font-semibold block uppercase">GPS Status</span>
+              <span className="font-extrabold text-[#00dc33] text-xs block">
+                {hasUserCoords ? 'Active GPS' : 'City Center'}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Embedded Interactive Google Map Iframe */}
-        <div className="relative w-full h-[380px] sm:h-[480px] rounded-2xl overflow-hidden border border-[#00dc33]/30 bg-black/60 shadow-inner">
-          <iframe
-            title={`Route map to ${facility.name}`}
-            src={embedUrl}
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen={true}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="w-full h-full rounded-2xl filter brightness-95 contrast-105"
-          />
+        {/* View Toggle Tabs for Mobile */}
+        <div className="flex items-center gap-2 mb-3 lg:hidden">
+          <button
+            onClick={() => setActiveTab('map')}
+            className={`flex-1 py-2 rounded-xl font-extrabold text-xs transition border ${
+              activeTab === 'map'
+                ? 'bg-[#00dc33] text-black border-[#00dc33]'
+                : 'bg-white/5 text-slate-300 border-white/10'
+            }`}
+          >
+            Interactive Map
+          </button>
+          <button
+            onClick={() => setActiveTab('steps')}
+            className={`flex-1 py-2 rounded-xl font-extrabold text-xs transition border ${
+              activeTab === 'steps'
+                ? 'bg-[#00dc33] text-black border-[#00dc33]'
+                : 'bg-white/5 text-slate-300 border-white/10'
+            }`}
+          >
+            Turn-by-Turn Steps ({routeInstructions.steps.length})
+          </button>
+        </div>
+
+        {/* Main Content Area: Split View (Interactive Map + Turn-by-Turn Instructions) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[420px] sm:h-[480px]">
+          
+          {/* Left Column: Interactive Route Map */}
+          <div className={`lg:col-span-7 h-full ${activeTab === 'steps' ? 'hidden lg:block' : 'block'}`}>
+            <div className="relative w-full h-full rounded-2xl overflow-hidden border border-[#00dc33]/30 bg-black/60 shadow-inner">
+              <iframe
+                title={`Route map to ${facility.name}`}
+                src={embedUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full h-full rounded-2xl filter brightness-95 contrast-105"
+              />
+            </div>
+          </div>
+
+          {/* Right Column: Step-by-Step Navigation Instructions */}
+          <div className={`lg:col-span-5 h-full ${activeTab === 'map' ? 'hidden lg:block' : 'block'}`}>
+            <div className="h-full rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between overflow-y-auto">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#00dc33] flex items-center gap-1.5 font-heading">
+                    <Compass className="w-4 h-4" />
+                    Turn-By-Turn Navigation Steps
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {routeInstructions.steps.length} Steps
+                  </span>
+                </div>
+
+                <div className="space-y-3 pr-1">
+                  {routeInstructions.steps.map((step, index) => (
+                    <div
+                      key={index}
+                      className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-start gap-3 hover:border-[#00dc33]/40 transition"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-[#00dc33]/20 text-[#00dc33] border border-[#00dc33]/30 flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-slate-200 font-medium leading-relaxed">
+                          {step.instruction}
+                        </p>
+                        {(step.distance || step.duration) && (
+                          <div className="flex items-center gap-2 mt-1 text-[10px] font-bold text-[#00dc33]">
+                            {step.distance && <span>{step.distance}</span>}
+                            {step.distance && step.duration && <span>•</span>}
+                            {step.duration && <span>{step.duration}</span>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Final Destination Arrival Card */}
+                  <div className="p-3 rounded-xl bg-[#00dc33]/10 border border-[#00dc33]/30 flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#00dc33] shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-extrabold text-white">Arrive at Destination</h4>
+                      <p className="text-[11px] text-slate-300 font-medium truncate max-w-[200px]">
+                        {facility.name}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* Footer Actions */}
         <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-white/10 text-xs">
           <span className="text-slate-400 flex items-center gap-1.5 font-medium">
             <Compass className="w-4 h-4 text-[#00dc33]" />
-            Pinch/scroll on map to zoom and inspect turns directly inside AfyaRoot.
+            Turn-by-turn directions calculated live inside AfyaRoot.
           </span>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -153,7 +321,7 @@ export default function RouteMapModal({
               onClick={onClose}
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#00dc33] hover:bg-[#00dc33]/90 text-black font-extrabold shadow-md shadow-[#00dc33]/20 transition"
             >
-              Close Map
+              Close Navigation
             </button>
           </div>
         </div>
