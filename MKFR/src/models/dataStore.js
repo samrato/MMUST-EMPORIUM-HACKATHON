@@ -504,16 +504,24 @@ function writeJSON(data) {
 }
 
 // PostgreSQL Integration Configs
-const poolConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'afyaroot_db',
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-};
+const poolConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+    }
+  : {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+      database: process.env.DB_NAME || 'afyaroot_db',
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    };
 
 let pool = null;
 let usePostgres = false;
@@ -524,7 +532,10 @@ async function initDB() {
     pool = new Pool(poolConfig);
     await pool.query('SELECT NOW()');
     usePostgres = true;
-    console.log(`📡 [Database] PostgreSQL connected successfully to '${poolConfig.database}' on ${poolConfig.host}:${poolConfig.port}`);
+    const dbTarget = process.env.DATABASE_URL
+      ? 'Neon PostgreSQL Cloud DB (neondb)'
+      : `'${poolConfig.database}' on ${poolConfig.host}:${poolConfig.port}`;
+    console.log(`📡 [Database] PostgreSQL connected successfully to ${dbTarget}`);
     
     const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
     await pool.query(schemaSql);
@@ -537,20 +548,25 @@ async function initDB() {
       for (const f of defaultData.facilities) {
         await pool.query(
           `INSERT INTO facilities (id, name, level, keph_level, county, sub_county, latitude, longitude, services, specialties, contact)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+           ON CONFLICT (id) DO NOTHING`,
           [f.id, f.name, f.level, f.kephLevel, f.county, f.subCounty, f.latitude, f.longitude, f.services, f.specialties, f.contact]
         );
       }
 
       for (const [fid, status] of Object.entries(defaultData.liveStatus)) {
-        await pool.query(
-          `INSERT INTO facility_live_status (facility_id, queue_count, doctor_available, beds_available, emergency_status, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [fid, status.queue_count, status.doctor_available, status.beds_available, status.emergency_status, status.updated_at]
-        );
+        const facExists = await pool.query('SELECT id FROM facilities WHERE id = $1', [fid]);
+        if (facExists.rows.length > 0) {
+          await pool.query(
+            `INSERT INTO facility_live_status (facility_id, queue_count, doctor_available, beds_available, emergency_status, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             ON CONFLICT (facility_id) DO NOTHING`,
+            [fid, status.queue_count, status.doctor_available, status.beds_available, status.emergency_status, status.updated_at || new Date()]
+          );
+        }
       }
       
-      console.log("✅ [Database] PostgreSQL tables successfully seeded.");
+      console.log("✅ [Database] PostgreSQL tables successfully seeded into Neon DB.");
     }
   } catch (err) {
     usePostgres = false;
