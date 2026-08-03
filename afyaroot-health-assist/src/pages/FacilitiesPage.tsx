@@ -50,7 +50,7 @@ export default function FacilitiesPage() {
       setFacilities(data);
     } catch (err: any) {
       console.error('Error fetching facilities:', err);
-      setError('Could not load facilities from KMHFR registry backend on http://localhost:5000.');
+      setError('Could not load facilities from KMHFR registry. Please check your network connection.');
     } finally {
       setLoading(false);
     }

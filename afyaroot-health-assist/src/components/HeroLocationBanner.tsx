@@ -107,36 +107,36 @@ export default function HeroLocationBanner({
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl glass-card p-6 md:p-10 mb-8 border border-white/10 shadow-2xl">
+    <div className="relative overflow-hidden rounded-3xl bg-[#08060d] p-6 md:p-10 mb-8 border border-[#00dc33]/20 shadow-2xl">
       {/* Background glow effects */}
-      <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#00dc33]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#00dc33]/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col gap-6">
+      <div className="relative z-10 flex flex-col gap-6 font-sans">
         {/* Top Badges Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#00dc33]/10 border border-[#00dc33]/30 text-[#00dc33] text-xs font-bold uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5" />
               KMHFR Registry Integration
             </span>
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-xs font-bold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-[#00dc33]" />
               AI Care Access
             </span>
           </div>
 
           {/* Auto-GPS Location Badge */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl glass-input text-xs sm:text-sm font-medium text-slate-200">
-            <MapPin className="w-4 h-4 text-emerald-400 animate-bounce" />
+          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-xs sm:text-sm font-medium text-slate-200">
+            <MapPin className="w-4 h-4 text-[#00dc33] animate-bounce" />
             <span>
               {isLocating ? (
                 <span className="flex items-center gap-2 text-slate-400">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#00dc33]" />
                   Detecting GPS Location...
                 </span>
               ) : locationDetails ? (
-                <span className="text-slate-100 font-semibold">
+                <span className="text-white font-bold">
                   📍 {locationDetails.ward}, {locationDetails.subCounty}, {locationDetails.county}
                 </span>
               ) : (
@@ -146,7 +146,7 @@ export default function HeroLocationBanner({
             <button
               onClick={requestLocation}
               title="Refresh GPS Location"
-              className="ml-2 text-slate-400 hover:text-emerald-400 transition"
+              className="ml-2 text-slate-400 hover:text-[#00dc33] transition"
             >
               <Navigation className="w-3.5 h-3.5" />
             </button>
@@ -155,13 +155,13 @@ export default function HeroLocationBanner({
 
         {/* Hero Title & Intro */}
         <div>
-          <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight font-heading">
             Navigate Health Facilities &<br />
-            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400 bg-clip-text text-transparent">
+            <span className="text-[#00dc33]">
               Access Real-Time AI Doctor Care
             </span>
           </h1>
-          <p className="mt-3 text-slate-300 text-sm md:text-base max-w-3xl leading-relaxed">
+          <p className="mt-3 text-slate-300 text-sm md:text-base max-w-3xl leading-relaxed font-medium">
             Search verified Kenya Master Health Facility Registry (KMHFR) hospitals, view live workload queues, doctor availability, free bed capacity, and launch instant AI symptom triage.
           </p>
         </div>
@@ -177,12 +177,12 @@ export default function HeroLocationBanner({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search hospital name, code, service, or location (e.g. Kakamega County Hospital, #30386)..."
-                className="w-full pl-12 pr-4 py-3.5 rounded-2xl glass-input text-white placeholder-slate-400 text-sm focus:outline-none focus:border-emerald-500 transition shadow-inner"
+                className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/5 border border-white/15 text-white placeholder-slate-400 text-sm focus:outline-none focus:border-[#00dc33] focus:ring-1 focus:ring-[#00dc33]/30 transition shadow-inner font-medium"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs px-2 py-1 bg-slate-800/60 rounded-lg"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs px-2 py-1 bg-white/10 rounded-lg"
                 >
                   Clear
                 </button>
@@ -192,25 +192,25 @@ export default function HeroLocationBanner({
             {/* Filter Toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-semibold border transition ${
+              className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold border transition ${
                 showFilters || selectedCounty !== 'All' || selectedKephLevel !== 'All' || selectedService !== 'All'
-                  ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300'
-                  : 'border-white/10 glass-input text-slate-200 hover:border-white/20'
+                  ? 'border-[#00dc33] bg-[#00dc33]/20 text-[#00dc33]'
+                  : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
               }`}
             >
               <Filter className="w-4 h-4" />
               <span>Filters</span>
               {(selectedCounty !== 'All' || selectedKephLevel !== 'All' || selectedService !== 'All') && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="w-2 h-2 rounded-full bg-[#00dc33]" />
               )}
             </button>
 
             {/* AI Doctor Triage Launcher Button */}
             <button
               onClick={onOpenTriageModal}
-              className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#00dc33] hover:bg-[#00dc33]/90 text-black font-extrabold text-sm shadow-lg shadow-[#00dc33]/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
             >
-              <Stethoscope className="w-4 h-4 animate-pulse" />
+              <Stethoscope className="w-4 h-4 stroke-[2.5]" />
               <span>Doctor Brain Triage</span>
             </button>
           </div>

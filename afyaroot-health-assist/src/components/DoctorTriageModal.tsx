@@ -55,7 +55,7 @@ export default function DoctorTriageModal({
       setRouteResult(routeRes);
     } catch (err: any) {
       console.error('Triage submission error:', err);
-      setError('AI Care Access service error. Please ensure backend is running at http://localhost:5000.');
+      setError('AI Care Access service temporary error. Please try again.');
     } finally {
       setLoading(false);
     }
