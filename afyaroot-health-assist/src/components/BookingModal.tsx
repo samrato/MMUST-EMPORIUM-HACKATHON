@@ -210,23 +210,34 @@ export default function BookingModal({ isOpen, onClose, facility }: BookingModal
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 rounded-2xl bg-[#00dc33] hover:bg-[#00dc33]/90 text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#00dc33]/25 transition transform active:scale-98 disabled:opacity-50 mt-2"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Submitting Booking...</span>
-                </>
-              ) : (
-                <>
-                  <Calendar className="w-4 h-4 stroke-[2.5]" />
-                  <span>Confirm Appointment Booking</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-3 mt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="w-1/3 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white font-bold text-sm border border-white/15 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-2/3 py-3.5 rounded-2xl bg-[#00dc33] hover:bg-[#00dc33]/90 text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#00dc33]/25 transition transform active:scale-98 disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="w-4 h-4 stroke-[2.5]" />
+                    <span>Confirm Booking</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         )}
       </div>
