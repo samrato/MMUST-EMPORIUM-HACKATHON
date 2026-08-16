@@ -88,14 +88,14 @@ export default function HeroLocationBanner({
         async (error) => {
           console.warn('Geolocation permission denied or timed out:', error);
           // Default fallback Kakamega / Shirere Ward
-          const defaultLat = -0.2833;
+          const defaultLat = 0.2833;
           const defaultLng = 34.75;
           setUserCoords({ lat: defaultLat, lng: defaultLng });
           const geocoded = await reverseGeocode(defaultLat, defaultLng);
-          setLocationDetails(geocoded);
+          setLocationDetails(geocoded || { ward: 'Shirere', subCounty: 'Lurambi', county: 'Kakamega' });
           setIsLocating(false);
         },
-        { timeout: 10000, enableHighAccuracy: true }
+        { timeout: 4000, enableHighAccuracy: false }
       );
     } else {
       setIsLocating(false);

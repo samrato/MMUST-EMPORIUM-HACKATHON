@@ -504,13 +504,19 @@ function writeJSON(data) {
 }
 
 // PostgreSQL Integration Configs
+const isLocalOrDocker = !process.env.DATABASE_URL || 
+  process.env.DATABASE_URL.includes('localhost') || 
+  process.env.DATABASE_URL.includes('127.0.0.1') || 
+  process.env.DATABASE_URL.includes('@postgres:') ||
+  process.env.DATABASE_URL.includes('sslmode=disable');
+
 const poolConfig = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
+      ssl: isLocalOrDocker ? false : { rejectUnauthorized: false },
       max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      connectionTimeoutMillis: 2500,
     }
   : {
       host: process.env.DB_HOST || 'localhost',
@@ -570,7 +576,8 @@ async function initDB() {
     }
   } catch (err) {
     usePostgres = false;
-    console.warn(`⚠️ [Database] PostgreSQL unavailable (${err.message}). Gracefully falling back to file-persisted JSON database.`);
+    const errReason = err.message || (err.errors && err.errors[0] && err.errors[0].message) || err.code || 'ETIMEDOUT/Unreachable';
+    console.warn(`⚠️ [Database] PostgreSQL unavailable (${errReason}). Gracefully falling back to file-persisted JSON database.`);
     readJSON();
   }
 }

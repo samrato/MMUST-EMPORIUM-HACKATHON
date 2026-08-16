@@ -96,43 +96,60 @@ export async function getVoiceDirections(
 }
 
 /**
- * Direct call to Vertex AI REST API from Frontend (Streaming)
+ * Direct call to Google Gemini / Vertex AI REST API from Frontend
  */
-async function callVertexDirectly(prompt: string) {
-  const url = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${MODEL_ID}:streamGenerateContent?key=${API_KEY}`;
-  
-  const payload = {
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: { maxOutputTokens: 2048, temperature: 0.7 }
-  };
+async function callDirectAi(prompt: string): Promise<string> {
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (geminiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 2048, temperature: 0.7 }
+        })
+      });
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Vertex API Error:", errorText);
-      throw new Error(`Vertex AI call failed: ${response.statusText}`);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return text;
+      }
+    } catch {
+      // Gracefully continue
     }
-
-    const data = await response.json();
-    // Vertex returns an array of objects for streamGenerateContent
-    if (!Array.isArray(data)) {
-        // Fallback for single object response
-        return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    }
-    
-    return data
-      .map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || "")
-      .join("");
-  } catch (error) {
-    console.error("Vertex API Request Failed:", error);
-    throw error;
   }
+
+  if (API_KEY && PROJECT_ID) {
+    const url = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${MODEL_ID}:streamGenerateContent?key=${API_KEY}`;
+    const payload = {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 2048, temperature: 0.7 }
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+          return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        }
+        return data
+          .map((chunk: any) => chunk.candidates?.[0]?.content?.parts?.[0]?.text || "")
+          .join("");
+      }
+    } catch {
+      // Quiet fallback
+    }
+  }
+  return "";
 }
 
 export async function analyzeSymptomsWithAI(
@@ -141,22 +158,23 @@ export async function analyzeSymptomsWithAI(
 ): Promise<SymptomAnalysisResult> {
   const outputLanguage = getSymptomOutputLanguage(options?.language);
   
+  const userCoords = options?.userLoc || { lat: 0.2882, lng: 34.7656 };
   let nearbyHospitals: NearbyHospitalInput[] = [];
-  if (options?.userLoc) {
-    try {
-      const realHospitals = await getNearbyHospitals(options.userLoc.lat, options.userLoc.lng);
+  try {
+    const realHospitals = await getNearbyHospitals(userCoords.lat, userCoords.lng);
+    if (realHospitals && realHospitals.length > 0) {
       nearbyHospitals = realHospitals.map(h => ({
         name: h.name,
-        distance_km: h.distance || 0,
+        distance_km: h.distance || 0.6,
         type: h.types[0] || 'hospital',
         types: h.types
       }));
-    } catch (e) {
-      console.error("Failed to fetch real hospitals for AI analysis:", e);
     }
+  } catch (e) {
+    console.error("Failed to fetch real hospitals for AI analysis:", e);
   }
 
-  // Baseline deterministic decision engine
+  // Baseline deterministic decision engine with KMHFR facilities
   const engineResult = runHealthcareDecisionEngine({
     user_input: symptoms,
     nearby_hospitals: nearbyHospitals,
@@ -165,8 +183,9 @@ export async function analyzeSymptomsWithAI(
 
   // 1. Try calling central backend API /api/triage
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-    const res = await fetch(`${backendUrl}/api/triage`, {
+    const rawBackend = import.meta.env.VITE_BACKEND_URL || '/api';
+    const cleanApi = rawBackend.endsWith('/api') ? rawBackend : `${rawBackend}/api`;
+    const res = await fetch(`${cleanApi}/triage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -198,10 +217,10 @@ export async function analyzeSymptomsWithAI(
       }
     }
   } catch (err) {
-    console.warn("Backend /api/triage call failed, proceeding to direct Vertex / Engine:", err);
+    // Graceful fallback to direct AI
   }
 
-  // 2. Try direct Vertex call if available
+  // 2. Try direct AI endpoint if available
   try {
     const prompt = `
       You are a medical symptom triage assistant for an educational health support application in Kenya.
@@ -218,27 +237,29 @@ export async function analyzeSymptomsWithAI(
         "warnings": ["warning 1"]
       }
     `;
-    const text = await callVertexDirectly(prompt);
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const aiResult = JSON.parse(jsonMatch[0]);
-      return {
-        condition: aiResult.condition || engineResult.possible_conditions[0] || "Assessment Required",
-        confidence: 0.95,
-        urgency: toUrgency(aiResult.urgency || engineResult.urgency),
-        description: aiResult.description || engineResult.explanation,
-        recommendations: toStringArray(aiResult.recommendations),
-        suggestedFacilityType: engineResult.recommended_facility.type as any,
-        matchedSymptoms: engineResult.matched_symptoms,
-        possibleConditions: engineResult.possible_conditions,
-        recommendedFacility: engineResult.recommended_facility,
-        guidance: [...new Set([...engineResult.guidance, ...toStringArray(aiResult.recommendations)])],
-        explanation: engineResult.explanation,
-        structuredResult: engineResult,
-      };
+    const text = await callDirectAi(prompt);
+    if (text) {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const aiResult = JSON.parse(jsonMatch[0]);
+        return {
+          condition: aiResult.condition || engineResult.possible_conditions[0] || "Assessment Required",
+          confidence: 0.95,
+          urgency: toUrgency(aiResult.urgency || engineResult.urgency),
+          description: aiResult.description || engineResult.explanation,
+          recommendations: toStringArray(aiResult.recommendations),
+          suggestedFacilityType: engineResult.recommended_facility.type as any,
+          matchedSymptoms: engineResult.matched_symptoms,
+          possibleConditions: engineResult.possible_conditions,
+          recommendedFacility: engineResult.recommended_facility,
+          guidance: [...new Set([...engineResult.guidance, ...toStringArray(aiResult.recommendations)])],
+          explanation: engineResult.explanation,
+          structuredResult: engineResult,
+        };
+      }
     }
-  } catch (err) {
-    console.warn("Vertex AI direct call failed, returning Decision Engine result:", err);
+  } catch {
+    // Quiet fallback to deterministic decision engine
   }
 
   // 3. Fallback to Decision Engine result - ALWAYS returns a valid result!
@@ -259,8 +280,9 @@ export async function analyzeSymptomsWithAI(
 }
 
 export async function getGeminiResponse(prompt: string, context: any = {}, patientId: string = "WEB-USER") {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-  const url = `${backendUrl}/api/conversations/message`;
+  const rawBackend = import.meta.env.VITE_BACKEND_URL || '/api';
+  const cleanApi = rawBackend.endsWith('/api') ? rawBackend : `${rawBackend}/api`;
+  const url = `${cleanApi}/conversations/message`;
 
   try {
     const lat = context.user_location?.lat || null;

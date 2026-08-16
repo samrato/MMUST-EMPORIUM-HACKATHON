@@ -202,20 +202,26 @@ export async function getAppointmentsByPatientId(patientId: string, limit = 100)
 export async function logAiInteraction(input: AIInteractionInput) {
   if (!AI_LOGGING_ENABLED) return;
 
-  const { error } = await supabase.from("ai_interactions").insert([
-    {
-      patient_id: input.patientId ? normalizePatientId(input.patientId) : null,
-      message_type: input.messageType,
-      language: input.language,
-      input_text: normalizeText(input.inputText).slice(0, 6000),
-      response_text: normalizeText(input.responseText).slice(0, 6000),
-      duration_ms: input.durationMs,
-      input_chars: input.inputText.length,
-      response_chars: input.responseText.length,
-    },
-  ]);
+  try {
+    const { error } = await supabase.from("ai_interactions").insert([
+      {
+        patient_id: input.patientId ? normalizePatientId(input.patientId) : null,
+        message_type: input.messageType,
+        language: input.language,
+        input_text: normalizeText(input.inputText).slice(0, 6000),
+        response_text: normalizeText(input.responseText).slice(0, 6000),
+        duration_ms: input.durationMs,
+        input_chars: input.inputText.length,
+        response_chars: input.responseText.length,
+      },
+    ]);
 
-  if (error) throw error;
+    if (error) {
+      console.warn("Supabase log interaction:", error.message);
+    }
+  } catch (err) {
+    // Non-blocking log failure
+  }
 }
 
 function parseTimestamp(value: string | null | undefined) {
@@ -676,13 +682,17 @@ export function storeDecisionCaseLocally(caseData: Omit<StoredDecisionCase, "id"
 
 export async function persistDecisionCase(caseData: Omit<StoredDecisionCase, "id" | "createdAt">) {
   const stored = storeDecisionCaseLocally(caseData);
-  await logAiInteraction({
-    patientId: caseData.patientId,
-    messageType: "decision_engine",
-    language: caseData.language,
-    inputText: caseData.inputText,
-    responseText: JSON.stringify(caseData.result),
-    durationMs: 0,
-  });
+  try {
+    await logAiInteraction({
+      patientId: caseData.patientId,
+      messageType: "decision_engine",
+      language: caseData.language,
+      inputText: caseData.inputText,
+      responseText: JSON.stringify(caseData.result),
+      durationMs: 0,
+    });
+  } catch {
+    // Non-blocking fallback to local storage
+  }
   return stored;
 }

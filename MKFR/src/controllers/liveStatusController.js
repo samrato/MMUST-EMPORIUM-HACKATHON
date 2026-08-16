@@ -137,3 +137,23 @@ exports.getStatusById = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get all live status records with freshness
+ */
+exports.getAllStatus = async (req, res) => {
+  try {
+    const allStatus = await dataStore.getLiveStatus();
+    return res.status(200).json({
+      success: true,
+      count: Object.keys(allStatus || {}).length,
+      data: allStatus
+    });
+  } catch (error) {
+    console.error("Error in getAllStatus controller:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error retrieving live status list."
+    });
+  }
+};

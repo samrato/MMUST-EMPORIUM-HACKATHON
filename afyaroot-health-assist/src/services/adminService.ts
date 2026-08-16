@@ -235,10 +235,11 @@ export interface AdminGbvAlert {
 
 // Fetch all recorded GBV interactions
 export async function getGbvAlerts(): Promise<AdminGbvAlert[]> {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  const rawBackend = import.meta.env.VITE_BACKEND_URL || '/api';
+  const cleanApi = rawBackend.endsWith('/api') ? rawBackend : `${rawBackend}/api`;
   
   try {
-    const res = await fetch(`${backendUrl}/api/conversations/classified?category=GBV`);
+    const res = await fetch(`${cleanApi}/conversations/classified?category=GBV`);
     if (res.ok) {
       const payload = await res.json();
       if (payload.success && Array.isArray(payload.data)) {
