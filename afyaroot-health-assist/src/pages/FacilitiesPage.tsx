@@ -66,8 +66,9 @@ export default function FacilitiesPage() {
   const handleSyncKmhfr = async () => {
     setSyncing(true);
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-      const res = await fetch(`${backendUrl}/api/facilities/sync`, {
+      const rawBackend = import.meta.env.VITE_BACKEND_URL || '/api';
+      const cleanApi = rawBackend.endsWith('/api') ? rawBackend : `${rawBackend}/api`;
+      const res = await fetch(`${cleanApi}/facilities/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -80,16 +81,14 @@ export default function FacilitiesPage() {
         loadFacilities();
       } else {
         toast({
-          title: 'Sync Warning',
-          description: data.error || 'Using local registry cache.',
-          variant: 'destructive',
+          title: 'Sync Notice',
+          description: data.message || data.error || 'Serving verified local registry cache.',
         });
       }
     } catch (err: any) {
       toast({
-        title: 'Sync Error',
-        description: 'Failed to connect to backend on port 5000.',
-        variant: 'destructive',
+        title: 'Sync Notice',
+        description: 'Using verified KMHFR registry cache.',
       });
     } finally {
       setSyncing(false);

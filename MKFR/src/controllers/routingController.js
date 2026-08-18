@@ -9,12 +9,12 @@ const aiTriageService = require('../services/aiTriageService');
  */
 exports.getRoutes = async (req, res) => {
   try {
-    const rawLat = req.body?.userLat ?? req.body?.lat ?? req.query?.lat ?? req.query?.userLat;
-    const rawLng = req.body?.userLng ?? req.query?.lng ?? req.query?.userLng;
+    const rawLat = req.body?.userLat ?? req.body?.lat ?? req.body?.coordinates?.lat ?? req.query?.lat ?? req.query?.userLat;
+    const rawLng = req.body?.userLng ?? req.body?.lng ?? req.body?.coordinates?.lng ?? req.query?.lng ?? req.query?.userLng;
     const symptom = req.body?.symptom ?? req.query?.symptom;
     const sessionId = req.body?.sessionId ?? req.query?.sessionId;
-    let requiredServices = req.body?.requiredServices ?? (req.query?.service ? [req.query.service] : []);
-    let isEmergency = req.body?.isEmergency ?? (req.query?.isEmergency === 'true');
+    let requiredServices = req.body?.requiredServices ?? req.body?.required_services ?? (req.query?.service ? [req.query.service] : []);
+    let isEmergency = req.body?.isEmergency ?? req.body?.is_emergency ?? (req.query?.isEmergency === 'true');
 
     // Validate coordinates
     if (rawLat === undefined || rawLng === undefined) {

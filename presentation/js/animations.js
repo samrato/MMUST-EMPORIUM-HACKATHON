@@ -56,9 +56,6 @@ class SlideAnimations {
       } else if (slideIndex === 5) {
         // How It Works Slide -> Interactive Workflow Timeline
         this.runWorkflowTimeline();
-      } else if (slideIndex === 9) {
-        // Cost Structure Slide -> Animate budget donut slices
-        this.animateCostDonut();
       }
     });
   }
