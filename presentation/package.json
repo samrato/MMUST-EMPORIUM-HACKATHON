@@ -7,6 +7,8 @@
   "description": "A premium, interactive, and offline-compatible HTML/CSS/JavaScript slide presentation representing the **AFYAROOT Healthcare** pitch deck. Engineered to feel like an Apple Keynote or high-end startup pitch.",
   "main": "index.js",
   "scripts": {
+    "start": "python3 -m http.server 8000",
+    "serve": "python3 -m http.server 8000",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

@@ -34,11 +34,11 @@ const diseaseData = [
 ];
 
 const facilityLoad = [
-  { name: 'Kapsabet', value: 78 },
-  { name: 'Nandi Hills', value: 62 },
-  { name: 'Chepterit', value: 45 },
-  { name: 'Kabiyet', value: 20 },
-  { name: 'Mosoriot', value: 70 },
+  { name: 'Kakamega Referral', value: 78 },
+  { name: 'MMUST Clinic', value: 35 },
+  { name: 'Avenue Healthcare', value: 52 },
+  { name: 'Shikoti Level 4', value: 60 },
+  { name: 'Lurambi Health', value: 40 },
 ];
 
 function formatDateTime(iso: string) {

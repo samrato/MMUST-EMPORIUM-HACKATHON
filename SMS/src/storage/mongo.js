@@ -55,7 +55,7 @@ function getModels() {
 
 export async function createMongoDb({ mongoUrl }) {
   if (!mongoUrl) throw new Error('mongoUrl is required');
-  await mongoose.connect(mongoUrl, { serverSelectionTimeoutMS: 10_000 });
+  await mongoose.connect(mongoUrl, { serverSelectionTimeoutMS: 2000 });
 
   const { Inbound, Outbound, Log } = getModels();
 

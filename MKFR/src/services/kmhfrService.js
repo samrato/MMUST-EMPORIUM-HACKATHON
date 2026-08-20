@@ -221,15 +221,32 @@ async function searchFacilities(filters = {}) {
     autoLocation = await resolveLocationFromCoordinates(lat, lng);
   }
 
-  // Try live KMHFR REST API first
-  const liveResults = await searchFacilitiesLive({ county: county || (autoLocation ? autoLocation.county : null), search });
-  if (liveResults && liveResults.length > 0) {
-    for (const f of liveResults) {
-      await dataStore.upsertFacility(f);
+  let list = await dataStore.getFacilities();
+
+  // If local list is empty, fetch live in background to avoid blocking user
+  if (!list || list.length === 0) {
+    const liveResults = await searchFacilitiesLive({ county: county || (autoLocation ? autoLocation.county : null), search });
+    if (liveResults && liveResults.length > 0) {
+      for (const f of liveResults) {
+        await dataStore.upsertFacility(f);
+      }
+      list = await dataStore.getFacilities();
+    }
+  } else {
+    // Non-blocking background sync if search parameter is present
+    if (search || county) {
+      void (async () => {
+        try {
+          const liveResults = await searchFacilitiesLive({ county: county || (autoLocation ? autoLocation.county : null), search });
+          if (liveResults && liveResults.length > 0) {
+            for (const f of liveResults) {
+              await dataStore.upsertFacility(f);
+            }
+          }
+        } catch {}
+      })();
     }
   }
-
-  let list = await dataStore.getFacilities();
 
   if (county && county !== 'All') {
     const cTerm = county.toLowerCase().replace('county', '').trim();
@@ -272,7 +289,8 @@ async function searchFacilities(filters = {}) {
     const uLng = parseFloat(lng);
     if (!isNaN(uLat) && !isNaN(uLng)) {
       list = list.map(f => {
-        const dist = (f.latitude && f.longitude) ? calculateDistance(uLat, uLng, f.latitude, f.longitude) : 999;
+        const rawDist = (f.latitude && f.longitude) ? calculateDistance(uLat, uLng, f.latitude, f.longitude) : 999;
+        const dist = (rawDist !== 999) ? Math.max(0.05, rawDist) : 999;
         return { ...f, distance_km: dist };
       });
 

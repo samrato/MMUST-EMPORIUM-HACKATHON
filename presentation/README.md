@@ -14,7 +14,7 @@ A premium, interactive, and offline-compatible HTML/CSS/JavaScript slide present
    - `End` to jump to the final slide.
 3. **Interactive Demos**:
    - **Slide 5**: A real-time smartphone simulator displaying localized Swahili AI SMS diagnostic conversations.
-   - **Slide 6**: A sequential pipeline workflow that animates connection lines and highlights milestones automatically.
+   - **Slide 6**: Mechanism & Process Flow featuring both an interactive step-by-step pipeline workflow and an integrated **1080P HD Video Player** with stage chapter controls and quick actions.
    - **Slide 10**: An animated SVG donut chart detailing financial budget distribution.
 4. **Touch Swipe Support**: Seamless horizontal swipe navigation for mobile, iPad, and tablet touchscreens.
 5. **Table of Contents (TOC) Sidebar**: Hoverable navigation dots on the left sidebar with tooltips displaying slide titles for direct access.
@@ -35,8 +35,10 @@ presentation/
 ├── js/
 │   ├── app.js          # Core bootstrap, utility logging, and lazy loading
 │   ├── navigation.js   # State management, keyboard, touch, and progress bar
-│   └── animations.js   # Interactive JS phone simulation & pipeline cycles
+│   └── animations.js   # Interactive JS phone simulation, video controls & pipeline cycles
 ├── assets/
+│   ├── vide/           # Video assets (e.g. mechanism_flow.mp4 / Untitled design.mp4)
+│   ├── videos/         # Standard video directory mirror
 │   ├── images/
 │   │   ├── surgeon.png       # Extracted surgeon cover visual
 │   │   ├── team_polycap.png  # Extracted CEO photo
@@ -66,7 +68,7 @@ presentation/
 3. **Introduction**: Setting the background and the critical need for rural guidance.
 4. **Problem Statement**: Details the primary friction points (connectivity, dialects, delays, hospital crowding).
 5. **The Solution**: An interactive SMS demonstration of our AI system.
-6. **How It Works**: A step-by-step pipeline from symptom input to dispatch.
+6. **How It Works**: Mechanism & Process Flow with interactive pipeline and Video Demonstration.
 7. **Unique Value Proposition**: What sets us apart (GSM offline capacity, localized routing).
 8. **Business Model**: Quad-canvas representation of partners, customers, channels, and revenue.
 9. **Sustainable Goals**: Alignment details with SDG 3, 4, 9, and 10.

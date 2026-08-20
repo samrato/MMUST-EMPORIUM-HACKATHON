@@ -191,6 +191,13 @@ class PresentationController {
           siblingCards.forEach(c => c.classList.remove('active'));
           prevFragment.classList.add('active');
         }
+      } else {
+        const firstTab = currentSlide.querySelector('.problem-tab, .uniqueness-tab');
+        if (firstTab) {
+          const selector = firstTab.classList.contains('problem-tab') ? '.problem-tab' : '.uniqueness-tab';
+          currentSlide.querySelectorAll(selector).forEach(c => c.classList.remove('active'));
+          firstTab.classList.add('active');
+        }
       }
       return; // Stop slide transition
     }
@@ -226,6 +233,12 @@ class PresentationController {
             f.classList.remove('visible');
             f.classList.remove('active');
           });
+          const firstTab = targetSlide.querySelector('.problem-tab, .uniqueness-tab');
+          if (firstTab) {
+            const selector = firstTab.classList.contains('problem-tab') ? '.problem-tab' : '.uniqueness-tab';
+            targetSlide.querySelectorAll(selector).forEach(c => c.classList.remove('active'));
+            firstTab.classList.add('active');
+          }
         } else {
           // Entering slide moving backward -> Make all fragments visible
           targetFragments.forEach(f => {

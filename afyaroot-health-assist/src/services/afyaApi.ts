@@ -155,18 +155,18 @@ export async function fetchFacilities(params?: {
     console.warn("Could not fetch facilities from backend API, serving from local offline fallback cache:", err);
   }
 
-  // Resilient fallback to local bundled facilities so UI never breaks
+  // Resilient fallback to local bundled KMHFR facilities so UI never breaks
   return localFacilities.map(f => ({
     id: f.id,
     code: f.id,
     name: f.name,
-    county: 'Kakamega',
-    sub_county: 'Lurambi',
+    county: f.county || 'Kakamega',
+    sub_county: f.sub_county || 'Lurambi',
     keph_level: f.type === 'hospital' ? 'Level 4 (Sub-County Hospital)' : 'Level 3 (Health Center)',
     facility_type: f.type,
     services: f.specialties || ['Outpatient Services', 'General Consultation'],
     coordinates: f.location || { lat: 0.2882, lng: 34.7656 },
-    distance_km: f.distance || 2.5,
+    distance_km: f.distance || 1.5,
     live_status: {
       outpatient_queue_length: Math.round(100 - f.availability),
       active_doctors: 3,

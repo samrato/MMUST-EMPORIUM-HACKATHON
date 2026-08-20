@@ -1,0 +1,155 @@
+services:
+  # =============================================================
+  # 1. PostgreSQL Database (Master Hospital Registry & Triage DB)
+  # =============================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: afyaroot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-afyaroot_secure_password}
+      POSTGRES_DB: ${DB_NAME:-afyaroot_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./MKFR/src/models/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-afyaroot_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - afyaroot-network
+
+  # =============================================================
+  # 2. MongoDB Database (SMS Sessions, Charts & Memory)
+  # =============================================================
+  mongo:
+    image: mongo:7
+    container_name: afyaroot-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - afyaroot-network
+
+  # =============================================================
+  # 3. MKFR Central Backend & AI Orchestrator (Port 5000)
+  # =============================================================
+  backend:
+    build:
+      context: ./MKFR
+      dockerfile: Dockerfile
+    container_name: afyaroot-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-AIzaSyAtb94gGpPQfeYJzkCL0QQ9SNPboyYhuBQ}
+      - VERTEX_API_KEY=${VERTEX_API_KEY:-AQ.Ab8RN6LyVnRDJ_eqKfFPi6slx6uv3oulR16vOITJ-EZr4QZTEw}
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-gen-lang-client-0852400804}
+      - GOOGLE_CLOUD_LOCATION=${GOOGLE_CLOUD_LOCATION:-us-central1}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-afyaroot_secure_password}@postgres:5432/${DB_NAME:-afyaroot_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend_data:/app/src/models/data
+    networks:
+      - afyaroot-network
+
+  # =============================================================
+  # 4. Mosquitto MQTT Broker (Port 1883 - SIM800 & SMS Bridge)
+  # =============================================================
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: afyaroot-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - afyaroot-network
+
+  # =============================================================
+  # 5. SMS Gateway & SIM800 GSM Network Bridge (Port 4000)
+  # =============================================================
+  sms-gateway:
+    build:
+      context: ./SMS
+      dockerfile: Dockerfile
+    container_name: afyaroot-sms
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://mongo:27017/afyroot_sms
+      - BACKEND_API_URL=http://backend:5000
+      - MQTT_URL=${MQTT_URL:-mqtt://mosquitto:1883}
+      - MQTT_USERNAME=${MQTT_USERNAME:-}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-}
+      - DEVICE_ID=${DEVICE_ID:-sim800-node-01}
+      - VERTEX_API_KEY=${VERTEX_API_KEY:-AQ.Ab8RN6LyVnRDJ_eqKfFPi6slx6uv3oulR16vOITJ-EZr4QZTEw}
+      - VERTEX_MODEL=gemini-2.5-flash-lite
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-gen-lang-client-0852400804}
+      - GOOGLE_CLOUD_LOCATION=${GOOGLE_CLOUD_LOCATION:-us-central1}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      backend:
+        condition: service_started
+      mosquitto:
+        condition: service_started
+    volumes:
+      - sms_data:/app/data
+    networks:
+      - afyaroot-network
+
+  # =============================================================
+  # 6. Frontend Web PWA (React + Vite + Nginx SSL Reverse Proxy)
+  # =============================================================
+  frontend:
+    build:
+      context: ./afyaroot-health-assist
+      dockerfile: Dockerfile
+    container_name: afyaroot-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - certbot_data:/var/www/certbot
+    depends_on:
+      - backend
+    networks:
+      - afyaroot-network
+
+volumes:
+  postgres_data:
+  mongo_data:
+  backend_data:
+  sms_data:
+  mosquitto_data:
+  mosquitto_log:
+  certbot_data:
+
+networks:
+  afyaroot-network:
+    driver: bridge

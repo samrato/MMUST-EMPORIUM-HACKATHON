@@ -110,33 +110,33 @@
     display: none; /* Hide workflow connector line on smaller screens */
   }
   
-  .uniqueness-split-layout {
-    grid-template-columns: 1fr;
-    gap: 25px;
-  }
-  
-  .uniqueness-spotlight {
-    min-height: auto;
-    padding: 30px;
-  }
-  
+  .uniqueness-split-layout,
   .problem-split-layout {
-    grid-template-columns: 1fr;
-    gap: 25px;
+    flex-direction: row !important;
+    gap: 24px !important;
+  }
+
+  .problem-menu,
+  .uniqueness-menu {
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
   }
   
+  .uniqueness-spotlight,
   .problem-spotlight {
     min-height: auto;
-    padding: 30px;
+    padding: 28px 32px;
   }
   
   .business-model-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
   }
   
   .business-model-center {
-    display: none; /* Hide middle logo badge on mobile grid */
+    width: 70px;
+    height: 70px;
   }
   
   .sdg-grid {
@@ -239,49 +239,48 @@
 }
 
 @media (max-width: 1200px) and (min-width: 851px) {
-  .arch-diagram-wrapper {
-    gap: 10px;
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .arch-card {
-    padding: 10px;
-  }
-
-  .arch-card p {
-    font-size: 0.68rem;
+  .video-showcase-container {
+    grid-template-columns: 1fr 280px;
+    gap: 14px;
   }
 }
 
 @media (max-width: 850px) {
-  .arch-diagram-wrapper {
-    grid-template-columns: 1fr 1fr;
+  .video-showcase-container {
+    grid-template-columns: 1fr;
     gap: 16px;
-    max-height: 65vh;
-    overflow-y: auto;
-    padding-right: 6px;
   }
 
-  .header-flow-arrow {
-    display: none;
+  .video-source-switcher {
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
-  .arch-column {
-    background: rgba(11, 19, 15, 0.4);
-    padding: 10px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+  .video-speed-toolbar {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .video-chapters-panel {
+    max-height: 260px;
   }
 }
 
 @media (max-width: 640px) {
-  .arch-diagram-wrapper {
+  .video-showcase-container {
     grid-template-columns: 1fr;
-    gap: 14px;
-    max-height: none;
-    overflow-y: visible;
+    gap: 12px;
+  }
+
+  .speed-preset-pills {
+    flex-wrap: wrap;
   }
   
+  .business-model-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
   .workflow-track {
     grid-template-columns: 1fr;
   }
@@ -289,13 +288,17 @@
   .slide-tabs {
     width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
   }
 
   .slide-tab-btn {
     padding: 6px 12px;
     font-size: 0.75rem;
   }
-}
+
+  .video-quick-controls {
+    justify-content: center;
+  }
 
   .cover-title {
     font-size: 2.2rem;

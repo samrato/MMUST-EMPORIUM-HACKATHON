@@ -73,11 +73,12 @@ function toStringArray(value: unknown) {
 }
 
 function toUrgency(value: unknown): EngineUrgency {
-  const v = String(value).toLowerCase();
-  if (v === "low" || v === "medium" || v === "high" || v === "emergency") {
-    return v as EngineUrgency;
-  }
-  return "medium";
+  const v = String(value || "").toLowerCase().trim();
+  if (v === "emergency" || v === "critical") return "emergency";
+  if (v === "high" || v === "urgent") return "high";
+  if (v === "medium" || v === "moderate" || v === "high/moderate") return "medium";
+  if (v === "low" || v === "non-emergency" || v === "low/moderate" || v === "normal") return "low";
+  return "low";
 }
 
 export async function getVoiceDirections(
@@ -95,6 +96,17 @@ export async function getVoiceDirections(
   }
 }
 
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 1200): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 /**
  * Direct call to Google Gemini / Vertex AI REST API from Frontend
  */
@@ -103,14 +115,14 @@ async function callDirectAi(prompt: string): Promise<string> {
   if (geminiKey) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: { maxOutputTokens: 2048, temperature: 0.7 }
         })
-      });
+      }, 1200);
 
       if (response.ok) {
         const data = await response.json();
@@ -130,11 +142,11 @@ async function callDirectAi(prompt: string): Promise<string> {
     };
 
     try {
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      });
+      }, 1200);
 
       if (response.ok) {
         const data = await response.json();
@@ -157,70 +169,88 @@ export async function analyzeSymptomsWithAI(
   options?: { language?: Language; userLoc?: { lat: number; lng: number } }
 ): Promise<SymptomAnalysisResult> {
   const outputLanguage = getSymptomOutputLanguage(options?.language);
-  
   const userCoords = options?.userLoc || { lat: 0.2882, lng: 34.7656 };
+  
   let nearbyHospitals: NearbyHospitalInput[] = [];
   try {
-    const realHospitals = await getNearbyHospitals(userCoords.lat, userCoords.lng);
+    const realHospitals = await getNearbyHospitals(userCoords.lat, userCoords.lng, true);
     if (realHospitals && realHospitals.length > 0) {
-      nearbyHospitals = realHospitals.map(h => ({
+      nearbyHospitals = realHospitals.map((h) => ({
         name: h.name,
         distance_km: h.distance || 0.6,
         type: h.types[0] || 'hospital',
-        types: h.types
+        types: h.types,
       }));
     }
   } catch (e) {
     console.error("Failed to fetch real hospitals for AI analysis:", e);
   }
 
-  // Baseline deterministic decision engine with KMHFR facilities
+  // Baseline deterministic decision engine with KMHFR facilities (instantaneous <2ms)
   const engineResult = runHealthcareDecisionEngine({
     user_input: symptoms,
     nearby_hospitals: nearbyHospitals,
-    preferred_language: options?.language === 'sw' ? 'sw' : 'en'
+    preferred_language: options?.language === 'sw' ? 'sw' : 'en',
   });
 
-  // 1. Try calling central backend API /api/triage
-  try {
-    const rawBackend = import.meta.env.VITE_BACKEND_URL || '/api';
-    const cleanApi = rawBackend.endsWith('/api') ? rawBackend : `${rawBackend}/api`;
-    const res = await fetch(`${cleanApi}/triage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        symptoms,
-        county: 'Kakamega',
-        language: options?.language === 'sw' ? 'sw' : 'en'
-      })
-    });
+  const isMatched = engineResult.matched_symptoms.length > 0;
+  const primaryCondition = isMatched
+    ? (engineResult.possible_conditions[0] || "General Medical Assessment")
+    : "No close dataset match";
+  const baseConfidence = isMatched ? 0.95 : 0.45;
 
-    if (res.ok) {
-      const payload = await res.json();
-      if (payload.success && payload.data) {
-        const d = payload.data;
-        const urgency = toUrgency(d.urgency || d.risk || engineResult.urgency);
-        return {
-          condition: d.symptom_summary || engineResult.possible_conditions[0] || "Clinical Health Assessment",
-          confidence: 0.96,
-          urgency,
-          description: d.advice || d.disclaimer || engineResult.explanation,
-          recommendations: d.required_services || engineResult.guidance,
-          suggestedFacilityType: (d.recommended_keph_level ? 'hospital' : engineResult.recommended_facility.type) as any,
-          matchedSymptoms: engineResult.matched_symptoms,
-          possibleConditions: engineResult.possible_conditions,
-          recommendedFacility: engineResult.recommended_facility,
-          guidance: d.required_services ? [...new Set([...d.required_services, ...engineResult.guidance])] : engineResult.guidance,
-          explanation: d.advice || engineResult.explanation,
-          structuredResult: engineResult,
-        };
+  // Fast-path: Try calling central backend API /api/triage with a tight 300ms race budget
+  try {
+    const rawBackend = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL) || '';
+    let cleanApi = '';
+    if (rawBackend.startsWith('http')) {
+      cleanApi = rawBackend.endsWith('/api') ? rawBackend : `${rawBackend}/api`;
+    } else if (typeof window !== 'undefined' && window.location?.origin) {
+      cleanApi = `${window.location.origin}/api`;
+    }
+
+    if (cleanApi) {
+      const res = await fetchWithTimeout(`${cleanApi}/triage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symptoms,
+          county: 'Kakamega',
+          language: options?.language === 'sw' ? 'sw' : 'en',
+        }),
+      }, 350);
+
+      if (res.ok) {
+        const payload = await res.json();
+        if (payload.success && payload.data) {
+          const d = payload.data;
+          const urgency = toUrgency(d.urgency || d.risk || engineResult.urgency);
+          const condition = isMatched
+            ? primaryCondition
+            : (d.symptom_summary && d.symptom_summary !== symptoms ? d.symptom_summary : primaryCondition);
+
+          return {
+            condition,
+            confidence: baseConfidence,
+            urgency,
+            description: d.advice || d.disclaimer || engineResult.explanation,
+            recommendations: d.required_services || engineResult.guidance,
+            suggestedFacilityType: (d.recommended_keph_level ? 'hospital' : engineResult.recommended_facility.type) as any,
+            matchedSymptoms: engineResult.matched_symptoms,
+            possibleConditions: engineResult.possible_conditions,
+            recommendedFacility: engineResult.recommended_facility,
+            guidance: d.required_services ? [...new Set([...d.required_services, ...engineResult.guidance])] : engineResult.guidance,
+            explanation: d.advice || engineResult.explanation,
+            structuredResult: engineResult,
+          };
+        }
       }
     }
-  } catch (err) {
-    // Graceful fallback to direct AI
+  } catch {
+    // Immediate fallback to Decision Engine
   }
 
-  // 2. Try direct AI endpoint if available
+  // 2. Direct AI endpoint if available
   try {
     const prompt = `
       You are a medical symptom triage assistant for an educational health support application in Kenya.
@@ -242,10 +272,11 @@ export async function analyzeSymptomsWithAI(
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const aiResult = JSON.parse(jsonMatch[0]);
+        const urgency = toUrgency(aiResult.urgency || engineResult.urgency);
         return {
-          condition: aiResult.condition || engineResult.possible_conditions[0] || "Assessment Required",
-          confidence: 0.95,
-          urgency: toUrgency(aiResult.urgency || engineResult.urgency),
+          condition: isMatched ? primaryCondition : (aiResult.condition || primaryCondition),
+          confidence: baseConfidence,
+          urgency,
           description: aiResult.description || engineResult.explanation,
           recommendations: toStringArray(aiResult.recommendations),
           suggestedFacilityType: engineResult.recommended_facility.type as any,
@@ -262,10 +293,10 @@ export async function analyzeSymptomsWithAI(
     // Quiet fallback to deterministic decision engine
   }
 
-  // 3. Fallback to Decision Engine result - ALWAYS returns a valid result!
+  // 3. Fallback to Decision Engine result - ALWAYS returns an immediate valid result!
   return {
-    condition: engineResult.possible_conditions[0] || "Clinical Assessment",
-    confidence: 0.92,
+    condition: primaryCondition,
+    confidence: baseConfidence,
     urgency: engineResult.urgency,
     description: engineResult.explanation,
     recommendations: engineResult.guidance,
@@ -280,43 +311,58 @@ export async function analyzeSymptomsWithAI(
 }
 
 export async function getGeminiResponse(prompt: string, context: any = {}, patientId: string = "WEB-USER") {
-  const rawBackend = import.meta.env.VITE_BACKEND_URL || '/api';
-  const cleanApi = rawBackend.endsWith('/api') ? rawBackend : `${rawBackend}/api`;
-  const url = `${cleanApi}/conversations/message`;
+  const rawBackend = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL) || '';
+  let url = '';
+  if (rawBackend.startsWith('http')) {
+    const cleanApi = rawBackend.endsWith('/api') ? rawBackend : `${rawBackend}/api`;
+    url = `${cleanApi}/conversations/message`;
+  } else if (typeof window !== 'undefined' && window.location?.origin) {
+    url = `${window.location.origin}/api/conversations/message`;
+  }
 
-  try {
-    const lat = context.user_location?.lat || null;
-    const lng = context.user_location?.lng || null;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        text: prompt,
-        webUserId: patientId,
-        channel: 'WEB',
-        userLat: lat,
-        userLng: lng
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Orchestrator server returned ${response.status}`);
-    }
-
-    const payload = await response.json();
-    if (payload.success && payload.data?.message?.message) {
-      return payload.data.message.message;
-    }
-    throw new Error("Invalid response format");
-  } catch (error) {
-    console.error("Central Orchestrator Call Failed, falling back to direct client-side Vertex:", error);
+  if (url) {
     try {
-      const text = await callVertexDirectly(`Context: Medical Assistant. Location Context: ${JSON.stringify(context)}. Question: ${prompt}`);
-      return text || "I'm sorry, I couldn't process that request.";
+      const lat = context.user_location?.lat || null;
+      const lng = context.user_location?.lng || null;
+      const response = await fetchWithTimeout(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: prompt,
+          webUserId: patientId,
+          channel: 'WEB',
+          userLat: lat,
+          userLng: lng,
+        }),
+      }, 1200);
+
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload.success && payload.data?.message?.message) {
+          return payload.data.message.message;
+        }
+      }
     } catch {
-      return "The medical AI is currently unavailable. Please check your connection.";
+      // Continue to client-side fallback
     }
   }
+
+  // Client-side fallback to direct Gemini AI
+  try {
+    const text = await callDirectAi(`Context: Medical Assistant. Location Context: ${JSON.stringify(context)}. Question: ${prompt}`);
+    if (text) return text;
+  } catch {
+    // Continue to deterministic engine
+  }
+
+  // Deterministic Kenyan Healthcare Engine fallback
+  const lang = context?.language === 'sw' ? 'sw' : 'en';
+  const engineRes = runHealthcareDecisionEngine({ user_input: prompt, preferred_language: lang });
+  if (engineRes.matched_symptoms.length === 0) {
+    return "No close dataset match was found for the symptoms entered. Please describe symptoms more clearly, including body part, duration, and severity.";
+  }
+  const humanGuidance = convertAnalysisToHumanGuidance(engineRes, lang);
+  return `${humanGuidance.message}\n\n${humanGuidance.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, Mic, MicOff, AlertTriangle, Loader2, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -52,10 +52,22 @@ export default function SymptomChecker() {
   const [input, setInput] = useState('');
   const [result, setResult] = useState<SymptomAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [cachedLoc, setCachedLoc] = useState<{ lat: number; lng: number }>({ lat: 0.2882, lng: 34.7656 });
   const navigate = useNavigate();
   const { lang } = useLanguage();
   const { patientId } = useUser();
   const { isListening, startListening, stopListening, speak } = useVoice();
+
+  // Pre-fetch location in background on mount so analysis is instantaneous
+  useEffect(() => {
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setCachedLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {},
+        { timeout: 3000, maximumAge: 600000, enableHighAccuracy: false }
+      );
+    }
+  }, []);
 
   const handleSubmit = async (text?: string) => {
     const symptomText = text || input;
@@ -65,20 +77,7 @@ export default function SymptomChecker() {
     setIsAnalyzing(true);
     setResult(null);
 
-    let userLoc: { lat: number; lng: number } | undefined;
-    
-    // Try to get location for better facility recommendations
-    try {
-      if (navigator.geolocation) {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-        });
-        userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      }
-    } catch (e) {
-      console.warn("Location not available for symptom analysis, using default routing.");
-    }
-    
+    const userLoc = cachedLoc;
     const aiResult = await analyzeSymptomsWithAI(symptomText, { language: lang, userLoc });
     if (aiResult) {
       setResult(aiResult);
