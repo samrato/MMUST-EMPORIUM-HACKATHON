@@ -7,11 +7,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "lint": "node --check src/index.js && node --check src/mqtt/smsBridge.js && node --check src/ai/vertexResponder.js && node --check src/storage/db.js && node --check src/http/server.js"
+    "lint": "node --check src/index.js && node --check src/mqtt/smsBridge.js && node --check src/ai/vertexResponder.js && node --check src/storage/index.js && node --check src/http/server.js"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.7.0",
-    "better-sqlite3": "^11.6.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mongoose": "^8.15.0",

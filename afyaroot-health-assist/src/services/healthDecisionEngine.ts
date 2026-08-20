@@ -823,9 +823,41 @@ const DEFAULT_KMHFR_ROUTING_FACILITIES: NearbyHospitalInput[] = [
   }
 ];
 
-export function routePatientToFacility(urgency: EngineUrgency, hospitalList: NearbyHospitalInput[] = []) {
+export function routePatientToFacility(
+  urgency: EngineUrgency,
+  hospitalList: NearbyHospitalInput[] = [],
+  symptomKeywords: string = ""
+) {
   const activeList = hospitalList && hospitalList.length > 0 ? hospitalList : DEFAULT_KMHFR_ROUTING_FACILITIES;
-  const sorted = [...activeList]
+
+  // Specialty detection from symptom context
+  const symLower = (symptomKeywords || "").toLowerCase();
+  const isDentalSymptom = /tooth|teeth|toothache|gum|dental|meno|jino|mdomo|gingiv/i.test(symLower);
+  const isEyeSymptom = /eye|vision|blind|macho|glaucoma|cataract|optometr/i.test(symLower);
+
+  const isDentalFacility = (name: string, types?: string[]) =>
+    /dental|dentist|teeth|tooth/i.test(name) || (types && types.some((t) => /dental|dentist/i.test(t)));
+
+  const isEyeFacility = (name: string, types?: string[]) =>
+    /eye clinic|optical|optician|optometr|ophthalm/i.test(name) || (types && types.some((t) => /eye|optician|optical/i.test(t)));
+
+  const isVetFacility = (name: string, types?: string[]) =>
+    /vet|veterinary|animal/i.test(name) || (types && types.some((t) => /vet/i.test(t)));
+
+  // Filter out irrelevant or specialized facilities for general health conditions
+  let eligibleList = activeList.filter((item) => {
+    if (isVetFacility(item.name, item.types)) return false;
+    if (!isDentalSymptom && isDentalFacility(item.name, item.types)) return false;
+    if (!isEyeSymptom && isEyeFacility(item.name, item.types)) return false;
+    return true;
+  });
+
+  // If filtering excluded all facilities, fallback to default general facilities
+  if (eligibleList.length === 0) {
+    eligibleList = DEFAULT_KMHFR_ROUTING_FACILITIES;
+  }
+
+  const sorted = [...eligibleList]
     .map((item) => ({
       ...item,
       normalizedType: normalizeFacilityType(item.type, item.types),
@@ -1000,7 +1032,7 @@ export function runHealthcareDecisionEngine(input: {
     matchedSymptoms = [language === 'sw' ? 'Dalili zilizoandikwa' : 'Reported symptoms'];
   }
 
-  const routing = routePatientToFacility(urgency, input.nearby_hospitals || []);
+  const routing = routePatientToFacility(urgency, input.nearby_hospitals || [], translation.translated);
   const guidance = buildGuidanceSteps(language, urgency, routing.selected, matches);
   const explanation = buildExplanation(language, matchedSymptoms, possibleConditions, urgency, routing.reason);
 
@@ -1082,7 +1114,7 @@ export function generateSimulatedPatientCases(total = 50, dataset: SymptomDatase
     return seed / 4294967296;
   };
 
-  const locations = ["Kapsabet", "Nandi Hills", "Mosoriot", "Chepterit", "Kabiyet", "Eldoret South"];
+  const locations = ["Kakamega Town", "Lurambi", "MMUST Campus", "Shinyalu", "Navakholo", "Bukhungu"];
   const result: SimulatedPatientCase[] = [];
 
   for (let i = 0; i < count; i += 1) {

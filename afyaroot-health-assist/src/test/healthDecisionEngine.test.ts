@@ -86,6 +86,40 @@ describe("healthDecisionEngine", () => {
     expect(simulated).toHaveLength(50);
   });
 
+  it("excludes dental suites and routes headache to general clinic", () => {
+    const facilitiesWithSpecialties = [
+      { name: "Kakamega Dental Suite", distance_km: 1.5, type: "clinic", types: ["clinic", "dentist", "dental"] },
+      { name: "Masinde Muliro University Clinic", distance_km: 1.8, type: "clinic", types: ["clinic", "Outpatient"] },
+      { name: "Kakamega County General Hospital", distance_km: 2.5, type: "hospital", types: ["hospital"] },
+    ];
+
+    const result = runHealthcareDecisionEngine({
+      user_input: "i hve sharp head ache for 2 days",
+      nearby_hospitals: facilitiesWithSpecialties,
+      preferred_language: "en",
+    });
+
+    expect(result.matched_symptoms).toContain("Headache");
+    expect(result.possible_conditions).toContain("Common Headache");
+    expect(result.recommended_facility.name).toBe("Masinde Muliro University Clinic");
+    expect(result.recommended_facility.name).not.toContain("Dental");
+  });
+
+  it("routes toothache to dental suite when dental symptom is present", () => {
+    const facilitiesWithSpecialties = [
+      { name: "Kakamega Dental Suite", distance_km: 1.5, type: "clinic", types: ["clinic", "dentist", "dental"] },
+      { name: "Masinde Muliro University Clinic", distance_km: 1.8, type: "clinic", types: ["clinic", "Outpatient"] },
+    ];
+
+    const result = runHealthcareDecisionEngine({
+      user_input: "I have a severe toothache and swollen gums",
+      nearby_hospitals: facilitiesWithSpecialties,
+      preferred_language: "en",
+    });
+
+    expect(result.recommended_facility.name).toBe("Kakamega Dental Suite");
+  });
+
   it("detects english language marker quickly", () => {
     expect(detectInputLanguage("I have severe headache")).toBe("en");
   });

@@ -87,17 +87,21 @@ export default function HeroLocationBanner({
         },
         async (error) => {
           console.warn('Geolocation permission denied or timed out:', error);
-          // Default fallback Kakamega / Shirere Ward
-          const defaultLat = 0.2833;
-          const defaultLng = 34.75;
+          // Default fallback to USIU / Roysambu, Nairobi
+          const defaultLat = -1.2188;
+          const defaultLng = 36.8810;
           setUserCoords({ lat: defaultLat, lng: defaultLng });
           const geocoded = await reverseGeocode(defaultLat, defaultLng);
-          setLocationDetails(geocoded || { ward: 'Shirere', subCounty: 'Lurambi', county: 'Kakamega' });
+          setLocationDetails(geocoded || { ward: 'Roysambu Ward', subCounty: 'Kasarani', county: 'Nairobi' });
           setIsLocating(false);
         },
-        { timeout: 4000, enableHighAccuracy: false }
+        { timeout: 8000, enableHighAccuracy: true }
       );
     } else {
+      const defaultLat = -1.2188;
+      const defaultLng = 36.8810;
+      setUserCoords({ lat: defaultLat, lng: defaultLng });
+      setLocationDetails({ ward: 'Roysambu Ward', subCounty: 'Kasarani', county: 'Nairobi' });
       setIsLocating(false);
     }
   };

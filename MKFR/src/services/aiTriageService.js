@@ -148,9 +148,34 @@ const CLINICAL_KNOWLEDGE_BASE = [
     is_emergency: false
   },
   {
+    keywords: ["dizzy", "dizziness", "kizunguzungu", "lightheaded", "feeling dizzy"],
+    risk: "low/moderate",
+    urgency: "non-emergency",
+    condition: "Dehydration or Mild Vertigo (Kizunguzungu)",
+    required_services: ["Outpatient"],
+    clarification_questions: [
+      "How many hours or days have you felt dizzy?",
+      "Are you able to drink water and sit down safely?"
+    ],
+    is_emergency: false
+  },
+  {
+    keywords: ["cough", "kukohoa", "flu", "mafua", "cold", "homa ya mafua", "kikooa", "kukooa"],
+    risk: "low/moderate",
+    urgency: "non-emergency",
+    condition: "Upper Respiratory Infection / Flu (Kikohozi na Mafua)",
+    required_services: ["Outpatient", "Pharmacy"],
+    clarification_questions: [
+      "Are you coughing up any yellow, green, or bloody mucus?",
+      "How many days has the cough lasted?"
+    ],
+    is_emergency: false
+  },
+  {
     keywords: ["stomach", "tumbo", "maumivu ya tumbo", "diarrhea", "kuhara", "tapika", "vomit"],
     risk: "moderate",
     urgency: "non-emergency",
+    condition: "Gastroenteritis / Stomach Infection (Maumivu ya Tumbo)",
     required_services: ["Outpatient", "Laboratory", "Pharmacy"],
     clarification_questions: [
       "Is the stomach pain sharp and localized in the lower right side?",

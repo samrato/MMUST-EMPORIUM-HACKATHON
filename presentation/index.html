@@ -6,10 +6,15 @@
   <title>AFYAROOT - Intelligent Healthcare Presentation</title>
   <meta name="description" content="AFYAROOT Healthcare - Reimagining rural healthcare access through intelligent, offline, and multilingual voice-and-SMS AI systems.">
   
+  <!-- Cache Control Meta Tags -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/animations.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/style.css?v=20260820_8">
+  <link rel="stylesheet" href="css/animations.css?v=20260820_8">
+  <link rel="stylesheet" href="css/responsive.css?v=20260820_8">
 </head>
 <body>
 
@@ -81,7 +86,7 @@
             <div class="team-card glass-card anim-slide-up delay-1">
               <div class="team-avatar-container">
                 <div class="team-avatar-mask">
-                  <img src="assets/images/team_amos.png" alt="Amos Sabuni">
+                  <img src="assets/images/team1_amos.png" alt="Amos Sabuni">
                 </div>
                 <div class="team-avatar-glow"></div>
               </div>
@@ -133,7 +138,6 @@
             <p class="quote-text" style="font-size: 2.1rem; font-weight: 600; line-height: 1.6; color: #fff; margin-bottom: 24px;">Every day, people in rural areas face life-threatening situations not because treatment is unavailable, but because they lack guidance on when and where to seek care.</p>
             <p class="quote-bridge" style="font-size: 1.15rem; font-weight: 400; line-height: 1.6; color: var(--text-secondary); max-width: 780px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">This guidance gap is driven by four severe systemic barriers:</p>
           </div>
-        </div>
         </div>
       </section>
 
@@ -267,280 +271,9 @@
       </section>
 
       <!-- ==========================================
-           SLIDE 6: HOW IT WORKS
-           ========================================== -->
-      <!-- ==========================================
-           SLIDE 6: HOW IT WORKS & ARCHITECTURE
-           ========================================== -->
-      <!-- ==========================================
-           SLIDE 6: HOW IT WORKS & ARCHITECTURE
+           SLIDE 6: UNIQUENESS
            ========================================== -->
       <section class="slide" id="slide-6">
-        <header class="slide-header">
-          <div class="slide-title-wrapper">
-            <span class="slide-category">Mechanism & Process Flow</span>
-            <h2 class="slide-title">How It Works & Architecture</h2>
-          </div>
-          <div class="slide-tabs">
-            <button class="slide-tab-btn active" data-target="tab-workflow">
-              <span class="tab-btn-icon">🔄</span>
-              <span>Process Flow (01-06)</span>
-            </button>
-            <button class="slide-tab-btn" data-target="tab-architecture">
-              <span class="tab-btn-icon">⚡</span>
-              <span>System Architecture Map</span>
-            </button>
-          </div>
-        </header>
-
-        <div class="slide-content">
-          <!-- TAB 1: 01-06 Process Flow -->
-          <div class="tab-pane active" id="tab-workflow">
-            <div class="workflow-container">
-              <div class="workflow-track">
-                <!-- Connecting Progress Line -->
-                <div class="workflow-line">
-                  <div class="workflow-line-progress"></div>
-                </div>
-                
-                <!-- Node 1: User Input -->
-                <div class="workflow-node anim-zoom-in delay-1">
-                  <div class="workflow-node-circle">
-                    <span class="node-icon">📱</span>
-                  </div>
-                  <div class="node-badge">01 | INPUT</div>
-                  <h3 class="workflow-node-title">User Input</h3>
-                  <p class="workflow-node-desc">Patient reports symptoms via SMS (Kabambe) or Web portal.</p>
-                  <div class="node-tech-tag">Feature & Smart Phones</div>
-                </div>
-
-                <!-- Node 2: Data Processing -->
-                <div class="workflow-node anim-zoom-in delay-2">
-                  <div class="workflow-node-circle">
-                    <span class="node-icon">⚡</span>
-                  </div>
-                  <div class="node-badge">02 | GATEWAY</div>
-                  <h3 class="workflow-node-title">Data Processing</h3>
-                  <p class="workflow-node-desc">Gateway bridge cleanses, verifies, and routes incoming patient queries.</p>
-                  <div class="node-tech-tag">Ingestion & Routing</div>
-                </div>
-
-                <!-- Node 3: AI Analysis -->
-                <div class="workflow-node anim-zoom-in delay-3">
-                  <div class="workflow-node-circle">
-                    <span class="node-icon">🧠</span>
-                  </div>
-                  <div class="node-badge">03 | AI BRAIN</div>
-                  <h3 class="workflow-node-title">AI Analysis</h3>
-                  <p class="workflow-node-desc">Central backend classifies queries using local medical AI or cloud models.</p>
-                  <div class="node-tech-tag">Medical Intelligence Engine</div>
-                </div>
-
-                <!-- Node 4: Health Rec -->
-                <div class="workflow-node anim-zoom-in delay-4">
-                  <div class="workflow-node-circle">
-                    <span class="node-icon">🛡️</span>
-                  </div>
-                  <div class="node-badge">04 | TRIAGE</div>
-                  <h3 class="workflow-node-title">Recommendation</h3>
-                  <p class="workflow-node-desc">AI orchestrator compiles triage advice & checks GBV safety flows.</p>
-                  <div class="node-tech-tag">Triage & GBV Safety</div>
-                </div>
-
-                <!-- Node 5: Intelligent Routing -->
-                <div class="workflow-node anim-zoom-in delay-5">
-                  <div class="workflow-node-circle">
-                    <span class="node-icon">🗺️</span>
-                  </div>
-                  <div class="node-badge">05 | GIS ROUTE</div>
-                  <h3 class="workflow-node-title">Intelligent Routing</h3>
-                  <p class="workflow-node-desc">Queries KMHFR GIS database to select nearest level 1-5 facility.</p>
-                  <div class="node-tech-tag">Kenya Facility GIS Index</div>
-                </div>
-
-                <!-- Node 6: Emergency -->
-                <div class="workflow-node anim-zoom-in delay-6">
-                  <div class="workflow-node-circle">
-                    <span class="node-icon">🚨</span>
-                  </div>
-                  <div class="node-badge">06 | DISPATCH</div>
-                  <h3 class="workflow-node-title">Emergency Response</h3>
-                  <p class="workflow-node-desc">Dispatches alerts to clinics or triggers secure Counselors & Helpline 1195.</p>
-                  <div class="node-tech-tag">Helpline 1195 & SMS</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- TAB 2: System Architecture Map -->
-          <div class="tab-pane" id="tab-architecture">
-            <div class="arch-diagram-wrapper">
-              
-              <!-- Tier 1: Client Devices -->
-              <div class="arch-column arch-clients">
-                <div class="arch-col-header">
-                  <span class="arch-col-icon">📱</span>
-                  <h4>1. Client Devices</h4>
-                  <span class="header-flow-arrow">➔</span>
-                </div>
-                
-                <!-- Card 1: Kabambe -->
-                <div class="arch-card feature-phone-card">
-                  <div class="arch-card-header">
-                    <span class="device-symbol">📟</span>
-                    <div>
-                      <h5>Kabambe (Feature Phone)</h5>
-                      <span class="arch-subtext">Offline SMS Channel</span>
-                    </div>
-                  </div>
-                  <p>Standard SMS text via local telecom operator tower.</p>
-                  <div class="arch-specs">
-                    <span>Low Bandwidth</span>
-                    <span>100% Offline</span>
-                  </div>
-                </div>
-
-                <!-- Card 2: Smartphone -->
-                <div class="arch-card smartphone-card">
-                  <div class="arch-card-header">
-                    <span class="device-symbol">📲</span>
-                    <div>
-                      <h5>Smartphone & Web</h5>
-                      <span class="arch-subtext">Interactive & Voice Input</span>
-                    </div>
-                  </div>
-                  <p>Voice-to-text logging & rich portal interface.</p>
-                  <div class="arch-specs">
-                    <span>3G / 4G / 5G</span>
-                    <span>Speech API</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Tier 2: Ingestion Gateway -->
-              <div class="arch-column arch-gateway">
-                <div class="arch-col-header">
-                  <span class="arch-col-icon">⚡</span>
-                  <h4>2. Ingestion Gateway</h4>
-                  <span class="header-flow-arrow">➔</span>
-                </div>
-                
-                <div class="arch-card gateway-card">
-                  <div class="arch-card-header">
-                    <span class="device-symbol">📡</span>
-                    <div>
-                      <h5>IoT SMS Dispatch Node</h5>
-                      <span class="arch-subtext">Rural Dispatch Kit</span>
-                    </div>
-                  </div>
-                  <p>Receives patient messages from rural health posts and forwards them securely.</p>
-                </div>
-
-                <div class="arch-card broker-card">
-                  <div class="arch-card-header">
-                    <span class="device-symbol">🔀</span>
-                    <div>
-                      <h5>Central Data Gateway</h5>
-                      <span class="arch-subtext">Data Cleansing Bridge</span>
-                    </div>
-                  </div>
-                  <p>Cleanses, normalizes payload headers, & queues triage tasks.</p>
-                  <div class="arch-specs">
-                    <span>Data Security</span>
-                    <span>Priority Queue</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Tier 3: AI & GIS Servers -->
-              <div class="arch-column arch-backend">
-                <div class="arch-col-header">
-                  <span class="arch-col-icon">🖥️</span>
-                  <h4>3. AI & GIS Servers</h4>
-                  <span class="header-flow-arrow">➔</span>
-                </div>
-                
-                <div class="arch-card edge-ai-card">
-                  <div class="arch-card-header">
-                    <span class="device-symbol">⚙️</span>
-                    <div>
-                      <h5>Offline Local Edge AI</h5>
-                      <span class="arch-subtext">Privacy-First Medical Engine</span>
-                    </div>
-                  </div>
-                  <p>Runs offline in county server hardware. Zero internet latency.</p>
-                  <div class="arch-specs">
-                    <span>Privacy First</span>
-                    <span>100% Offline</span>
-                  </div>
-                </div>
-
-                <div class="arch-card cloud-ai-card">
-                  <div class="arch-card-header">
-                    <span class="device-symbol">☁️</span>
-                    <div>
-                      <h5>Cloud AI Intelligence</h5>
-                      <span class="arch-subtext">Advanced Diagnostic Scaler</span>
-                    </div>
-                  </div>
-                  <p>Handles complex medical queries when connectivity is available.</p>
-                </div>
-
-                <div class="arch-card gis-card">
-                  <div class="arch-card-header">
-                    <span class="device-symbol">🗺️</span>
-                    <div>
-                      <h5>KMHFR GIS Database</h5>
-                      <span class="arch-subtext">Level 1-5 Facility Registry</span>
-                    </div>
-                  </div>
-                  <p>Geospatial index matching patient needs to closest clinic.</p>
-                </div>
-              </div>
-
-              <!-- Tier 4: Dispatch & Emergency -->
-              <div class="arch-column arch-dispatch">
-                <div class="arch-col-header">
-                  <span class="arch-col-icon">🚨</span>
-                  <h4>4. Dispatch & Emergency</h4>
-                </div>
-                
-                <div class="arch-card response-card">
-                  <div class="arch-card-header">
-                    <span class="device-symbol">💬</span>
-                    <div>
-                      <h5>Patient Triage Advice</h5>
-                      <span class="arch-subtext">SMS / Web Response</span>
-                    </div>
-                  </div>
-                  <p>Sends clear diagnostic guidance back to Kabambe or Smartphone.</p>
-                </div>
-
-                <div class="arch-card gbv-card">
-                  <div class="arch-card-header">
-                    <span class="device-symbol">🛡️</span>
-                    <div>
-                      <h5>GBV & Helpline 1195</h5>
-                      <span class="arch-subtext">Emergency Safety Relay</span>
-                    </div>
-                  </div>
-                  <p>Instant secure alert dispatch to crisis counselors & Kenya Helpline 1195.</p>
-                  <div class="arch-specs">
-                    <span>Covert Mode</span>
-                    <span>Helpline 1195</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ==========================================
-           SLIDE 7: UNIQUENESS
-           ========================================== -->
-      <section class="slide" id="slide-7">
         <header class="slide-header">
           <div class="slide-title-wrapper">
             <span class="slide-category">Core Differentiation</span>
@@ -548,57 +281,52 @@
           </div>
         </header>
         <div class="slide-content">
-          <div class="uniqueness-split-layout">
+          <div class="problem-split-layout uniqueness-split-layout">
             <!-- Left Column: Menu Tabs -->
-            <div class="uniqueness-menu">
+            <div class="problem-menu uniqueness-menu">
               <!-- Tab 1 (Active on load) -->
-              <div class="uniqueness-tab active" data-desc="Maintains active physical dispatch kits built with custom microcontroller boards and low-power SIM800 GSM modems. These nodes act as localized internet-free relays bridging remote community health volunteers directly to the AI operating system.">
+              <div class="problem-tab uniqueness-tab active" data-desc="Hardware relay kits bridging remote community health volunteers directly to the AI operating system without internet.">
                 <span class="tab-icon">📡</span>
                 <span class="tab-label">IoT SMS Dispatch Node</span>
               </div>
               <!-- Tab 2 (Fragment) -->
-              <div class="uniqueness-tab fragment" data-desc="Automatically queries the Kenya Master Health Facility Registry (KMHFR) database to direct patients to the nearest level 1-5 clinic that possesses the exact equipment, medical staff, and drug stock needed for their diagnosed condition, eliminating wasted journeys.">
+              <div class="problem-tab uniqueness-tab fragment" data-desc="Queries the KMHFR registry to direct patients to clinics with the exact doctors, equipment, and drugs needed.">
                 <span class="tab-icon">📍</span>
                 <span class="tab-label">Intelligent GIS Routing</span>
               </div>
               <!-- Tab 3 (Fragment) -->
-              <div class="uniqueness-tab fragment" data-desc="Uses localized natural language processing to detect domestic violence signals in text queries. When triggered, the system seamlessly redirects the user to emergency counseling contacts and logs the incident to the Kenya National Helpline 1195.">
+              <div class="problem-tab uniqueness-tab fragment" data-desc="Uses local NLP to detect domestic violence signals and seamlessly routes patients to National Helpline 1195.">
                 <span class="tab-icon">🛡️</span>
                 <span class="tab-label">GBV Detection & Counsel</span>
               </div>
               <!-- Tab 4 (Fragment) -->
-              <div class="uniqueness-tab fragment" data-desc="Enables low-cost GSM devices (kabambe phones) to access advanced medical AI. By stripping heavy payload requests into lightweight SMS text strings, patients receive structured diagnostic feedback without relying on 3G/4G broadband internet.">
+              <div class="problem-tab uniqueness-tab fragment" data-desc="Enables low-cost kabambe feature phones to query advanced medical AI over lightweight SMS text channels.">
                 <span class="tab-icon">💬</span>
                 <span class="tab-label">Offline GSM SMS Network</span>
               </div>
               <!-- Tab 5 (Fragment) -->
-              <div class="uniqueness-tab fragment" data-desc="Runs large language models completely offline on local county server hardware using Ollama and fine-tuned BioMistral-7B models. This guarantees data privacy, zero internet latency, and continuous medical support during national power grids or fiber outages.">
+              <div class="problem-tab uniqueness-tab fragment" data-desc="Runs BioMistral LLMs offline on local hardware, ensuring data privacy and zero outage dependency.">
                 <span class="tab-icon">⚙️</span>
                 <span class="tab-label">Local Edge AI Node</span>
-              </div>
-              <!-- Tab 6 (Fragment) -->
-              <div class="uniqueness-tab fragment" data-desc="Provides health administrative officers with real-time dashboards mapping local epidemiological outbreaks, SMS query frequencies, and clinic referral compliance statistics, allowing data-backed resource distribution.">
-                <span class="tab-icon">📊</span>
-                <span class="tab-label">Unified Oversight Web App</span>
               </div>
             </div>
 
             <!-- Right Column: Showcase Spotlight Card -->
-            <div class="uniqueness-spotlight glass-card">
+            <div class="problem-spotlight uniqueness-spotlight glass-card">
               <div class="spotlight-header">
                 <div class="spotlight-icon">📡</div>
                 <h3 class="spotlight-title">IoT SMS Dispatch Node</h3>
               </div>
-              <p class="spotlight-desc">Maintains active physical dispatch kits built with custom microcontroller boards and low-power SIM800 GSM modems. These nodes act as localized internet-free relays bridging remote community health volunteers directly to the AI operating system.</p>
+              <p class="spotlight-desc">Hardware relay kits bridging remote community health volunteers directly to the AI operating system without internet.</p>
             </div>
           </div>
         </div>
       </section>
 
       <!-- ==========================================
-           SLIDE 8: BUSINESS MODEL
+           SLIDE 7: BUSINESS MODEL
            ========================================== -->
-      <section class="slide" id="slide-8">
+      <section class="slide" id="slide-7">
         <header class="slide-header">
           <div class="slide-title-wrapper">
             <span class="slide-category">Business Canvas</span>
@@ -607,16 +335,6 @@
         </header>
         <div class="slide-content">
           <div class="business-model-grid">
-            
-            <!-- Central spinning decorative gear -->
-            <div class="business-model-center">
-              <div class="business-model-center-inner">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </div>
-            </div>
-
             <!-- Key Partners -->
             <div class="bm-card glass-card anim-slide-left delay-1">
               <div class="bm-card-header">
@@ -687,9 +405,9 @@
       </section>
 
       <!-- ==========================================
-           SLIDE 9: SUSTAINABLE GOALS
+           SLIDE 8: SUSTAINABLE GOALS
            ========================================== -->
-      <section class="slide" id="slide-9">
+      <section class="slide" id="slide-8">
         <header class="slide-header">
           <div class="slide-title-wrapper">
             <span class="slide-category">Alignment</span>
@@ -747,9 +465,9 @@
       </section>
 
       <!-- ==========================================
-           SLIDE 10: IMPACT
+           SLIDE 9: IMPACT
            ========================================== -->
-      <section class="slide" id="slide-10">
+      <section class="slide" id="slide-9">
         <header class="slide-header">
           <div class="slide-title-wrapper">
             <span class="slide-category">Key Outcomes</span>
@@ -840,6 +558,113 @@
       </section>
 
       <!-- ==========================================
+           SLIDE 10: DEMO & PROCESS FLOW VIDEO
+           ========================================== -->
+      <section class="slide" id="slide-10">
+        <header class="slide-header">
+          <div class="slide-title-wrapper">
+            <span class="slide-category">Live System Walkthrough</span>
+            <h2 class="slide-title">System Demo</h2>
+          </div>
+          <!-- Header Quick Actions -->
+          <div class="header-actions">
+            <button type="button" class="vid-btn vid-btn-popout-header" id="vid-open-normal-win-top" title="Open Video in standalone window">
+              <span class="vid-btn-icon">🪟</span>
+              <span>Dedicated Popout</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="slide-content">
+          <div class="video-showcase-container">
+            
+            <!-- Video Main Player Frame -->
+            <div class="video-main-frame glass-card">
+              
+              <!-- Video Source Selector Bar -->
+              <div class="video-source-switcher">
+                <div class="switcher-tabs">
+                  <button type="button" class="video-source-pill active" id="pill-src-faster" data-src="assets/videos/faster.mp4" data-mode="faster">
+                    <span class="pill-icon">⚡</span>
+                    <span class="pill-title">Fast Demo (1.5x)</span>
+                  </button>
+                  <button type="button" class="video-source-pill" id="pill-src-normal" data-src="assets/videos/normal.mp4" data-mode="normal">
+                    <span class="pill-icon">🎬</span>
+                    <span class="pill-title">Full Walkthrough</span>
+                  </button>
+                  <button type="button" class="video-source-pill" id="pill-src-mechanism" data-src="assets/videos/mechanism_flow.mp4" data-mode="mechanism">
+                    <span class="pill-icon">🔄</span>
+                    <span class="pill-title">Flow Architecture</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Main Video Frame -->
+              <div class="video-wrapper">
+                <video id="mechanism-video" class="styled-video-element" playsinline preload="auto" poster="assets/images/slide-06.png">
+                  <source id="video-active-source" src="assets/videos/faster.mp4" type="video/mp4">
+                  Your browser does not support HTML5 video playback.
+                </video>
+                <div class="video-play-overlay" id="vid-overlay-btn" title="Click to Play / Pause">
+                  <div class="overlay-play-icon">▶</div>
+                </div>
+              </div>
+
+              <!-- Refined Minimal Controls Toolbar -->
+              <div class="video-quick-controls">
+                <!-- Group 1: Basic Playback Controls & Timestamp -->
+                <div class="video-ctrl-group main-playback-group">
+                  <button type="button" class="vid-btn vid-btn-play" id="vid-play-toggle" title="Toggle Play / Pause">
+                    <span class="vid-btn-icon">▶</span>
+                    <span class="vid-btn-label">Play</span>
+                  </button>
+                  <button type="button" class="vid-btn" id="vid-restart" title="Restart from 0:00">
+                    <span class="vid-btn-icon">⏮</span>
+                  </button>
+                  <div class="video-timer-display" id="video-timer-display">00:00 / 06:05</div>
+                </div>
+
+                <!-- Group 2: Speed Multipliers Preset Bar -->
+                <div class="video-ctrl-group video-speed-toolbar">
+                  <div class="speed-preset-pills">
+                    <button type="button" class="speed-pill-btn" data-speed="1.0">1.0x</button>
+                    <button type="button" class="speed-pill-btn active" data-speed="1.5">1.5x</button>
+                    <button type="button" class="speed-pill-btn" data-speed="2.0">2.0x</button>
+                  </div>
+                </div>
+
+                <!-- Group 3: Fullscreen & PiP -->
+                <div class="video-ctrl-group display-modes-group">
+                  <button type="button" class="vid-btn vid-btn-pip" id="vid-pip-btn" title="Float PiP">
+                    <span>🖼️ PiP</span>
+                  </button>
+                  <button type="button" class="vid-btn vid-btn-fullscreen" id="vid-fullscreen" title="Toggle Fullscreen">
+                    <span>⛶ Fullscreen</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mechanism Stages Sidebar -->
+            <div class="video-chapters-panel glass-card">
+              <div class="chapters-header">
+                <div class="chapters-header-title">
+                  <span class="chapters-icon">⚡</span>
+                  <h4>Key Milestones</h4>
+                </div>
+              </div>
+
+              <!-- Streamlined Stage Items Container -->
+              <div class="chapters-list" id="chapters-list-container">
+                <!-- Dynamically populated by animations.js -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
            SLIDE 11: COME JOIN US!
            ========================================== -->
       <section class="slide" id="slide-11">
@@ -905,8 +730,8 @@
   </div>
 
   <!-- Javascript Scripts -->
-  <script src="js/app.js"></script>
-  <script src="js/animations.js"></script>
-  <script src="js/navigation.js"></script>
+  <script src="js/app.js?v=20260820_8"></script>
+  <script src="js/animations.js?v=20260820_8"></script>
+  <script src="js/navigation.js?v=20260820_8"></script>
 </body>
 </html>

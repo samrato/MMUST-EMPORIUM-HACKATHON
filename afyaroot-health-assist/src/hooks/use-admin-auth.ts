@@ -3,19 +3,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 const ADMIN_SESSION_KEY = 'afyaroot-admin-session-v2';
 const DEFAULT_ADMIN_CODE = 'AFYAROOT-ADMIN';
 const DEFAULT_FACILITY_CODES: Record<string, string> = {
-  kapsabet: '1111',
-  'nandi-hills': '2222',
-  chepterit: '3333',
-  kabiyet: '4444',
-  mosoriot: '5555',
-  'kakamega-referral': '1001',
-  'mukumu-hospital': '1002',
   'mmust-clinic': '1003',
+  'kakamega-referral': '1001',
+  'avenue-kakamega': '1004',
+  'shikoti-hospital': '1002',
+  'lurambi-health': '1005',
   'knh-nairobi': '6001',
   'mtrh-eldoret': '6002',
   'jootrh-kisumu': '6003',
   'kakamega-county-director': '7001',
-  'nandi-county-director': '7002',
   'nairobi-county-director': '7003',
 };
 

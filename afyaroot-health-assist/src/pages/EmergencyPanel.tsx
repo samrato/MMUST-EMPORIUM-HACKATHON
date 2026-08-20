@@ -254,7 +254,15 @@ export default function EmergencyPanel() {
                   <p className="text-xs text-muted-foreground font-medium">{nearestHospital.address}</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-lg font-black text-emergency">{nearestHospital.distance} km</span>
+                  <span className="text-lg font-black text-emergency">
+                    {typeof nearestHospital.distance === 'number'
+                      ? (nearestHospital.distance < 0.05
+                        ? '< 50m'
+                        : nearestHospital.distance < 1
+                        ? `${Math.max(50, Math.round(nearestHospital.distance * 1000))}m`
+                        : `${nearestHospital.distance.toFixed(1)} km`)
+                      : (nearestHospital.distance ? `${nearestHospital.distance} km` : 'Nearby')}
+                  </span>
                   <p className="text-[10px] font-bold text-muted-foreground">DIRECT DISTANCE</p>
                 </div>
               </div>

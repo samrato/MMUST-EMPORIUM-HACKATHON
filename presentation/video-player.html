@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AFYAROOT | Video Player & Simulation Window</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+  <style>
+    body {
+      background: #0d0f12;
+      color: #f3f4f6;
+      font-family: var(--font-family, 'Plus Jakarta Sans', system-ui, sans-serif);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .popout-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      gap: 12px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .popout-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: rgba(31, 32, 40, 0.85);
+      border: 1px solid rgba(0, 220, 51, 0.3);
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+    }
+    .popout-title-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .popout-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      font-family: var(--font-heading, monospace);
+    }
+    .popout-player-frame {
+      flex: 1;
+      position: relative;
+      background: #000;
+      border: 1px solid rgba(0, 220, 51, 0.3);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 220, 51, 0.12);
+    }
+    .popout-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+    .popout-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 12px 18px;
+      background: rgba(31, 32, 40, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+    }
+    .video-source-group, .speed-control-group, .action-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .ctrl-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-secondary, #9ca3af);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-right: 4px;
+    }
+    .btn-pill {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #d1d5db;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-pill:hover {
+      background: rgba(0, 220, 51, 0.15);
+      border-color: rgba(0, 220, 51, 0.5);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .btn-pill.active {
+      background: var(--primary, #00dc33);
+      color: #0b130f;
+      border-color: var(--primary, #00dc33);
+      font-weight: 700;
+      box-shadow: 0 0 14px rgba(0, 220, 51, 0.4);
+    }
+    .speed-tag {
+      font-family: monospace;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="popout-container">
+    <!-- Header -->
+    <div class="popout-header">
+      <div class="popout-title-box">
+        <span class="live-dot"></span>
+        <span class="popout-title" id="player-title">AFYAROOT Video Player & Simulation Window</span>
+      </div>
+      <div class="video-meta-tags">
+        <span class="video-tag-pill" id="current-speed-badge">⚡ 1.5x Speed</span>
+        <span class="video-tag-pill" id="current-mode-badge">Fast Mode</span>
+        <span class="video-tag-pill">1080P HD</span>
+      </div>
+    </div>
+
+    <!-- Video Viewport -->
+    <div class="popout-player-frame">
+      <video id="standalone-video" class="popout-video" controls autoplay playsinline preload="auto" poster="assets/images/slide-06.png">
+        <source id="video-src" src="assets/videos/faster.mp4" type="video/mp4">
+        Your browser does not support HTML5 video playback.
+      </video>
+    </div>
+
+    <!-- Controls & Speed Toolbar -->
+    <div class="popout-toolbar">
+      <!-- Source Switcher -->
+      <div class="video-source-group">
+        <span class="ctrl-label">Source:</span>
+        <button type="button" class="btn-pill active" data-src="assets/videos/faster.mp4" data-title="⚡ Fast Demo" data-mode="Fast Mode" id="src-faster">
+          ⚡ Fast Demo
+        </button>
+        <button type="button" class="btn-pill" data-src="assets/videos/normal.mp4" data-title="📺 Normal Display" data-mode="Normal Display" id="src-normal">
+          📺 Normal Display
+        </button>
+        <button type="button" class="btn-pill" data-src="assets/videos/mechanism_flow.mp4" data-title="🔄 Mechanism Flow" data-mode="Mechanism Flow" id="src-mechanism">
+          🔄 Mechanism Flow
+        </button>
+        <label class="btn-pill" title="Load custom local video file">
+          📁 Load Video
+          <input type="file" id="popout-file-input" accept="video/*" style="display: none;">
+        </label>
+      </div>
+
+      <!-- Playback Speed Controller -->
+      <div class="speed-control-group">
+        <span class="ctrl-label">Speed:</span>
+        <button type="button" class="btn-pill speed-tag" data-speed="0.75">0.75x</button>
+        <button type="button" class="btn-pill speed-tag" data-speed="1.0">1.0x</button>
+        <button type="button" class="btn-pill speed-tag" data-speed="1.25">1.25x</button>
+        <button type="button" class="btn-pill speed-tag active" data-speed="1.5">1.5x</button>
+        <button type="button" class="btn-pill speed-tag" data-speed="1.75">1.75x</button>
+        <button type="button" class="btn-pill speed-tag" data-speed="2.0">2.0x</button>
+        <button type="button" class="btn-pill speed-tag" data-speed="2.5">2.5x</button>
+        <button type="button" class="btn-pill speed-tag" data-speed="3.0">3.0x</button>
+      </div>
+
+      <!-- Extra Actions -->
+      <div class="action-group">
+        <button type="button" class="btn-pill" id="btn-pip" title="Picture-in-Picture floating window">
+          🖼️ Float PiP
+        </button>
+        <button type="button" class="btn-pill" id="btn-fullscreen" title="Fullscreen mode">
+          ⛶ Fullscreen
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const vid = document.getElementById('standalone-video');
+    const titleEl = document.getElementById('player-title');
+    const speedBadge = document.getElementById('current-speed-badge');
+    const modeBadge = document.getElementById('current-mode-badge');
+    const srcButtons = document.querySelectorAll('.video-source-group .btn-pill[data-src]');
+    const speedButtons = document.querySelectorAll('.speed-control-group .btn-pill[data-speed]');
+    const fileInput = document.getElementById('popout-file-input');
+    const btnPip = document.getElementById('btn-pip');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+
+    let currentSpeed = 1.5;
+
+    // Parse URL params
+    const params = new URLSearchParams(window.location.search);
+    const requestedVideo = params.get('video');
+    const requestedSpeed = parseFloat(params.get('speed') || '1.5');
+
+    function applySpeed(speed) {
+      currentSpeed = speed;
+      vid.playbackRate = speed;
+      if (speedBadge) speedBadge.textContent = `⚡ ${speed}x Speed`;
+      speedButtons.forEach(btn => {
+        btn.classList.toggle('active', parseFloat(btn.getAttribute('data-speed')) === speed);
+      });
+    }
+
+    function switchSource(src, title, modeName) {
+      vid.src = src;
+      vid.playbackRate = currentSpeed;
+      vid.load();
+      vid.play().catch(() => {});
+      if (titleEl) titleEl.textContent = `AFYAROOT Video: ${title}`;
+      if (modeBadge) modeBadge.textContent = modeName;
+      srcButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-src') === src);
+      });
+    }
+
+    // Set initial speed
+    if (!isNaN(requestedSpeed)) {
+      applySpeed(requestedSpeed);
+    } else {
+      applySpeed(1.5);
+    }
+
+    // Handle initial video selection from URL query
+    if (requestedVideo === 'normal' || requestedVideo === 'assets/videos/normal.mp4') {
+      switchSource('assets/videos/normal.mp4', 'Normal Display Demo', 'Normal Display');
+    } else if (requestedVideo === 'mechanism' || requestedVideo === 'mechanism_flow' || requestedVideo === 'assets/videos/mechanism_flow.mp4') {
+      switchSource('assets/videos/mechanism_flow.mp4', 'Mechanism & Process Flow Simulation', 'Mechanism Flow');
+    } else {
+      switchSource('assets/videos/faster.mp4', 'Fast Demo & Flow', 'Fast Mode');
+    }
+
+    // Event listeners
+    srcButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const src = btn.getAttribute('data-src');
+        const title = btn.getAttribute('data-title');
+        const mode = btn.getAttribute('data-mode');
+        switchSource(src, title, mode);
+      });
+    });
+
+    speedButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const speed = parseFloat(btn.getAttribute('data-speed'));
+        applySpeed(speed);
+      });
+    });
+
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          const url = URL.createObjectURL(file);
+          switchSource(url, file.name, 'Custom Video');
+        }
+      });
+    }
+
+    if (btnPip) {
+      btnPip.addEventListener('click', async () => {
+        try {
+          if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+          } else if (vid.requestPictureInPicture) {
+            await vid.requestPictureInPicture();
+          }
+        } catch (err) {
+          console.warn('PiP error:', err);
+        }
+      });
+    }
+
+    if (btnFullscreen) {
+      btnFullscreen.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          if (vid.requestFullscreen) vid.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+    }
+
+    // Keyboard controls in standalone window
+    document.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'k') {
+        e.preventDefault();
+        vid.paused ? vid.play() : vid.pause();
+      } else if (e.key === 'ArrowRight') {
+        vid.currentTime += 5;
+      } else if (e.key === 'ArrowLeft') {
+        vid.currentTime -= 5;
+      } else if (e.key === ']' || e.key === '>') {
+        applySpeed(Math.min(3.0, currentSpeed + 0.25));
+      } else if (e.key === '[' || e.key === '<') {
+        applySpeed(Math.max(0.5, currentSpeed - 0.25));
+      }
+    });
+  </script>
+</body>
+</html>

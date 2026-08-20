@@ -91,7 +91,8 @@ async function routeAndScore(params) {
 
   // 2. STANDARD SCORING: Score = Service Match (40%) + Distance (30%) + Live Queue (20%) + Facility Level (10%)
   const scoredFacilities = facilities.map(facility => {
-    const distance = calculateDistance(userLat, userLng, facility.latitude, facility.longitude);
+    const rawDistance = calculateDistance(userLat, userLng, facility.latitude, facility.longitude);
+    const distance = Math.max(0.05, rawDistance);
     
     // Retrieve live status, or estimate it if stale/missing
     let rawStatus = liveStatusMap[facility.id];
@@ -216,7 +217,8 @@ function runEmergencyOverride({ facilities, liveStatusMap, userLat, userLng }) {
   const rankedEmergencyFacilities = facilities
     .filter(f => f.services.includes("Emergency Care") || f.kephLevel >= 4)
     .map(facility => {
-      const distance = calculateDistance(userLat, userLng, facility.latitude, facility.longitude);
+      const rawDist = calculateDistance(userLat, userLng, facility.latitude, facility.longitude);
+      const distance = Math.max(0.05, rawDist);
       const rawStatus = liveStatusMap[facility.id] || {};
       
       return {
