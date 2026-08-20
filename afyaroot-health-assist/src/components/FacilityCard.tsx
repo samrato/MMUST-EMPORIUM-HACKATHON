@@ -103,8 +103,10 @@ export default function FacilityCard({
           </h3>
           {facility.distance_km !== undefined && (
             <span className="shrink-0 font-bold text-xs text-[#00dc33] bg-[#00dc33]/10 px-2.5 py-1 rounded-lg border border-[#00dc33]/30">
-              {facility.distance_km < 1
-                ? `${Math.round(facility.distance_km * 1000)}m`
+              {facility.distance_km < 0.05
+                ? '< 50m'
+                : facility.distance_km < 1
+                ? `${Math.max(50, Math.round(facility.distance_km * 1000))}m`
                 : `${facility.distance_km.toFixed(1)} km`}
             </span>
           )}

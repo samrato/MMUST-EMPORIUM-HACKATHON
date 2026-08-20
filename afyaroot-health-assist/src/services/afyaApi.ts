@@ -123,6 +123,18 @@ export interface BookingResponse {
   data?: any;
 }
 
+function calcDistKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.max(0.05, parseFloat((R * c).toFixed(2)));
+}
+
 // Fetch facilities list with optional filters and GPS coordinates
 export async function fetchFacilities(params?: {
   lat?: number;
@@ -155,26 +167,61 @@ export async function fetchFacilities(params?: {
     console.warn("Could not fetch facilities from backend API, serving from local offline fallback cache:", err);
   }
 
-  // Resilient fallback to local bundled KMHFR facilities so UI never breaks
-  return localFacilities.map(f => ({
-    id: f.id,
-    code: f.id,
-    name: f.name,
-    county: f.county || 'Kakamega',
-    sub_county: f.sub_county || 'Lurambi',
-    keph_level: f.type === 'hospital' ? 'Level 4 (Sub-County Hospital)' : 'Level 3 (Health Center)',
-    facility_type: f.type,
-    services: f.specialties || ['Outpatient Services', 'General Consultation'],
-    coordinates: f.location || { lat: 0.2882, lng: 34.7656 },
-    distance_km: f.distance || 1.5,
-    live_status: {
-      outpatient_queue_length: Math.round(100 - f.availability),
-      active_doctors: 3,
-      free_beds: f.beds || 10,
-      emergency_status: 'normal',
-      freshness_trust: 'HIGH'
-    }
-  }));
+  // Resilient fallback to local bundled KMHFR facilities with accurate distance calculation
+  let list = localFacilities.map(f => {
+    const hasUserCoords = params?.lat !== undefined && params?.lng !== undefined;
+    const dist = hasUserCoords
+      ? calcDistKm(params.lat!, params.lng!, f.location.lat, f.location.lng)
+      : (typeof f.distance === 'number' ? f.distance : 1.5);
+
+    return {
+      id: f.id,
+      code: f.id,
+      name: f.name,
+      county: f.county || 'Nairobi',
+      sub_county: f.sub_county || 'Kasarani',
+      ward: f.sub_county || 'Roysambu',
+      keph_level: f.type === 'hospital' ? 'Level 4 (Sub-County Hospital)' : 'Level 3 (Health Center)',
+      facility_type: f.type,
+      services: f.specialties || ['Outpatient Services', 'General Consultation'],
+      coordinates: f.location || { lat: -1.2188, lng: 36.8810 },
+      distance_km: dist,
+      live_status: {
+        outpatient_queue_length: Math.round(100 - f.availability),
+        active_doctors: 3,
+        free_beds: f.beds || 10,
+        emergency_status: 'normal' as const,
+        freshness_trust: 'HIGH' as const
+      }
+    };
+  });
+
+  // Apply filters on fallback
+  if (params?.county && params.county !== 'All') {
+    const cTerm = params.county.toLowerCase().replace('county', '').trim();
+    list = list.filter(f => f.county && f.county.toLowerCase().includes(cTerm));
+  }
+
+  if (params?.service && params.service !== 'All') {
+    const sTerm = params.service.toLowerCase();
+    list = list.filter(f => f.services && f.services.some(s => s.toLowerCase().includes(sTerm)));
+  }
+
+  if (params?.search) {
+    const q = params.search.toLowerCase().trim();
+    list = list.filter(f =>
+      f.name.toLowerCase().includes(q) ||
+      f.county.toLowerCase().includes(q) ||
+      (f.sub_county && f.sub_county.toLowerCase().includes(q))
+    );
+  }
+
+  // Sort closest first
+  if (params?.lat !== undefined && params?.lng !== undefined) {
+    list.sort((a, b) => (a.distance_km || 999) - (b.distance_km || 999));
+  }
+
+  return list;
 }
 
 // Fetch facility detail by ID
@@ -311,13 +358,17 @@ export async function reverseGeocode(lat: number, lng: number): Promise<{ ward: 
     if (res.ok) {
       const data = await res.json();
       const addr = data.address || {};
-      const county = addr.county || addr.state || 'Kakamega';
-      const subCounty = addr.suburb || addr.city_district || addr.town || addr.municipality || 'Lurambi';
-      const ward = addr.village || addr.neighbourhood || addr.suburb || 'Shirere Ward';
+      const isNairobi = lat < 0 && lng > 36;
+      const county = addr.county || addr.state || (isNairobi ? 'Nairobi' : 'Kakamega');
+      const subCounty = addr.suburb || addr.city_district || addr.town || addr.municipality || (isNairobi ? 'Kasarani' : 'Lurambi');
+      const ward = addr.village || addr.neighbourhood || addr.suburb || (isNairobi ? 'Roysambu Ward' : 'Shirere Ward');
       return { ward, subCounty, county };
     }
   } catch (err) {
     console.warn('Geocoding fallback activated', err);
   }
-  return { ward: 'Shirere Ward', subCounty: 'Lurambi', county: 'Kakamega' };
+  const isNairobi = lat < 0 && lng > 36;
+  return isNairobi
+    ? { ward: 'Roysambu Ward', subCounty: 'Kasarani', county: 'Nairobi' }
+    : { ward: 'Shirere Ward', subCounty: 'Lurambi', county: 'Kakamega' };
 }

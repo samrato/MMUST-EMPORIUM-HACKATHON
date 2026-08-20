@@ -223,7 +223,7 @@ export default function SymptomChecker() {
             <h3 className="font-bold text-xs uppercase tracking-wider mb-2 text-foreground opacity-70">Recommended Facility</h3>
             <p className="text-sm font-bold text-foreground">{result.recommendedFacility.name}</p>
             <p className="text-xs text-muted-foreground">
-              {result.recommendedFacility.type} • {result.recommendedFacility.distance_km.toFixed(1)} km
+              {result.recommendedFacility.type} • {result.recommendedFacility.distance_km < 0.05 ? '< 50m' : (result.recommendedFacility.distance_km < 1 ? `${Math.max(50, Math.round(result.recommendedFacility.distance_km * 1000))}m` : `${result.recommendedFacility.distance_km.toFixed(1)} km`)}
             </p>
             <p className="text-xs text-foreground/70 mt-2">{result.explanation}</p>
           </div>

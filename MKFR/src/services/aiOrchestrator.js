@@ -297,12 +297,23 @@ Example Output:
   ]
 }`;
 
-  const compactList = (Array.isArray(hospitalsList) ? hospitalsList : []).slice(0, 4).map(h => ({
-    name: h.name,
-    keph_level: h.keph_level || h.kephLevel || '4',
-    distance: typeof h.distance === 'number' ? `${h.distance.toFixed(1)} km` : (h.distance || 'Nearby'),
-    services: (Array.isArray(h.services) ? h.services : []).slice(0, 4)
-  }));
+  const compactList = (Array.isArray(hospitalsList) ? hospitalsList : []).slice(0, 4).map(h => {
+    const rawDist = typeof h.distance_km === 'number' ? h.distance_km : (typeof h.distance === 'number' ? h.distance : null);
+    let distStr = 'Nearby';
+    if (rawDist !== null) {
+      if (rawDist < 0.05) distStr = '< 50m (Walking distance)';
+      else if (rawDist < 1) distStr = `${Math.max(50, Math.round(rawDist * 1000))}m`;
+      else distStr = `${rawDist.toFixed(1)} km`;
+    } else if (typeof h.distance === 'string' && h.distance.trim()) {
+      distStr = h.distance;
+    }
+    return {
+      name: h.name,
+      keph_level: h.keph_level || h.kephLevel || '4',
+      distance: distStr,
+      services: (Array.isArray(h.services) ? h.services : []).slice(0, 4)
+    };
+  });
 
   const userPrompt = `REAL BACKEND HOSPITALS LIST:\n${JSON.stringify(compactList, null, 2)}\n\nUser query details:\n"${userQuery}"`;
 

@@ -256,7 +256,7 @@ export default function DoctorTriageModal({
 
                           <h4 className="text-lg font-extrabold text-white">{item.facility.name}</h4>
                           <p className="text-xs text-slate-300 mt-1">
-                            {item.recommendation_reason || `Distance: ${item.distance_km.toFixed(1)} km • ~${item.estimated_travel_minutes} mins travel`}
+                            {item.recommendation_reason || `Distance: ${item.distance_km < 0.05 ? '< 50m' : (item.distance_km < 1 ? `${Math.max(50, Math.round(item.distance_km * 1000))}m` : `${item.distance_km.toFixed(1)} km`)} • ~${Math.max(1, item.estimated_travel_minutes)} mins travel`}
                           </p>
                         </div>
 

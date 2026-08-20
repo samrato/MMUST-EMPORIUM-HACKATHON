@@ -524,7 +524,15 @@ export default function BookingPage() {
                         </span>
                       )}
                     </div>
-                    <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-lg">{f.distance} km</span>
+                    <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-lg">
+                      {typeof f.distance === 'number'
+                        ? (f.distance < 0.05
+                          ? '< 50m'
+                          : f.distance < 1
+                          ? `${Math.max(50, Math.round(f.distance * 1000))}m`
+                          : `${f.distance.toFixed(1)} km`)
+                        : (f.distance || 'Nearby')}
+                    </span>
                   </div>
                   <p className="text-xs text-muted-foreground mb-3 flex items-start gap-1">
                     <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
